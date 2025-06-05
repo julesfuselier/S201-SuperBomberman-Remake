@@ -28,6 +28,9 @@ public class GameViewController {
     // Liste pour stocker les bombes actives
     private List<Bomb> activeBombs = new ArrayList<>();
 
+    // Variable pour contrôler si le joueur peut placer une bombe
+    private boolean canPlaceBomb = true;
+
     Image playerImg = new Image(
             Objects.requireNonNull(getClass().getResource("/images/player.png")).toExternalForm()
     );
@@ -73,7 +76,7 @@ public class GameViewController {
 
     public void initialize() {
         try {
-            map = MapLoader.loadMap("src/main/resources/maps/level2.txt");
+            map = MapLoader.loadMap("src/main/resources/maps/level3.txt");
             drawMap(map);
             enemyCurrDirection = new int[]{1, 0}; // [x, y] direction
         } catch (IOException e) {
@@ -116,22 +119,33 @@ public class GameViewController {
                     break;
                 }
                 case SPACE -> {
-                    System.out.println("Bombe posée !");
-                    Bomb bomb = new Bomb(player1.getX(), player1.getY(), 10, 1);
+                    // Vérifier si le joueur peut placer une bombe
+                    if (canPlaceBomb) {
+                        System.out.println("Bombe posée !");
+                        Bomb bomb = new Bomb(player1.getX(), player1.getY(), 10, 1);
 
-                    // Afficher visuellement la bombe avec l'herbe en arrière-plan
-                    placeBombVisual(bomb);
+                        // Afficher visuellement la bombe avec l'herbe en arrière-plan
+                        placeBombVisual(bomb);
 
-                    // Ajouter à la liste des bombes actives
-                    activeBombs.add(bomb);
+                        // Ajouter à la liste des bombes actives
+                        activeBombs.add(bomb);
 
-                    bomb.startCountdown(() -> {
-                        System.out.println("BOOM !");
-                        handleExplosion(bomb);
+                        // Empêcher de placer une autre bombe
+                        canPlaceBomb = false;
 
-                        // Retirer la bombe de la liste après explosion
-                        activeBombs.remove(bomb);
-                    });
+                        bomb.startCountdown(() -> {
+                            System.out.println("BOOM !");
+                            handleExplosion(bomb);
+
+                            // Retirer la bombe de la liste après explosion
+                            activeBombs.remove(bomb);
+
+                            // Permettre de nouveau de placer une bombe
+                            canPlaceBomb = true;
+                        });
+                    } else {
+                        System.out.println("Impossible de placer une bombe - Une bombe est déjà active !");
+                    }
                 }
 
                 default -> {
