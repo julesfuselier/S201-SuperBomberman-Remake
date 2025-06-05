@@ -69,7 +69,7 @@ public class GameViewController {
 
     public void initialize() {
         try {
-            map = MapLoader.loadMap("src/main/resources/maps/level2.txt");
+            map = MapLoader.loadMap("src/main/resources/maps/level3.txt");
             drawMap(map);
             enemyCurrDirection = new int[]{1, 0}; // [x, y] direction
         } catch (IOException e) {
