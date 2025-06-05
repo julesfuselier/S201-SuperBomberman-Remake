@@ -63,6 +63,13 @@ public class GameViewController {
     );
     private ImagePattern bombPattern = new ImagePattern(bombImg);
 
+//    Image bombUpImg = new Image(
+//            Objects.requireNonNull(getClass().getResource("/images/item-bomb.png")).toExternalForm()
+//    );
+//    private ImagePattern itemBombPattern = new ImagePattern(bombUpImg);
+
+
+
 
     public void initialize() {
         try {
@@ -410,4 +417,5 @@ public class GameViewController {
             }
         }
     }
+
 }
