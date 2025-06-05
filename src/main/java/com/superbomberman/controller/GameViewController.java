@@ -9,6 +9,8 @@ import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import static com.superbomberman.model.MapLoader.enemy;
@@ -21,6 +23,9 @@ public class GameViewController {
 
     private Tile[][] map;
     private int[] enemyCurrDirection;
+
+    // AJOUT : Liste pour stocker les bombes actives
+    private List<Bomb> activeBombs = new ArrayList<>();
 
     Image playerImg = new Image(
             Objects.requireNonNull(getClass().getResource("/images/player.png")).toExternalForm()
@@ -60,7 +65,7 @@ public class GameViewController {
 
     public void initialize() {
         try {
-            map = MapLoader.loadMap("src/main/resources/maps/level1.txt");
+            map = MapLoader.loadMap("src/main/resources/maps/level2.txt");
             drawMap(map);
             enemyCurrDirection = new int[]{1, 0}; // [x, y] direction
         } catch (IOException e) {
@@ -109,18 +114,27 @@ public class GameViewController {
                 case SPACE -> {
                     System.out.println("Bombe posée !");
                     Bomb bomb = new Bomb(player1.getX(), player1.getY(), 10, 1);
+
+                    // CORRECTION : Afficher visuellement la bombe
+                    placeBombVisual(bomb);
+
+                    // CORRECTION : Ajouter à la liste des bombes actives
+                    activeBombs.add(bomb);
+
                     bomb.startCountdown(() -> {
                         System.out.println("BOOM !");
                         handleExplosion(bomb);
+
+                        // CORRECTION : Retirer la bombe de la liste après explosion
+                        activeBombs.remove(bomb);
                     });
                 }
 
                 default -> {
                     break;
                 }
-
-
             }
+
             if (canMoveTo(pNewX, pNewY)) {
                 player1.setPosition(pNewX, pNewY);
                 updatePlayerPosition(player1);
@@ -131,8 +145,6 @@ public class GameViewController {
             updateEnemyPosition(enemy);
         });
 
-
-
         gameGrid.setFocusTraversable(true);
         gameGrid.requestFocus();
     }
@@ -142,8 +154,6 @@ public class GameViewController {
     // ***************************************************
 
     private void drawMap(Tile[][] map) {
-
-
         for (int row = 0; row < map.length; row++) {
             for (int col = 0; col < map[row].length; col++) {
                 Tile tile = map[row][col]; // recupération des type de Tile afin de construire la map
@@ -162,22 +172,48 @@ public class GameViewController {
         }
     }
 
+    // CORRECTION : Méthode pour afficher la bombe visuellement
+    private void placeBombVisual(Bomb bomb) {
+        // Supprimer l'élément existant à cette position
+        gameGrid.getChildren().removeIf(node ->
+                GridPane.getColumnIndex(node) == bomb.getX() &&
+                        GridPane.getRowIndex(node) == bomb.getY()
+        );
+
+        // Ajouter la texture de la bombe
+        Rectangle bombRect = new Rectangle(40, 40);
+        bombRect.setFill(bombPattern);
+        gameGrid.add(bombRect, bomb.getX(), bomb.getY());
+    }
+
+    // CORRECTION : Méthode canMoveTo mise à jour
     private boolean canMoveTo(int x, int y) {
-        //  coordonnées ==  limites de la grille ?
+        // Vérifier les limites de la grille
         if (x < 0 || y < 0 || y >= map.length || x >= map[0].length) {
             return false;
         }
 
         Tile tile = map[y][x];
-        return tile.getType() != TileType.WALL && tile.getType() != TileType.WALL_BREAKABLE;
+
+        // Empêcher de marcher sur les murs
+        if (tile.getType() == TileType.WALL || tile.getType() == TileType.WALL_BREAKABLE) {
+            return false;
+        }
+
+        // CORRECTION : Empêcher de marcher sur les bombes actives
+        for (Bomb bomb : activeBombs) {
+            if (bomb.getX() == x && bomb.getY() == y) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    // TODO : ENLEVER LES COMMENTAIRES + EN REFAIRE
     private void updatePlayerPosition(Player player) {
         // 1. Remettre la case où était le joueur avant à son tile d'origine (sol, mur cassable...)
         int prevX = player.getPreviousX();
         int prevY = player.getPreviousY();
-
 
         // Supprimer le rectangle (joueur) à l'ancienne position
         gameGrid.getChildren().removeIf(node ->
@@ -185,13 +221,29 @@ public class GameViewController {
                         && GridPane.getRowIndex(node) == prevY
         );
 
-        // Remettre la texture du sol ou autre tile à l'ancienne position
-        Tile oldTile = map[prevY][prevX];
-        Rectangle oldRect = new Rectangle(40, 40);
-        switch (oldTile.getType()) {
-            case FLOOR, WALL_BREAKABLE, PLAYER1, ENEMY -> oldRect.setFill(floorPattern);
+        // CORRECTION : Vérifier s'il y a une bombe à l'ancienne position
+        boolean hasBombAtPrevPos = false;
+        for (Bomb bomb : activeBombs) {
+            if (bomb.getX() == prevX && bomb.getY() == prevY) {
+                hasBombAtPrevPos = true;
+                break;
+            }
         }
-        gameGrid.add(oldRect, prevX, prevY);
+
+        if (hasBombAtPrevPos) {
+            // S'il y a une bombe, la remettre
+            Rectangle bombRect = new Rectangle(40, 40);
+            bombRect.setFill(bombPattern);
+            gameGrid.add(bombRect, prevX, prevY);
+        } else {
+            // Sinon, remettre la texture du sol ou autre tile à l'ancienne position
+            Tile oldTile = map[prevY][prevX];
+            Rectangle oldRect = new Rectangle(40, 40);
+            switch (oldTile.getType()) {
+                case FLOOR, WALL_BREAKABLE, PLAYER1, ENEMY -> oldRect.setFill(floorPattern);
+            }
+            gameGrid.add(oldRect, prevX, prevY);
+        }
 
         // 2. Ajouter le joueur à la nouvelle position
         Rectangle playerRect = new Rectangle(40, 40);
@@ -200,30 +252,45 @@ public class GameViewController {
     }
 
     private void updateEnemyPosition(Enemy enemy) {
-        // 1. Remettre la case où était le joueur avant à son tile d'origine (sol, mur cassable...)
+        // 1. Remettre la case où était l'ennemi avant à son tile d'origine (sol, mur cassable...)
         int prevX = enemy.getPreviousX();
         int prevY = enemy.getPreviousY();
 
-        // Supprimer le rectangle (joueur) à l'ancienne position
+        // Supprimer le rectangle (ennemi) à l'ancienne position
         gameGrid.getChildren().removeIf(node ->
                 GridPane.getColumnIndex(node) == prevX
                         && GridPane.getRowIndex(node) == prevY
         );
 
-        // Remettre la texture du sol ou autre tile à l'ancienne position
-        Tile oldTile = map[prevY][prevX];
-        Rectangle oldRect = new Rectangle(40, 40);
-        switch (oldTile.getType()) {
-            case FLOOR, WALL_BREAKABLE, ENEMY, PLAYER1 -> oldRect.setFill(floorPattern);
+        // CORRECTION : Vérifier s'il y a une bombe à l'ancienne position
+        boolean hasBombAtPrevPos = false;
+        for (Bomb bomb : activeBombs) {
+            if (bomb.getX() == prevX && bomb.getY() == prevY) {
+                hasBombAtPrevPos = true;
+                break;
+            }
         }
-        gameGrid.add(oldRect, prevX, prevY);
 
-        // 2. Ajouter le joueur à la nouvelle position
+        if (hasBombAtPrevPos) {
+            // S'il y a une bombe, la remettre
+            Rectangle bombRect = new Rectangle(40, 40);
+            bombRect.setFill(bombPattern);
+            gameGrid.add(bombRect, prevX, prevY);
+        } else {
+            // Sinon, remettre la texture du sol ou autre tile à l'ancienne position
+            Tile oldTile = map[prevY][prevX];
+            Rectangle oldRect = new Rectangle(40, 40);
+            switch (oldTile.getType()) {
+                case FLOOR, WALL_BREAKABLE, ENEMY, PLAYER1 -> oldRect.setFill(floorPattern);
+            }
+            gameGrid.add(oldRect, prevX, prevY);
+        }
+
+        // 2. Ajouter l'ennemi à la nouvelle position
         Rectangle enemyRect = new Rectangle(40, 40);
         enemyRect.setFill(enemyPattern);
         gameGrid.add(enemyRect, enemy.getX(), enemy.getY());
     }
-
 
     private void handleExplosion(Bomb bomb) {
         int x = bomb.getX();
@@ -237,7 +304,7 @@ public class GameViewController {
         int[][] directions = { {1,0}, {-1,0}, {0,1}, {0,-1} };
 
         for (int[] direction : directions) {
-            for (int rangeStep = 1; rangeStep <= range; rangeStep++) { // TODO : EXPLIQUER AUX AUTRES
+            for (int rangeStep = 1; rangeStep <= range; rangeStep++) {
                 int nx = x + direction[0] * rangeStep; // direction horizontale
                 int ny = y + direction[1] * rangeStep; // direction verticale
 
@@ -256,7 +323,7 @@ public class GameViewController {
             return false; // Ne rien afficher
         }
 
-        // appliquée directement
+        // Afficher l'explosion
         Rectangle explosionRect = new Rectangle(40, 40);
         explosionRect.setFill(explosionPattern);
         gameGrid.getChildren().removeIf(node ->
@@ -282,8 +349,6 @@ public class GameViewController {
         };
     }
 
-
-
     private boolean isInBounds(int x, int y) { // -> permet de verifier si les coordonnées sont dans la map
         return x >= 0 && y >= 0 && y < map.length && x < map[0].length;
     }
@@ -307,7 +372,6 @@ public class GameViewController {
     }
 
     public void moveEnemy(Enemy enemy) {
-
         int currentX = enemy.getX();
         int currentY = enemy.getY();
 
@@ -337,12 +401,5 @@ public class GameViewController {
                 updateEnemyPosition(enemy);
             }
         }
-
-
     }
-
-
-
-
-
 }
