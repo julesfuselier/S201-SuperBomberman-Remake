@@ -40,7 +40,7 @@ public class GameViewController {
     private ImagePattern playerPattern = new ImagePattern(playerImg);
 
     Image player2Img = new Image(
-            Objects.requireNonNull(getClass().getResource("/images/enemy.png")).toExternalForm()
+            Objects.requireNonNull(getClass().getResource("/images/player2.png")).toExternalForm()
     );
     private ImagePattern player2Pattern = new ImagePattern(player2Img);
 
