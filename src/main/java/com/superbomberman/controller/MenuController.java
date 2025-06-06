@@ -40,6 +40,7 @@ public class MenuController {
             // Obtenir la stage actuelle
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 
+
             // Changer la scène
             stage.setScene(gameScene);
             stage.setTitle("Super Bomberman - Jeu");
@@ -55,9 +56,28 @@ public class MenuController {
 
     @FXML
     private void handleOptions(ActionEvent event) {
-        // Implémentation pour les options
-        System.out.println("Options sélectionnées");
-        // Vous pouvez ouvrir un autre FXML pour les options
+        try {
+            // Charger la scène des options
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/options.fxml"));
+            Parent optionsRoot = loader.load();
+
+            // Créer une nouvelle scène
+            Scene optionsScene = new Scene(optionsRoot);
+
+            // Obtenir la stage actuelle
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+            // Changer la scène
+            stage.setScene(optionsScene);
+            stage.setTitle("Bomberman JavaFX - Options");
+
+            // Ajuster la taille de la fenêtre
+            stage.sizeToScene();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Erreur lors du chargement des options");
+        }
     }
 
     @FXML
