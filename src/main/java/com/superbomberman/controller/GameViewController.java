@@ -1,13 +1,18 @@
 package com.superbomberman.controller;
 
 import com.superbomberman.model.*;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,15 +22,15 @@ import java.util.Objects;
 import static com.superbomberman.model.MapLoader.enemy;
 import static com.superbomberman.model.MapLoader.player1;
 import static com.superbomberman.model.MapLoader.player2;
+import static com.superbomberman.controller.MenuController.isOnePlayer;
 
-public class GameViewController {
+public class GameViewController extends OptionsController{
 
     @FXML
     private GridPane gameGrid;
 
     private Tile[][] map;
     private int[] enemyCurrDirection;
-    private GameMode gameMode = GameMode.ONE_PLAYER; // Mode par défaut
 
     // Liste pour stocker les bombes actives
     private List<Bomb> activeBombs = new ArrayList<>();
@@ -41,7 +46,7 @@ public class GameViewController {
     private ImagePattern playerPattern = new ImagePattern(playerImg);
 
     Image player2Img = new Image(
-            Objects.requireNonNull(getClass().getResource("/images/enemy.png")).toExternalForm()
+            Objects.requireNonNull(getClass().getResource("/images/player2.png")).toExternalForm()
     );
     private ImagePattern player2Pattern = new ImagePattern(player2Img);
 
@@ -75,21 +80,22 @@ public class GameViewController {
     );
     private ImagePattern bombPattern = new ImagePattern(bombImg);
 
-    /**
-     * Méthode pour définir le mode de jeu
-     */
-    public void setGameMode(GameMode mode) {
-        this.gameMode = mode;
-        System.out.println("Mode de jeu défini : " + mode);
-    }
-
     public void initialize() {
         try {
-            map = MapLoader.loadMap("src/main/resources/maps/level2.txt");
+            System.out.println("Mode un joueur: " + isOnePlayer);
+            if (isOnePlayer) {
+                System.out.println("Chargement de la carte niveau 1 (1 joueur)");
+                map = MapLoader.loadMap("src/main/resources/maps/level1.txt");
+            } else {
+                System.out.println("Chargement de la carte niveau 2 (2 joueurs)");
+                map = MapLoader.loadMap("src/main/resources/maps/level2.txt");
+            }
+
             drawMap(map);
             enemyCurrDirection = new int[]{1, 0}; // [x, y] direction
         } catch (IOException e) {
             e.printStackTrace();
+            System.err.println("Erreur lors du chargement de la carte");
         }
 
         // Initialiser le joueur 1
@@ -99,13 +105,13 @@ public class GameViewController {
         }
 
         // Initialiser le joueur 2 seulement en mode 2 joueurs
-        if(gameMode == GameMode.TWO_PLAYER && player2 != null && map[player2.getY()][player2.getX()].getType() == TileType.FLOOR) {
+        if(!isOnePlayer && player2 != null && map[player2.getY()][player2.getX()].getType() == TileType.FLOOR) {
             map[player2.getY()][player2.getX()] = new Tile(TileType.PLAYER2);
             addEntityToGrid(player2.getX(), player2.getY(), player2Pattern);
         }
 
-        // Initialiser l'ennemi seulement en mode 1 joueur
-        if(gameMode == GameMode.ONE_PLAYER && enemy != null && map[enemy.getY()][enemy.getX()].getType() == TileType.FLOOR) {
+        // Initialiser l'ennemi
+        if(enemy != null && map[enemy.getY()][enemy.getX()].getType() == TileType.FLOOR) {
             map[enemy.getY()][enemy.getX()] = new Tile(TileType.ENEMY);
             addEntityToGrid(enemy.getX(), enemy.getY(), enemyPattern);
         }
@@ -117,54 +123,55 @@ public class GameViewController {
             int p1NewX = player1.getX();
             int p1NewY = player1.getY();
 
-            // Variables pour le joueur 2
-            int p2NewX = player2 != null ? player2.getX() : -1;
-            int p2NewY = player2 != null ? player2.getY() : -1;
+            // Variables pour le joueur 2 (seulement en mode 2 joueurs)
+            int p2NewX = (!isOnePlayer && player2 != null) ? player2.getX() : -1;
+            int p2NewY = (!isOnePlayer && player2 != null) ? player2.getY() : -1;
 
-            // Variables pour l'ennemi
-            int eNewX = enemy != null ? enemy.getX() : -1;
-            int eNewY = enemy != null ? enemy.getY() : -1;
+            // Récupérer les touches configurées
+            String up1 = getUpKey1();
+            String down1 = getDownKey1();
+            String left1 = getLeftKey1();
+            String right1 = getRightKey1();
+            String bomb1 = getBombKey1();
 
-            switch (event.getCode()) {
-                // Contrôles Joueur 1 (flèches directionnelles)
-                case LEFT -> p1NewX -= 1;
-                case RIGHT -> p1NewX += 1;
-                case UP -> p1NewY -= 1;
-                case DOWN -> p1NewY += 1;
-                case SPACE -> {
-                    // Bombe du joueur 1
-                    if (canPlaceBombPlayer1) {
-                        System.out.println("Joueur 1 pose une bombe !");
-                        Bomb bomb = new Bomb(player1.getX(), player1.getY(), 10, 1);
-                        placeBombVisual(bomb);
-                        activeBombs.add(bomb);
-                        canPlaceBombPlayer1 = false;
+            String up2 = getUpKey2();
+            String down2 = getDownKey2();
+            String left2 = getLeftKey2();
+            String right2 = getRightKey2();
+            String bomb2 = getBombKey2();
 
-                        bomb.startCountdown(() -> {
-                            System.out.println("BOOM ! (Joueur 1)");
-                            handleExplosion(bomb);
-                            activeBombs.remove(bomb);
-                            canPlaceBombPlayer1 = true;
-                        });
-                    }
-                }
+            // Contrôles Joueur 1
+            if (event.getCode().toString().equals(left1)) p1NewX -= 1;
+            else if (event.getCode().toString().equals(right1)) p1NewX += 1;
+            else if (event.getCode().toString().equals(up1)) p1NewY -= 1;
+            else if (event.getCode().toString().equals(down1)) p1NewY += 1;
+            else if (event.getCode().toString().equals(bomb1)) {
+                // Bombe du joueur 1
+                if (canPlaceBombPlayer1) {
+                    System.out.println("Joueur 1 pose une bombe !");
+                    Bomb bomb = new Bomb(player1.getX(), player1.getY(), 10, 1);
+                    placeBombVisual(bomb);
+                    activeBombs.add(bomb);
+                    canPlaceBombPlayer1 = false;
 
-                // Contrôles Joueur 2 (WASD) - seulement en mode 2 joueurs
-                case Q -> {
-                    if (gameMode == GameMode.TWO_PLAYER && player2 != null) p2NewX -= 1;
+                    bomb.startCountdown(() -> {
+                        System.out.println("BOOM ! (Joueur 1)");
+                        handleExplosion(bomb);
+                        activeBombs.remove(bomb);
+                        canPlaceBombPlayer1 = true;
+                    });
                 }
-                case D -> {
-                    if (gameMode == GameMode.TWO_PLAYER && player2 != null) p2NewX += 1;
-                }
-                case Z -> {
-                    if (gameMode == GameMode.TWO_PLAYER && player2 != null) p2NewY -= 1;
-                }
-                case S -> {
-                    if (gameMode == GameMode.TWO_PLAYER && player2 != null) p2NewY += 1;
-                }
-                case A -> {
-                    // Bombe du joueur 2 - seulement en mode 2 joueurs
-                    if (gameMode == GameMode.TWO_PLAYER && player2 != null && canPlaceBombPlayer2) {
+            }
+
+            // Contrôles Joueur 2 (seulement en mode 2 joueurs)
+            if (!isOnePlayer && player2 != null) {
+                if (event.getCode().toString().equals(left2)) p2NewX -= 1;
+                else if (event.getCode().toString().equals(right2)) p2NewX += 1;
+                else if (event.getCode().toString().equals(up2)) p2NewY -= 1;
+                else if (event.getCode().toString().equals(down2)) p2NewY += 1;
+                else if (event.getCode().toString().equals(bomb2)) {
+                    // Bombe du joueur 2
+                    if (canPlaceBombPlayer2) {
                         System.out.println("Joueur 2 pose une bombe !");
                         Bomb bomb = new Bomb(player2.getX(), player2.getY(), 10, 1);
                         placeBombVisual(bomb);
@@ -187,14 +194,14 @@ public class GameViewController {
                 updatePlayerPosition(player1, playerPattern);
             }
 
-            // Déplacer le joueur 2 seulement en mode 2 joueurs
-            if (gameMode == GameMode.TWO_PLAYER && player2 != null && canMoveTo(p2NewX, p2NewY)) {
+            // Déplacer le joueur 2 (seulement en mode 2 joueurs)
+            if (!isOnePlayer && player2 != null && canMoveTo(p2NewX, p2NewY)) {
                 player2.setPosition(p2NewX, p2NewY);
                 updatePlayerPosition(player2, player2Pattern);
             }
 
-            // Déplacer l'ennemi seulement en mode 1 joueur
-            if (gameMode == GameMode.ONE_PLAYER && enemy != null) {
+            // Déplacer l'ennemi
+            if (enemy != null) {
                 moveEnemy(enemy);
                 updateEnemyPosition(enemy);
             }
@@ -202,6 +209,23 @@ public class GameViewController {
 
         gameGrid.setFocusTraversable(true);
         gameGrid.requestFocus();
+    }
+
+    @FXML
+    private void handleBackToMenu() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu.fxml"));
+            Parent menuRoot = loader.load();
+
+            Scene menuScene = new Scene(menuRoot);
+            Stage stage = (Stage) gameGrid.getScene().getWindow();
+
+            stage.setScene(menuScene);
+            stage.setTitle("Super Bomberman - Menu");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void drawMap(Tile[][] map) {
@@ -273,10 +297,10 @@ public class GameViewController {
         if (player1.getX() == x && player1.getY() == y) {
             return false;
         }
-        if (gameMode == GameMode.TWO_PLAYER && player2 != null && player2.getX() == x && player2.getY() == y) {
+        if (!isOnePlayer && player2 != null && player2.getX() == x && player2.getY() == y) {
             return false;
         }
-        if (gameMode == GameMode.ONE_PLAYER && enemy != null && enemy.getX() == x && enemy.getY() == y) {
+        if (enemy != null && enemy.getX() == x && enemy.getY() == y) {
             return false;
         }
 
@@ -376,7 +400,7 @@ public class GameViewController {
             cell.getChildren().add(explosionRect);
         }
 
-        javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(2));
+        javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(0.7));
         delay.setOnFinished(event -> {
             if (tile.getType() == TileType.WALL_BREAKABLE) {
                 map[y][x] = new Tile(TileType.FLOOR);

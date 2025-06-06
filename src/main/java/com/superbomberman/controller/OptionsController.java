@@ -153,8 +153,6 @@ public class OptionsController {
     private void handleApply(ActionEvent event) {
         // Sauvegarder les paramètres actuels
         soundVolume = soundVolumeSlider.getValue();
-        difficulty = difficultyComboBox.getValue();
-        gameSpeed = gameSpeedSlider.getValue();
 
         // Afficher une confirmation
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
