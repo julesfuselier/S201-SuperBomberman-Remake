@@ -17,20 +17,46 @@ import java.util.Objects;
 import static com.superbomberman.model.MapLoader.enemy;
 import static com.superbomberman.model.MapLoader.player1;
 
+/**
+ * Contrôleur principal de la vue de jeu pour Super Bomberman.
+ * <p>
+ * Cette classe gère l'initialisation de la grille de jeu, le rendu de la carte,
+ * la gestion des entités (joueur, ennemi, bombes), le déplacement des personnages,
+ * la pose et la détonation des bombes, ainsi que les interactions clavier.
+ * Elle orchestre l'affichage graphique et la logique de jeu côté client.
+ * </p>
+ *
+ * <h2>Fonctionnalités principales :</h2>
+ * <ul>
+ *   <li>Initialise la grille de jeu et place les entités sur celle-ci.</li>
+ *   <li>Gère les déplacements du joueur et de l'ennemi en fonction des entrées clavier ou de l'IA.</li>
+ *   <li>Permet la pose, le rendu et l'explosion des bombes avec gestion des collisions.</li>
+ *   <li>Met à jour dynamiquement l'interface graphique (GridPane) selon l'état du jeu.</li>
+ * </ul>
+ *
+ * @author Jules Fuselier
+ * @version 1.0
+ * @since 2025-06-05
+ */
 public class GameViewController {
 
+    /** Grille de jeu affichée à l'écran. */
     @FXML
     private GridPane gameGrid;
 
+    /** Carte du niveau courant, sous forme de matrice de tuiles. */
     private Tile[][] map;
+
+    /** Direction actuelle de déplacement de l'ennemi ([x, y]). */
     private int[] enemyCurrDirection;
 
-    // Liste pour stocker les bombes actives
+    /** Liste des bombes actuellement actives sur la grille. */
     private List<Bomb> activeBombs = new ArrayList<>();
 
-    // Variable pour contrôler si le joueur peut placer une bombe
+    /** Indique si le joueur peut actuellement poser une nouvelle bombe. */
     private boolean canPlaceBomb = true;
 
+    // Images et patterns pour le rendu des entités et tuiles
     Image playerImg = new Image(
             Objects.requireNonNull(getClass().getResource("/images/player.png")).toExternalForm()
     );
@@ -66,7 +92,10 @@ public class GameViewController {
     );
     private ImagePattern bombPattern = new ImagePattern(bombImg);
 
-
+    /**
+     * Initialise la scène de jeu : charge la carte, place les entités et configure les contrôles clavier.
+     * Appelée automatiquement par JavaFX à l'affichage de la vue.
+     */
     public void initialize() {
         try {
             map = MapLoader.loadMap("src/main/resources/maps/level3.txt");
@@ -76,74 +105,45 @@ public class GameViewController {
             e.printStackTrace();
         }
 
-        if(map[player1.getY()][player1.getX()].getType() == TileType.FLOOR) {
+        if (map[player1.getY()][player1.getX()].getType() == TileType.FLOOR) {
             map[player1.getY()][player1.getX()] = new Tile(TileType.PLAYER1);
             addEntityToGrid(player1.getX(), player1.getY(), playerPattern);
         }
 
-        if(map[enemy.getY()][enemy.getX()].getType() == TileType.FLOOR) {
+        if (map[enemy.getY()][enemy.getX()].getType() == TileType.FLOOR) {
             map[enemy.getY()][enemy.getX()] = new Tile(TileType.ENEMY);
             addEntityToGrid(enemy.getX(), enemy.getY(), enemyPattern);
         }
 
         gameGrid.setOnKeyPressed((KeyEvent event) -> {
-            System.out.println("Touche appuyée : " + event.getCode()); // debug
+            // Gestion des touches de déplacement et d'action
             int pNewX = player1.getX();
             int pNewY = player1.getY();
 
             int eNewX = enemy.getX();
             int eNewY = enemy.getY();
-            System.out.println("New position : (" + pNewX + ", " + pNewY + ")");
+
             switch (event.getCode()) {
-                case LEFT -> {
-                    pNewX -= 1;
-                    break;
-                }
-                case RIGHT -> {
-                    pNewX += 1;
-                    break;
-                }
-                case UP -> {
-                    pNewY -= 1;
-                    break;
-                }
-                case DOWN -> {
-                    pNewY += 1;
-                    break;
-                }
+                case LEFT -> pNewX -= 1;
+                case RIGHT -> pNewX += 1;
+                case UP -> pNewY -= 1;
+                case DOWN -> pNewY += 1;
                 case SPACE -> {
-                    // Vérifier si le joueur peut placer une bombe
+                    // Pose d'une bombe
                     if (canPlaceBomb) {
-                        System.out.println("Bombe posée !");
                         Bomb bomb = new Bomb(player1.getX(), player1.getY(), 10, 1);
-
-                        // Afficher visuellement la bombe avec l'herbe en arrière-plan
                         placeBombVisual(bomb);
-
-                        // Ajouter à la liste des bombes actives
                         activeBombs.add(bomb);
-
-                        // Empêcher de placer une autre bombe
                         canPlaceBomb = false;
 
                         bomb.startCountdown(() -> {
-                            System.out.println("BOOM !");
                             handleExplosion(bomb);
-
-                            // Retirer la bombe de la liste après explosion
                             activeBombs.remove(bomb);
-
-                            // Permettre de nouveau de placer une bombe
                             canPlaceBomb = true;
                         });
-                    } else {
-                        System.out.println("Impossible de placer une bombe - Une bombe est déjà active !");
                     }
                 }
-
-                default -> {
-                    break;
-                }
+                default -> { /* Pas d'action */ }
             }
 
             if (canMoveTo(pNewX, pNewY)) {
@@ -151,7 +151,6 @@ public class GameViewController {
                 updatePlayerPosition(player1);
             }
 
-            System.out.println("New enemy position : (" + eNewX + ", " + eNewY + ")");
             moveEnemy(enemy);
             updateEnemyPosition(enemy);
         });
@@ -160,26 +159,23 @@ public class GameViewController {
         gameGrid.requestFocus();
     }
 
-    // ***************************************************
-    // drawmap() -> METHODE : DESSINER LA MAP
-    // ***************************************************
-
+    /**
+     * Dessine la carte du niveau sur la grille graphique.
+     *
+     * @param map Tableau de tuiles à afficher.
+     */
     private void drawMap(Tile[][] map) {
         for (int row = 0; row < map.length; row++) {
             for (int col = 0; col < map[row].length; col++) {
                 Tile tile = map[row][col];
-
-                // Créer un StackPane pour permettre la superposition
                 StackPane cell = new StackPane();
-
-                // Fond de base (herbe pour les sols, texture appropriée pour les autres)
                 Rectangle background = new Rectangle(40, 40);
 
                 switch (tile.getType()) {
                     case WALL -> background.setFill(wallPattern);
                     case FLOOR -> background.setFill(floorPattern);
                     case WALL_BREAKABLE -> background.setFill(wallBreakablePattern);
-                    case PLAYER1, ENEMY -> background.setFill(floorPattern); // Herbe en arrière-plan
+                    case PLAYER1, ENEMY -> background.setFill(floorPattern);
                 }
 
                 cell.getChildren().add(background);
@@ -188,18 +184,30 @@ public class GameViewController {
         }
     }
 
-    // Nouvelle méthode pour ajouter une entité sur la grille avec l'herbe en arrière-plan
+    /**
+     * Ajoute une entité graphique (joueur, ennemi, bombe) sur la grille à la position spécifiée.
+     *
+     * @param x             Coordonnée X dans la grille.
+     * @param y             Coordonnée Y dans la grille.
+     * @param entityPattern Pattern graphique pour l'entité.
+     */
     private void addEntityToGrid(int x, int y, ImagePattern entityPattern) {
         StackPane cell = (StackPane) getNodeFromGridPane(gameGrid, x, y);
         if (cell != null) {
-            // Ajouter l'entité par-dessus l'arrière-plan
             Rectangle entity = new Rectangle(40, 40);
             entity.setFill(entityPattern);
             cell.getChildren().add(entity);
         }
     }
 
-    // Méthode pour récupérer un nœud spécifique de la GridPane
+    /**
+     * Récupère un nœud spécifique dans la GridPane selon ses coordonnées.
+     *
+     * @param gridPane Grille cible.
+     * @param col      Colonne du nœud.
+     * @param row      Ligne du nœud.
+     * @return Le nœud correspondant ou null si absent.
+     */
     private javafx.scene.Node getNodeFromGridPane(GridPane gridPane, int col, int row) {
         for (javafx.scene.Node node : gridPane.getChildren()) {
             Integer columnIndex = GridPane.getColumnIndex(node);
@@ -211,38 +219,41 @@ public class GameViewController {
         return null;
     }
 
-    // Méthode pour afficher la bombe visuellement avec l'herbe en arrière-plan
+    /**
+     * Affiche une bombe sur la grille à sa position, au-dessus de l'herbe.
+     *
+     * @param bomb Bombe à afficher.
+     */
     private void placeBombVisual(Bomb bomb) {
         StackPane cell = (StackPane) getNodeFromGridPane(gameGrid, bomb.getX(), bomb.getY());
         if (cell != null) {
-            // Garder seulement l'arrière-plan (herbe)
             if (cell.getChildren().size() > 1) {
-                // Supprimer les entités (joueur, ennemi) mais garder l'arrière-plan
                 cell.getChildren().removeIf(node -> cell.getChildren().indexOf(node) > 0);
             }
-
-            // Ajouter la texture de la bombe par-dessus l'herbe
             Rectangle bombRect = new Rectangle(40, 40);
             bombRect.setFill(bombPattern);
             cell.getChildren().add(bombRect);
         }
     }
 
-    // Méthode canMoveTo mise à jour
+    /**
+     * Indique si une case est accessible (pas de mur ni de bombe).
+     *
+     * @param x Coordonnée X.
+     * @param y Coordonnée Y.
+     * @return true si déplacement possible, false sinon.
+     */
     private boolean canMoveTo(int x, int y) {
-        // Vérifier les limites de la grille
         if (x < 0 || y < 0 || y >= map.length || x >= map[0].length) {
             return false;
         }
 
         Tile tile = map[y][x];
 
-        // Empêcher de marcher sur les murs
         if (tile.getType() == TileType.WALL || tile.getType() == TileType.WALL_BREAKABLE) {
             return false;
         }
 
-        // Empêcher de marcher sur les bombes actives
         for (Bomb bomb : activeBombs) {
             if (bomb.getX() == x && bomb.getY() == y) {
                 return false;
@@ -252,73 +263,74 @@ public class GameViewController {
         return true;
     }
 
+    /**
+     * Met à jour la position graphique du joueur sur la grille.
+     *
+     * @param player Le joueur à afficher.
+     */
     private void updatePlayerPosition(Player player) {
-        // Remettre la case où était le joueur avant à son état d'origine
         int prevX = player.getPreviousX();
         int prevY = player.getPreviousY();
 
         StackPane prevCell = (StackPane) getNodeFromGridPane(gameGrid, prevX, prevY);
         if (prevCell != null) {
-            // Vérifier s'il y a une bombe à l'ancienne position
             boolean hasBombAtPrevPos = activeBombs.stream()
                     .anyMatch(bomb -> bomb.getX() == prevX && bomb.getY() == prevY);
 
             if (hasBombAtPrevPos) {
-                // S'il y a une bombe, garder seulement l'herbe et la bombe
                 if (prevCell.getChildren().size() > 2) {
-                    // Supprimer le joueur mais garder l'herbe (index 0) et la bombe (index 1)
                     prevCell.getChildren().removeIf(node -> prevCell.getChildren().indexOf(node) > 1);
                 }
             } else {
-                // Sinon, garder seulement l'herbe
                 if (prevCell.getChildren().size() > 1) {
                     prevCell.getChildren().removeIf(node -> prevCell.getChildren().indexOf(node) > 0);
                 }
             }
         }
 
-        // Ajouter le joueur à la nouvelle position
         addEntityToGrid(player.getX(), player.getY(), playerPattern);
     }
 
+    /**
+     * Met à jour la position graphique de l'ennemi sur la grille.
+     *
+     * @param enemy L'ennemi à afficher.
+     */
     private void updateEnemyPosition(Enemy enemy) {
-        // Remettre la case où était l'ennemi avant à son état d'origine
         int prevX = enemy.getPreviousX();
         int prevY = enemy.getPreviousY();
 
         StackPane prevCell = (StackPane) getNodeFromGridPane(gameGrid, prevX, prevY);
         if (prevCell != null) {
-            // Vérifier s'il y a une bombe à l'ancienne position
             boolean hasBombAtPrevPos = activeBombs.stream()
                     .anyMatch(bomb -> bomb.getX() == prevX && bomb.getY() == prevY);
 
             if (hasBombAtPrevPos) {
-                // S'il y a une bombe, garder seulement l'herbe et la bombe
                 if (prevCell.getChildren().size() > 2) {
-                    // Supprimer l'ennemi mais garder l'herbe (index 0) et la bombe (index 1)
                     prevCell.getChildren().removeIf(node -> prevCell.getChildren().indexOf(node) > 1);
                 }
             } else {
-                // Sinon, garder seulement l'herbe
                 if (prevCell.getChildren().size() > 1) {
                     prevCell.getChildren().removeIf(node -> prevCell.getChildren().indexOf(node) > 0);
                 }
             }
         }
 
-        // Ajouter l'ennemi à la nouvelle position
         addEntityToGrid(enemy.getX(), enemy.getY(), enemyPattern);
     }
 
+    /**
+     * Gère l'explosion d'une bombe et applique les effets sur la grille.
+     *
+     * @param bomb Bombe qui explose.
+     */
     private void handleExplosion(Bomb bomb) {
         int x = bomb.getX();
         int y = bomb.getY();
         int range = bomb.getRange();
 
-        // Centre de l'explosion
         destroyTile(x, y);
 
-        // Directions : droite, gauche, bas, haut
         int[][] directions = { {1,0}, {-1,0}, {0,1}, {0,-1} };
 
         for (int[] direction : directions) {
@@ -334,6 +346,13 @@ public class GameViewController {
         }
     }
 
+    /**
+     * Détruit une tuile à la position spécifiée (si destructible) et affiche l'explosion.
+     *
+     * @param x Coordonnée X de la tuile.
+     * @param y Coordonnée Y de la tuile.
+     * @return true si l'explosion peut continuer au-delà, false sinon.
+     */
     private boolean destroyTile(int x, int y) {
         Tile tile = map[y][x];
 
@@ -343,7 +362,6 @@ public class GameViewController {
 
         StackPane cell = (StackPane) getNodeFromGridPane(gameGrid, x, y);
         if (cell != null) {
-            // Garder seulement l'arrière-plan et ajouter l'explosion
             if (cell.getChildren().size() > 1) {
                 cell.getChildren().removeIf(node -> cell.getChildren().indexOf(node) > 0);
             }
@@ -353,7 +371,6 @@ public class GameViewController {
             cell.getChildren().add(explosionRect);
         }
 
-        // 2s avant de restaurer la texture appropriée
         javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(2));
         delay.setOnFinished(event -> {
             if (tile.getType() == TileType.WALL_BREAKABLE) {
@@ -371,19 +388,30 @@ public class GameViewController {
         };
     }
 
+    /**
+     * Vérifie si les coordonnées spécifiées se trouvent dans les limites de la carte.
+     *
+     * @param x Coordonnée X.
+     * @param y Coordonnée Y.
+     * @return true si dans les limites, false sinon.
+     */
     private boolean isInBounds(int x, int y) {
-        return x >= 0 && y >= 0 && y < map.length && x < map[0].length;
+        return x >= 0 && y >= map.length && y < map.length && x < map[0].length;
     }
 
+    /**
+     * Redessine une tuile particulière de la grille (arrière-plan uniquement).
+     *
+     * @param x Coordonnée X.
+     * @param y Coordonnée Y.
+     */
     private void redrawTile(int x, int y) {
         StackPane cell = (StackPane) getNodeFromGridPane(gameGrid, x, y);
         if (cell != null) {
-            // Supprimer tout sauf l'arrière-plan
             if (cell.getChildren().size() > 1) {
                 cell.getChildren().removeIf(node -> cell.getChildren().indexOf(node) > 0);
             }
 
-            // Mettre à jour l'arrière-plan si nécessaire
             Rectangle background = (Rectangle) cell.getChildren().get(0);
             switch (map[y][x].getType()) {
                 case FLOOR -> background.setFill(floorPattern);
@@ -393,6 +421,11 @@ public class GameViewController {
         }
     }
 
+    /**
+     * Déplace l'ennemi selon la direction courante ou choisit une nouvelle direction valide.
+     *
+     * @param enemy L'ennemi à déplacer.
+     */
     public void moveEnemy(Enemy enemy) {
         int currentX = enemy.getX();
         int currentY = enemy.getY();

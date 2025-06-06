@@ -13,4 +13,6 @@ module com.superbomberman {
 
     opens com.superbomberman.controller to javafx.fxml;
     exports com.superbomberman.controller;
+    exports com.superbomberman.model.powerup;
+    opens com.superbomberman.model.powerup to javafx.fxml;
 }
