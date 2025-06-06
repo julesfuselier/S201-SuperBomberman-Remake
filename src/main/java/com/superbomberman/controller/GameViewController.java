@@ -2,12 +2,16 @@ package com.superbomberman.controller;
 
 import com.superbomberman.model.*;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -171,6 +175,22 @@ public class GameViewController {
     // drawmap() -> METHODE : DESSINER LA MAP
     // ***************************************************
 
+    @FXML
+    private void handleBackToMenu() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu.fxml"));
+            Parent menuRoot = loader.load();
+
+            Scene menuScene = new Scene(menuRoot);
+            Stage stage = (Stage) gameGrid.getScene().getWindow();
+
+            stage.setScene(menuScene);
+            stage.setTitle("Super Bomberman - Menu");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     private void drawMap(Tile[][] map) {
         for (int row = 0; row < map.length; row++) {
             for (int col = 0; col < map[row].length; col++) {
