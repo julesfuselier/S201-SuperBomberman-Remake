@@ -1,5 +1,7 @@
 package com.superbomberman.model;
 
+import java.util.Random;
+
 /**
  * Représente un joueur dans le jeu Super Bomberman, avec sa position, ses capacités et ses bonus.
  * <p>
@@ -17,20 +19,37 @@ package com.superbomberman.model;
 public class Player {
     /** Position actuelle sur l'axe X du joueur. */
     private int x;
+
     /** Position actuelle sur l'axe Y du joueur. */
     private int y;
+
     /** Position précédente sur l'axe X du joueur. */
     private int previousX;
+
     /** Position précédente sur l'axe Y du joueur. */
     private int previousY;
+
     /** Nombre maximum de bombes que le joueur peut poser en même temps. */
     private int maxBombs = 1;
+
     /** Portée de l'explosion des bombes posées par le joueur. */
     private int explosionRange = 1;
+
     /** Vitesse de déplacement du joueur. */
     private double speed = 1.0;
+
     /** Indique si le joueur peut pousser les bombes. */
     private boolean canKickBombs = false;
+
+    private boolean canThrowBombs = false;
+
+    private boolean hasRemoteDetonation = false;
+
+    private boolean canPassThroughWalls = false;
+
+    private boolean canPassThroughBombs = false;
+
+    private boolean hasLineBombs = false;
 
     /**
      * Définit la position du joueur et met à jour la position précédente.
@@ -132,4 +151,56 @@ public class Player {
     public boolean canKickBombs() {
         return canKickBombs;
     }
+
+    public void setCanThrowBombs(boolean value) {
+        canThrowBombs = value;
+    }
+
+    public boolean canThrowBombs() {
+        return canThrowBombs;
+    }
+
+    public void setRemoteDetonation(boolean value) {
+        hasRemoteDetonation = value;
+    }
+
+    public boolean hasRemoteDetonation() {
+        return hasRemoteDetonation;
+    }
+
+    public void setCanPassThroughWalls(boolean value) {
+        canPassThroughWalls = value;
+    }
+
+    public boolean canPassThroughWalls() {
+        return canPassThroughWalls;
+    }
+
+    public void setCanPassThroughBombs(boolean value) {
+        canPassThroughBombs = value;
+    }
+
+    public boolean canPassThroughBombs() {
+        return canPassThroughBombs;
+    }
+
+    public void setHasLineBombs(boolean value) {
+        hasLineBombs = value;
+    }
+
+    public boolean hasLineBombs() {
+        return hasLineBombs;
+    }
+
+    public void applyRandomMalus() {
+        int r = new Random().nextInt(3);
+        switch (r) {
+            case 0 -> speed = Math.max(0.5, speed - 0.5);
+            case 2 -> explosionRange = Math.max(1, explosionRange - 1);
+        }
+    }
+
+
+
+
 }

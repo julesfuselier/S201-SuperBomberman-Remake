@@ -8,6 +8,7 @@ public class PowerUpFactory {
     public static PowerUp create(PowerUpType type, int x, int y) {
         return switch (type) {
             case RANGE_UP     -> new RangeUp(x, y);
+            case BOMB_UP     -> new BombUp(x, y);
             case SPEED_UP    -> new SpeedUp(x, y);
             case KICK        -> new KickPower(x, y);
             case GLOVE       -> new GlovePower(x, y);
