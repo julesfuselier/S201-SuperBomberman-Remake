@@ -46,7 +46,7 @@
                 </HBox>
             </VBox>
 
-            <!-- Section Jeu -->
+            <!--
             <VBox spacing="15">
                 <Label text="JEU" textFill="#e74c3c" style="-fx-font-weight: bold; -fx-font-size: 18px;" />
 
@@ -74,7 +74,7 @@
                             snapToTicks="true" showTickLabels="true" showTickMarks="true"
                             style="-fx-control-inner-background: #34495e;" />
                 </HBox>
-            </VBox>
+            </VBox>   -->
 
             <!-- Section Contrôles -->
             <VBox spacing="15">

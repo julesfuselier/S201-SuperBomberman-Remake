@@ -389,7 +389,7 @@ public class GameViewController extends OptionsController{
             cell.getChildren().add(explosionRect);
         }
 
-        javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(2));
+        javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(0.7));
         delay.setOnFinished(event -> {
             if (tile.getType() == TileType.WALL_BREAKABLE) {
                 map[y][x] = new Tile(TileType.FLOOR);

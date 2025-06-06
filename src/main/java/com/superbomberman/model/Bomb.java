@@ -24,7 +24,7 @@ public class Bomb {
     }
 
     public void startCountdown(Runnable onExplode) {
-        timer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+        timer = new Timeline(new KeyFrame(Duration.seconds(1.5), e -> {
             exploded = true;
             onExplode.run();  // Cette ligne exécute le code qu'on lui a passé
         }));

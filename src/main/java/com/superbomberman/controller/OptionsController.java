@@ -66,8 +66,6 @@ public class OptionsController {
     public void initialize() {
         // Initialiser les valeurs des contrôles avec les paramètres sauvegardés
         soundVolumeSlider.setValue(soundVolume);
-        difficultyComboBox.setValue(difficulty);
-        gameSpeedSlider.setValue(gameSpeed);
 
         // Lier le label au slider pour afficher la valeur en temps réel
         soundVolumeSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
