@@ -25,6 +25,7 @@ public class GameViewController {
 
     private Tile[][] map;
     private int[] enemyCurrDirection;
+    private GameMode gameMode = GameMode.ONE_PLAYER; // Mode par défaut
 
     // Liste pour stocker les bombes actives
     private List<Bomb> activeBombs = new ArrayList<>();
@@ -40,7 +41,7 @@ public class GameViewController {
     private ImagePattern playerPattern = new ImagePattern(playerImg);
 
     Image player2Img = new Image(
-            Objects.requireNonNull(getClass().getResource("/images/player2.png")).toExternalForm()
+            Objects.requireNonNull(getClass().getResource("/images/enemy.png")).toExternalForm()
     );
     private ImagePattern player2Pattern = new ImagePattern(player2Img);
 
@@ -74,6 +75,14 @@ public class GameViewController {
     );
     private ImagePattern bombPattern = new ImagePattern(bombImg);
 
+    /**
+     * Méthode pour définir le mode de jeu
+     */
+    public void setGameMode(GameMode mode) {
+        this.gameMode = mode;
+        System.out.println("Mode de jeu défini : " + mode);
+    }
+
     public void initialize() {
         try {
             map = MapLoader.loadMap("src/main/resources/maps/level2.txt");
@@ -89,14 +98,14 @@ public class GameViewController {
             addEntityToGrid(player1.getX(), player1.getY(), playerPattern);
         }
 
-        // Initialiser le joueur 2
-        if(player2 != null && map[player2.getY()][player2.getX()].getType() == TileType.FLOOR) {
+        // Initialiser le joueur 2 seulement en mode 2 joueurs
+        if(gameMode == GameMode.TWO_PLAYER && player2 != null && map[player2.getY()][player2.getX()].getType() == TileType.FLOOR) {
             map[player2.getY()][player2.getX()] = new Tile(TileType.PLAYER2);
             addEntityToGrid(player2.getX(), player2.getY(), player2Pattern);
         }
 
-        // Initialiser l'ennemi
-        if(enemy != null && map[enemy.getY()][enemy.getX()].getType() == TileType.FLOOR) {
+        // Initialiser l'ennemi seulement en mode 1 joueur
+        if(gameMode == GameMode.ONE_PLAYER && enemy != null && map[enemy.getY()][enemy.getX()].getType() == TileType.FLOOR) {
             map[enemy.getY()][enemy.getX()] = new Tile(TileType.ENEMY);
             addEntityToGrid(enemy.getX(), enemy.getY(), enemyPattern);
         }
@@ -140,22 +149,22 @@ public class GameViewController {
                     }
                 }
 
-                // Contrôles Joueur 2 (WASD)
+                // Contrôles Joueur 2 (WASD) - seulement en mode 2 joueurs
                 case Q -> {
-                    if (player2 != null) p2NewX -= 1;
+                    if (gameMode == GameMode.TWO_PLAYER && player2 != null) p2NewX -= 1;
                 }
                 case D -> {
-                    if (player2 != null) p2NewX += 1;
+                    if (gameMode == GameMode.TWO_PLAYER && player2 != null) p2NewX += 1;
                 }
                 case Z -> {
-                    if (player2 != null) p2NewY -= 1;
+                    if (gameMode == GameMode.TWO_PLAYER && player2 != null) p2NewY -= 1;
                 }
                 case S -> {
-                    if (player2 != null) p2NewY += 1;
+                    if (gameMode == GameMode.TWO_PLAYER && player2 != null) p2NewY += 1;
                 }
                 case A -> {
-                    // Bombe du joueur 2
-                    if (player2 != null && canPlaceBombPlayer2) {
+                    // Bombe du joueur 2 - seulement en mode 2 joueurs
+                    if (gameMode == GameMode.TWO_PLAYER && player2 != null && canPlaceBombPlayer2) {
                         System.out.println("Joueur 2 pose une bombe !");
                         Bomb bomb = new Bomb(player2.getX(), player2.getY(), 10, 1);
                         placeBombVisual(bomb);
@@ -178,14 +187,14 @@ public class GameViewController {
                 updatePlayerPosition(player1, playerPattern);
             }
 
-            // Déplacer le joueur 2
-            if (player2 != null && canMoveTo(p2NewX, p2NewY)) {
+            // Déplacer le joueur 2 seulement en mode 2 joueurs
+            if (gameMode == GameMode.TWO_PLAYER && player2 != null && canMoveTo(p2NewX, p2NewY)) {
                 player2.setPosition(p2NewX, p2NewY);
                 updatePlayerPosition(player2, player2Pattern);
             }
 
-            // Déplacer l'ennemi
-            if (enemy != null) {
+            // Déplacer l'ennemi seulement en mode 1 joueur
+            if (gameMode == GameMode.ONE_PLAYER && enemy != null) {
                 moveEnemy(enemy);
                 updateEnemyPosition(enemy);
             }
@@ -264,10 +273,10 @@ public class GameViewController {
         if (player1.getX() == x && player1.getY() == y) {
             return false;
         }
-        if (player2 != null && player2.getX() == x && player2.getY() == y) {
+        if (gameMode == GameMode.TWO_PLAYER && player2 != null && player2.getX() == x && player2.getY() == y) {
             return false;
         }
-        if (enemy != null && enemy.getX() == x && enemy.getY() == y) {
+        if (gameMode == GameMode.ONE_PLAYER && enemy != null && enemy.getX() == x && enemy.getY() == y) {
             return false;
         }
 

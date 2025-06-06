@@ -9,10 +9,11 @@ import javafx.scene.Parent;
 public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/game-view.fxml"));
+        // Charger le menu principal au lieu du jeu directement
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu-view.fxml"));
         Parent root = loader.load();
         Scene scene = new Scene(root);
-        primaryStage.setTitle("Bomberman JavaFX");
+        primaryStage.setTitle("Bomberman JavaFX - Menu");
         primaryStage.setScene(scene);
         primaryStage.show();
     }
