@@ -10,6 +10,6 @@ public enum PowerUpType {
     WALL_PASS,
     BOMB_PASS,
     LINE_BOMB,
-    SKULL
+    BOMB_COUNT, BOMB_RANGE, SKULL
 }
 

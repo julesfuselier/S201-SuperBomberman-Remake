@@ -14,8 +14,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.superbomberman.model.powerup.*;
+
+
 import static com.superbomberman.model.MapLoader.enemy;
 import static com.superbomberman.model.MapLoader.player1;
+import static javafx.scene.CacheHint.SPEED;
 
 /**
  * Contrôleur principal de la vue de jeu pour Super Bomberman.
@@ -55,6 +59,10 @@ public class GameViewController {
 
     /** Indique si le joueur peut actuellement poser une nouvelle bombe. */
     private boolean canPlaceBomb = true;
+
+    private List<PowerUp> activePowerUps = new ArrayList<>();
+    private Image powerUpImg = new Image(Objects.requireNonNull(getClass().getResource("/images/powerup.png")).toExternalForm());
+    private ImagePattern powerUpPattern = new ImagePattern(powerUpImg);
 
     // Images et patterns pour le rendu des entités et tuiles
     Image playerImg = new Image(
@@ -289,6 +297,7 @@ public class GameViewController {
         }
 
         addEntityToGrid(player.getX(), player.getY(), playerPattern);
+        checkPlayerOnPowerUp(player);
     }
 
     /**
@@ -375,6 +384,11 @@ public class GameViewController {
         delay.setOnFinished(event -> {
             if (tile.getType() == TileType.WALL_BREAKABLE) {
                 map[y][x] = new Tile(TileType.FLOOR);
+                if (Math.random() < 0.3) { // 30% de chance, adapte le taux si besoin
+                    PowerUp powerUp = new PowerUp(x, y, PowerUpType.randomType());
+                    activePowerUps.add(powerUp);
+                    placePowerUpVisual(powerUp);
+                }
             }
             redrawTile(x, y);
         });
@@ -455,6 +469,47 @@ public class GameViewController {
                 enemy.setPosition(newX, newY);
                 updateEnemyPosition(enemy);
             }
+        }
+    }
+
+    private void placePowerUpVisual(PowerUp powerUp) {
+        StackPane cell = (StackPane) getNodeFromGridPane(gameGrid, powerUp.getX(), powerUp.getY());
+        if (cell != null) {
+            Rectangle powerUpRect = new Rectangle(40, 40);
+            powerUpRect.setFill(powerUpPattern);
+            cell.getChildren().add(powerUpRect);
+        }
+    }
+
+    private void checkPlayerOnPowerUp(Player player) {
+        PowerUp toCollect = null;
+        for (PowerUp powerUp : activePowerUps) {
+            if (powerUp.getX() == player.getX() && powerUp.getY() == player.getY()) {
+                toCollect = powerUp;
+                break;
+            }
+        }
+        if (toCollect != null) {
+            applyPowerUpEffect(player, toCollect);
+            removePowerUpVisual(toCollect);
+            activePowerUps.remove(toCollect);
+        }
+    }
+
+    private void removePowerUpVisual(PowerUp powerUp) {
+        StackPane cell = (StackPane) getNodeFromGridPane(gameGrid, powerUp.getX(), powerUp.getY());
+        if (cell != null) {
+            if (cell.getChildren().size() > 1) {
+                cell.getChildren().removeIf(node -> cell.getChildren().indexOf(node) > 0);
+            }
+        }
+    }
+    private void applyPowerUpEffect(Player player, PowerUp powerUp) {
+        switch (powerUp.getType()) {
+            case BOMB_RANGE -> player.increaseExplosionRange();
+            case BOMB_COUNT -> player.increaseMaxBombs();
+            case SPEED -> player.increaseSpeed();
+
         }
     }
 }

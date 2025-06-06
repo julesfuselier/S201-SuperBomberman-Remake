@@ -19,5 +19,13 @@ public abstract class PowerUp {
     }
 
     public abstract void applyTo(Player player);
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
 }
 
