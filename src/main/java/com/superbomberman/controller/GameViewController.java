@@ -16,7 +16,6 @@ import java.util.Objects;
 
 import com.superbomberman.model.powerup.*;
 
-
 import static com.superbomberman.model.MapLoader.enemy;
 import static com.superbomberman.model.MapLoader.player1;
 import static javafx.scene.CacheHint.SPEED;
@@ -139,7 +138,9 @@ public class GameViewController {
                 case SPACE -> {
                     // Pose d'une bombe
                     if (canPlaceBomb) {
-                        Bomb bomb = new Bomb(player1.getX(), player1.getY(), 10, 1);
+                        System.out.println("Range : " + player1.getExplosionRange());
+                        Bomb bomb = new Bomb(player1.getX(), player1.getY(), 10, player1.getExplosionRange());
+                        System.out.println("Range Bomb : " + bomb.getRange());
                         placeBombVisual(bomb);
                         activeBombs.add(bomb);
                         canPlaceBomb = false;
@@ -364,6 +365,7 @@ public class GameViewController {
      */
     private boolean destroyTile(int x, int y) {
         Tile tile = map[y][x];
+        System.out.println("Destruction de la tuile en (" + x + ", " + y + ") de type: " + tile.getType());
 
         if (tile.getType() == TileType.WALL) {
             return false;
@@ -383,11 +385,32 @@ public class GameViewController {
         javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(2));
         delay.setOnFinished(event -> {
             if (tile.getType() == TileType.WALL_BREAKABLE) {
+                System.out.println("Mur cassable détruit en (" + x + ", " + y + ")");
                 map[y][x] = new Tile(TileType.FLOOR);
-                if (Math.random() < 0.3) { // 30% de chance, adapte le taux si besoin
-                    PowerUp powerUp = new PowerUp(x, y, PowerUpType.randomType());
-                    activePowerUps.add(powerUp);
-                    placePowerUpVisual(powerUp);
+
+                double random = Math.random();
+                System.out.println("Random généré: " + random);
+                if (random < 0.25) { // 50% de chance
+                    try {
+                        PowerUpType type = PowerUpType.randomType();
+                        System.out.println("Type de power-up généré: " + type);
+                        PowerUp powerUp = PowerUpFactory.create(type, x, y);
+                        System.out.println("Power-up créé: " + powerUp);
+
+                        if (powerUp != null) {
+                            activePowerUps.add(powerUp);
+                            placePowerUpVisual(powerUp);
+                            System.out.println("Power-up ajouté et affiché en (" + x + ", " + y + ")");
+                            System.out.println("Nombre total de power-ups actifs: " + activePowerUps.size());
+                        } else {
+                            System.out.println("ERREUR: PowerUp créé est null!");
+                        }
+                    } catch (Exception e) {
+                        System.out.println("ERREUR lors de la création du power-up: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                } else {
+                    System.out.println("Pas de power-up généré (probabilité)");
                 }
             }
             redrawTile(x, y);
@@ -410,7 +433,7 @@ public class GameViewController {
      * @return true si dans les limites, false sinon.
      */
     private boolean isInBounds(int x, int y) {
-        return x >= 0 && y >= map.length && y < map.length && x < map[0].length;
+        return x >= 0 && y >= 0 && y < map.length && x < map[0].length;
     }
 
     /**
@@ -422,7 +445,11 @@ public class GameViewController {
     private void redrawTile(int x, int y) {
         StackPane cell = (StackPane) getNodeFromGridPane(gameGrid, x, y);
         if (cell != null) {
-            if (cell.getChildren().size() > 1) {
+            // Ne pas supprimer le power-up s'il y en a un
+            boolean hasPowerUp = activePowerUps.stream()
+                    .anyMatch(powerUp -> powerUp.getX() == x && powerUp.getY() == y);
+
+            if (!hasPowerUp && cell.getChildren().size() > 1) {
                 cell.getChildren().removeIf(node -> cell.getChildren().indexOf(node) > 0);
             }
 
@@ -473,11 +500,15 @@ public class GameViewController {
     }
 
     private void placePowerUpVisual(PowerUp powerUp) {
+        System.out.println("Tentative d'affichage du power-up en (" + powerUp.getX() + ", " + powerUp.getY() + ")");
         StackPane cell = (StackPane) getNodeFromGridPane(gameGrid, powerUp.getX(), powerUp.getY());
         if (cell != null) {
             Rectangle powerUpRect = new Rectangle(40, 40);
             powerUpRect.setFill(powerUpPattern);
             cell.getChildren().add(powerUpRect);
+            System.out.println("Power-up affiché avec succès!");
+        } else {
+            System.out.println("ERREUR: Cellule introuvable pour afficher le power-up!");
         }
     }
 
@@ -490,9 +521,11 @@ public class GameViewController {
             }
         }
         if (toCollect != null) {
+            System.out.println("Power-up collecté: " + toCollect.getType());
             applyPowerUpEffect(player, toCollect);
             removePowerUpVisual(toCollect);
             activePowerUps.remove(toCollect);
+            System.out.println("Power-ups restants: " + activePowerUps.size());
         }
     }
 
@@ -504,12 +537,21 @@ public class GameViewController {
             }
         }
     }
+
     private void applyPowerUpEffect(Player player, PowerUp powerUp) {
         switch (powerUp.getType()) {
-            case BOMB_RANGE -> player.increaseExplosionRange();
-            case BOMB_COUNT -> player.increaseMaxBombs();
-            case SPEED -> player.increaseSpeed();
-
+            case RANGE_UP -> {
+                player.increaseExplosionRange();
+                System.out.println("Range augmentée! Nouvelle range: " + player.getExplosionRange());
+            }
+            case BOMB_UP -> {
+                player.increaseMaxBombs();
+                System.out.println("Nombre de bombes augmenté!");
+            }
+            case SPEED_UP -> {
+                player.increaseSpeed();
+                System.out.println("Vitesse augmentée!");
+            }
         }
     }
 }

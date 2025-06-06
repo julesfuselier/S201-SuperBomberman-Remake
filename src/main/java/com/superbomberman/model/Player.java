@@ -33,7 +33,7 @@ public class Player {
     private int maxBombs = 1;
 
     /** Portée de l'explosion des bombes posées par le joueur. */
-    private int explosionRange = 1;
+    private int explosionRange = 2;
 
     /** Vitesse de déplacement du joueur. */
     private double speed = 1.0;
