@@ -22,7 +22,7 @@ import static com.superbomberman.model.MapLoader.enemy;
 import static com.superbomberman.model.MapLoader.player1;
 import static com.superbomberman.model.MapLoader.player2;
 
-public class GameViewController {
+public class GameViewController extends OptionsController{
 
     @FXML
     private GridPane gameGrid;
@@ -116,46 +116,51 @@ public class GameViewController {
             int p2NewX = player2 != null ? player2.getX() : -1;
             int p2NewY = player2 != null ? player2.getY() : -1;
 
-            switch (event.getCode()) {
-                // Contrôles Joueur 1 (flèches directionnelles)
-                case LEFT -> p1NewX -= 1;
-                case RIGHT -> p1NewX += 1;
-                case UP -> p1NewY -= 1;
-                case DOWN -> p1NewY += 1;
-                case SPACE -> {
-                    // Bombe du joueur 1
-                    if (canPlaceBombPlayer1) {
-                        System.out.println("Joueur 1 pose une bombe !");
-                        Bomb bomb = new Bomb(player1.getX(), player1.getY(), 10, 1);
-                        placeBombVisual(bomb);
-                        activeBombs.add(bomb);
-                        canPlaceBombPlayer1 = false;
+            // Récupérer les touches configurées
+            String up1 = getUpKey1();
+            String down1 = getDownKey1();
+            String left1 = getLeftKey1();
+            String right1 = getRightKey1();
+            String bomb1 = getBombKey1();
 
-                        bomb.startCountdown(() -> {
-                            System.out.println("BOOM ! (Joueur 1)");
-                            handleExplosion(bomb);
-                            activeBombs.remove(bomb);
-                            canPlaceBombPlayer1 = true;
-                        });
-                    }
-                }
+            String up2 = getUpKey2();
+            String down2 = getDownKey2();
+            String left2 = getLeftKey2();
+            String right2 = getRightKey2();
+            String bomb2 = getBombKey2();
 
-                // Contrôles Joueur 2 (WASD)
-                case Q -> {
-                    if (player2 != null) p2NewX -= 1;
+            // Contrôles Joueur 1
+            if (event.getCode().toString().equals(left1)) p1NewX -= 1;
+            else if (event.getCode().toString().equals(right1)) p1NewX += 1;
+            else if (event.getCode().toString().equals(up1)) p1NewY -= 1;
+            else if (event.getCode().toString().equals(down1)) p1NewY += 1;
+            else if (event.getCode().toString().equals(bomb1)) {
+                // Bombe du joueur 1
+                if (canPlaceBombPlayer1) {
+                    System.out.println("Joueur 1 pose une bombe !");
+                    Bomb bomb = new Bomb(player1.getX(), player1.getY(), 10, 1);
+                    placeBombVisual(bomb);
+                    activeBombs.add(bomb);
+                    canPlaceBombPlayer1 = false;
+
+                    bomb.startCountdown(() -> {
+                        System.out.println("BOOM ! (Joueur 1)");
+                        handleExplosion(bomb);
+                        activeBombs.remove(bomb);
+                        canPlaceBombPlayer1 = true;
+                    });
                 }
-                case D -> {
-                    if (player2 != null) p2NewX += 1;
-                }
-                case Z -> {
-                    if (player2 != null) p2NewY -= 1;
-                }
-                case S -> {
-                    if (player2 != null) p2NewY += 1;
-                }
-                case A -> {
+            }
+
+            // Contrôles Joueur 2
+            if (player2 != null) {
+                if (event.getCode().toString().equals(left2)) p2NewX -= 1;
+                else if (event.getCode().toString().equals(right2)) p2NewX += 1;
+                else if (event.getCode().toString().equals(up2)) p2NewY -= 1;
+                else if (event.getCode().toString().equals(down2)) p2NewY += 1;
+                else if (event.getCode().toString().equals(bomb2)) {
                     // Bombe du joueur 2
-                    if (player2 != null && canPlaceBombPlayer2) {
+                    if (canPlaceBombPlayer2) {
                         System.out.println("Joueur 2 pose une bombe !");
                         Bomb bomb = new Bomb(player2.getX(), player2.getY(), 10, 1);
                         placeBombVisual(bomb);
