@@ -1,5 +1,6 @@
 package com.superbomberman.controller;
 
+import com.superbomberman.model.GameMode;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -18,6 +19,12 @@ public class MenuController {
 
     @FXML
     private Button optionsButton;
+
+    @FXML
+    private Button onePlayerBtn;
+
+    @FXML
+    private Button twoPlayerBtn;
 
     @FXML
     private Button exitButton;
@@ -85,5 +92,25 @@ public class MenuController {
         // Fermer l'application
         Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         stage.close();
+    }
+
+    @FXML
+    private void startOnePlayerGame() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/game-view.fxml"));
+            Parent root = loader.load();
+
+            // Récupérer le contrôleur du jeu et définir le mode 1 joueur
+            GameViewController gameController = loader.getController();
+            gameController.setGameMode(GameMode.ONE_PLAYER);
+
+            Stage stage = (Stage) onePlayerBtn.getScene().getWindow();
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.setTitle("Bomberman - 1 Joueur");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

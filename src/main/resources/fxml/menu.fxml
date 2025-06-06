@@ -24,7 +24,14 @@
     <!-- Boutons du menu -->
     <VBox alignment="CENTER" spacing="15">
         <Button fx:id="startGameButton" onAction="#handleStartGame"
-                prefWidth="200" prefHeight="40" text="NOUVELLE PARTIE">
+                prefWidth="200" prefHeight="40" text="Partie 2 Joueurs">
+            <font>
+                <Font size="14.0" />
+            </font>
+        </Button>
+
+        <Button fx:id="startGameButton" onAction="#handleStartGame"
+                prefWidth="200" prefHeight="40" text="Partie 1 Joueur">
             <font>
                 <Font size="14.0" />
             </font>
