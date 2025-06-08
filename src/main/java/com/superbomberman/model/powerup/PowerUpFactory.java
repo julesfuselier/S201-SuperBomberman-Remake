@@ -16,7 +16,7 @@ public class PowerUpFactory {
             case WALL_PASS   -> new WallPass(x, y);
             case BOMB_PASS   -> new BombPass(x, y);
             case LINE_BOMB   -> new LineBomb(x, y);
-            case SKULL       -> new Skull(x, y);
+            case SKULL       -> new SkullMalus(x, y);
         };
     }
 
