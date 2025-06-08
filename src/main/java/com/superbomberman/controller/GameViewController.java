@@ -36,8 +36,12 @@ import static com.superbomberman.controller.MenuController.isOnePlayer;
  * la pose et la détonation des bombes, ainsi que les interactions clavier.
  * Support complet du mode 1 et 2 joueurs avec toutes les fonctionnalités de power-ups.
  *
+ * Contrôles:
+ * - Joueur 1: Flèches directionnelles + SPACE (bombe) + SHIFT (glove) + L (line) + R (remote)
+ * - Joueur 2: ZQSD + ENTER (bombe) + CTRL (glove) + K (line) + O (remote)
+ *
  * @author Jules Fuselier
- * @version 2.0
+ * @version 2.1
  * @since 2025-06-08
  */
 public class GameViewController extends OptionsController {
@@ -157,6 +161,32 @@ public class GameViewController extends OptionsController {
 
         gameGrid.setFocusTraversable(true);
         gameGrid.requestFocus();
+
+        // Afficher les contrôles
+        displayControls();
+    }
+
+    /**
+     * Affiche les contrôles dans la console pour information.
+     */
+    private void displayControls() {
+        System.out.println("=== CONTRÔLES DU JEU ===");
+        System.out.println("Joueur 1 (Bleu):");
+        System.out.println("  - Déplacement: Flèches directionnelles");
+        System.out.println("  - Bombe: ESPACE");
+        System.out.println("  - Ramasser/Lancer: SHIFT");
+        System.out.println("  - LineBomb: L");
+        System.out.println("  - Remote: R");
+
+        if (!isOnePlayer) {
+            System.out.println("\nJoueur 2 (Rouge):");
+            System.out.println("  - Déplacement: Z-Q-S-D (AZERTY)");
+            System.out.println("  - Bombe: ENTRÉE");
+            System.out.println("  - Ramasser/Lancer: CTRL");
+            System.out.println("  - LineBomb: K");
+            System.out.println("  - Remote: O");
+        }
+        System.out.println("========================");
     }
 
     private void startGameLoop() {
@@ -189,8 +219,8 @@ public class GameViewController extends OptionsController {
                     lastAutoBombTimePlayer1 = now;
                 }
 
-                if (!isOnePlayer && player2 != null && player2.hasMalus(MalusType.AUTO_BOMB) && 
-                    now - lastAutoBombTimePlayer2 >= AUTO_BOMB_INTERVAL) {
+                if (!isOnePlayer && player2 != null && player2.hasMalus(MalusType.AUTO_BOMB) &&
+                        now - lastAutoBombTimePlayer2 >= AUTO_BOMB_INTERVAL) {
                     placeBomb(player2, 2);
                     lastAutoBombTimePlayer2 = now;
                 }
@@ -200,7 +230,7 @@ public class GameViewController extends OptionsController {
     }
 
     private void handleImmediateActions() {
-        // Actions du joueur 1
+        // Actions du joueur 1 (Flèches + SPACE + SHIFT + L + R)
         if (pressedKeys.contains(javafx.scene.input.KeyCode.SPACE)) {
             placeBomb(player1, 1);
             pressedKeys.remove(javafx.scene.input.KeyCode.SPACE); // Éviter la répétition
@@ -218,7 +248,7 @@ public class GameViewController extends OptionsController {
             pressedKeys.remove(javafx.scene.input.KeyCode.R);
         }
 
-        // Actions du joueur 2 (mode 2 joueurs)
+        // Actions du joueur 2 (ZQSD + ENTER + CTRL + K + O)
         if (!isOnePlayer && player2 != null) {
             if (pressedKeys.contains(javafx.scene.input.KeyCode.ENTER)) {
                 placeBomb(player2, 2);
@@ -262,15 +292,17 @@ public class GameViewController extends OptionsController {
         // Déterminer les touches selon le joueur
         javafx.scene.input.KeyCode leftKey, rightKey, upKey, downKey;
         if (playerNumber == 1) {
+            // Joueur 1: Flèches directionnelles
             leftKey = javafx.scene.input.KeyCode.LEFT;
             rightKey = javafx.scene.input.KeyCode.RIGHT;
             upKey = javafx.scene.input.KeyCode.UP;
             downKey = javafx.scene.input.KeyCode.DOWN;
         } else {
-            leftKey = javafx.scene.input.KeyCode.A;
-            rightKey = javafx.scene.input.KeyCode.D;
-            upKey = javafx.scene.input.KeyCode.W;
-            downKey = javafx.scene.input.KeyCode.S;
+            // Joueur 2: ZQSD (AZERTY français)
+            leftKey = javafx.scene.input.KeyCode.Q;    // Q = gauche
+            rightKey = javafx.scene.input.KeyCode.D;   // D = droite
+            upKey = javafx.scene.input.KeyCode.Z;      // Z = haut
+            downKey = javafx.scene.input.KeyCode.S;    // S = bas
         }
 
         // Calculer le mouvement
@@ -297,7 +329,7 @@ public class GameViewController extends OptionsController {
             player.setPosition(newX, newY);
             ImagePattern pattern = (playerNumber == 1) ? playerPattern : player2Pattern;
             updatePlayerPosition(player, pattern);
-            
+
             // Mettre à jour le timestamp
             if (playerNumber == 1) {
                 lastPlayer1MoveTime = currentTime;
@@ -350,7 +382,7 @@ public class GameViewController extends OptionsController {
         }
 
         int currentBombCount = (playerNumber == 1) ? currentBombCountPlayer1 : currentBombCountPlayer2;
-        
+
         if (currentBombCount < player.getMaxBombs()) {
             System.out.println("Joueur " + playerNumber + ": Pose d'une bombe (" + (currentBombCount + 1) + "/" + player.getMaxBombs() + ")");
 
@@ -359,7 +391,7 @@ public class GameViewController extends OptionsController {
 
             placeBombVisual(bomb);
             activeBombs.add(bomb);
-            
+
             // Incrémenter le bon compteur
             if (playerNumber == 1) {
                 currentBombCountPlayer1++;
@@ -376,16 +408,16 @@ public class GameViewController extends OptionsController {
                     activeBombs.remove(bomb);
                     flyingBombs.remove(bomb);
                     kickingBombs.remove(bomb);
-                    
+
                     // Décrémenter le bon compteur
                     if (playerNumber == 1) {
                         currentBombCountPlayer1--;
                     } else {
                         currentBombCountPlayer2--;
                     }
-                    
-                    System.out.println("Joueur " + playerNumber + ": Bombe explosée. Bombes restantes : " + 
-                        ((playerNumber == 1) ? currentBombCountPlayer1 : currentBombCountPlayer2) + "/" + player.getMaxBombs());
+
+                    System.out.println("Joueur " + playerNumber + ": Bombe explosée. Bombes restantes : " +
+                            ((playerNumber == 1) ? currentBombCountPlayer1 : currentBombCountPlayer2) + "/" + player.getMaxBombs());
                 });
             }
         } else {
@@ -412,7 +444,7 @@ public class GameViewController extends OptionsController {
         // Chercher une bombe à ramasser
         for (Bomb bomb : activeBombs) {
             if (bomb.getX() == player.getX() && bomb.getY() == player.getY() &&
-                bomb.getOwner() == player && !bomb.isFlying() && !bomb.isMoving()) {
+                    bomb.getOwner() == player && !bomb.isFlying() && !bomb.isMoving()) {
                 bombToPickup = bomb;
                 break;
             }
@@ -424,7 +456,7 @@ public class GameViewController extends OptionsController {
             if (player.pickUpBomb(bombToPickup)) {
                 activeBombs.remove(bombToPickup);
                 kickingBombs.remove(bombToPickup);
-                
+
                 // Décrémenter le bon compteur
                 if (playerNumber == 1) {
                     currentBombCountPlayer1--;
@@ -448,7 +480,7 @@ public class GameViewController extends OptionsController {
             thrownBomb.setPosition(player.getX(), player.getY());
             activeBombs.add(thrownBomb);
             flyingBombs.add(thrownBomb);
-            
+
             // Incrémenter le bon compteur
             if (playerNumber == 1) {
                 currentBombCountPlayer1++;
@@ -465,14 +497,14 @@ public class GameViewController extends OptionsController {
                 activeBombs.remove(thrownBomb);
                 flyingBombs.remove(thrownBomb);
                 kickingBombs.remove(thrownBomb);
-                
+
                 // Décrémenter le bon compteur
                 if (playerNumber == 1) {
                     currentBombCountPlayer1--;
                 } else {
                     currentBombCountPlayer2--;
                 }
-                
+
                 System.out.println("Joueur " + playerNumber + ": Bombe lancée explosée !");
             });
 
@@ -494,7 +526,7 @@ public class GameViewController extends OptionsController {
 
         int currentBombCount = (playerNumber == 1) ? currentBombCountPlayer1 : currentBombCountPlayer2;
         int bombsToPlace = player.getMaxBombs() - currentBombCount;
-        
+
         if (bombsToPlace <= 0) {
             System.out.println("Joueur " + playerNumber + ": Limite de bombes atteinte !");
             return;
@@ -526,7 +558,7 @@ public class GameViewController extends OptionsController {
 
             placeBombVisual(bomb);
             activeBombs.add(bomb);
-            
+
             // Incrémenter le bon compteur
             if (playerNumber == 1) {
                 currentBombCountPlayer1++;
@@ -543,7 +575,7 @@ public class GameViewController extends OptionsController {
                     activeBombs.remove(bomb);
                     flyingBombs.remove(bomb);
                     kickingBombs.remove(bomb);
-                    
+
                     // Décrémenter le bon compteur
                     if (playerNumber == 1) {
                         currentBombCountPlayer1--;
@@ -582,7 +614,7 @@ public class GameViewController extends OptionsController {
             activeBombs.remove(bomb);
             flyingBombs.remove(bomb);
             kickingBombs.remove(bomb);
-            
+
             // Décrémenter le bon compteur
             if (playerNumber == 1) {
                 currentBombCountPlayer1--;
@@ -611,8 +643,8 @@ public class GameViewController extends OptionsController {
 
         // Vérifier s'il y a des entités
         if ((player1.getX() == x && player1.getY() == y) ||
-            (!isOnePlayer && player2 != null && player2.getX() == x && player2.getY() == y) ||
-            (enemy != null && enemy.getX() == x && enemy.getY() == y)) {
+                (!isOnePlayer && player2 != null && player2.getX() == x && player2.getY() == y) ||
+                (enemy != null && enemy.getX() == x && enemy.getY() == y)) {
             return false;
         }
 
@@ -631,8 +663,8 @@ public class GameViewController extends OptionsController {
 
             // Vérifier collision
             if (newX < 0 || newX >= map[0].length || newY < 0 || newY >= map.length ||
-                map[newY][newX].getType() == TileType.WALL ||
-                map[newY][newX].getType() == TileType.WALL_BREAKABLE) {
+                    map[newY][newX].getType() == TileType.WALL ||
+                    map[newY][newX].getType() == TileType.WALL_BREAKABLE) {
 
                 bomb.stopFlying();
                 bombsToStop.add(bomb);
@@ -680,15 +712,15 @@ public class GameViewController extends OptionsController {
         // Vérifier les autres bombes immobiles
         for (Bomb otherBomb : activeBombs) {
             if (otherBomb.getX() == x && otherBomb.getY() == y &&
-                !otherBomb.isFlying() && !otherBomb.isMoving()) {
+                    !otherBomb.isFlying() && !otherBomb.isMoving()) {
                 return false;
             }
         }
 
         // Vérifier les joueurs
         if ((player1.getX() == x && player1.getY() == y) ||
-            (!isOnePlayer && player2 != null && player2.getX() == x && player2.getY() == y) ||
-            (enemy != null && enemy.getX() == x && enemy.getY() == y)) {
+                (!isOnePlayer && player2 != null && player2.getX() == x && player2.getY() == y) ||
+                (enemy != null && enemy.getX() == x && enemy.getY() == y)) {
             return false;
         }
 
@@ -729,7 +761,7 @@ public class GameViewController extends OptionsController {
         if (tile.getType() == TileType.WALL_BREAKABLE) {
             // Vérifier WallPass
             if ((entity == player1 && player1.canPassThroughWalls()) ||
-                (!isOnePlayer && entity == player2 && player2 != null && player2.canPassThroughWalls())) {
+                    (!isOnePlayer && entity == player2 && player2 != null && player2.canPassThroughWalls())) {
                 return true;
             } else {
                 return false;
@@ -741,9 +773,9 @@ public class GameViewController extends OptionsController {
             if (bomb.getX() == x && bomb.getY() == y) {
                 // Vérifier Kick Power
                 if (((entity == player1 && player1.canKickBombs()) ||
-                     (!isOnePlayer && entity == player2 && player2 != null && player2.canKickBombs())) 
-                     && !bomb.isFlying() && !bomb.isMoving()) {
-                    
+                        (!isOnePlayer && entity == player2 && player2 != null && player2.canKickBombs()))
+                        && !bomb.isFlying() && !bomb.isMoving()) {
+
                     Player currentPlayer = (Player) entity;
                     int kickDirX = x - currentPlayer.getX();
                     int kickDirY = y - currentPlayer.getY();
@@ -755,7 +787,7 @@ public class GameViewController extends OptionsController {
 
                 // Vérifier BombPass
                 if (((entity == player1 && player1.canPassThroughBombs() && bomb.getOwner() == player1) ||
-                     (!isOnePlayer && entity == player2 && player2 != null && player2.canPassThroughBombs() && bomb.getOwner() == player2))) {
+                        (!isOnePlayer && entity == player2 && player2 != null && player2.canPassThroughBombs() && bomb.getOwner() == player2))) {
                     continue;
                 }
 
@@ -844,13 +876,13 @@ public class GameViewController extends OptionsController {
             int[][] directions = {{1,0}, {-1,0}, {0,1}, {0,-1}};
             int[][] possibleDirections = new int[3][2];
             int idx = 0;
-            
+
             for (int[] dir : directions) {
                 if (!(dir[0] == enemyCurrDirection[0] && dir[1] == enemyCurrDirection[1])) {
                     possibleDirections[idx++] = dir;
                 }
             }
-            
+
             int randomIndex = (int) (Math.random() * possibleDirections.length);
             enemyCurrDirection = possibleDirections[randomIndex];
 
@@ -976,11 +1008,11 @@ public class GameViewController extends OptionsController {
                 break;
             }
         }
-        
+
         if (toCollect != null) {
             int playerNumber = (player == player1) ? 1 : 2;
             System.out.println("Joueur " + playerNumber + ": Power-up collecté: " + toCollect.getType());
-            
+
             applyPowerUpEffect(player, toCollect, playerNumber);
             removePowerUpVisual(toCollect);
             activePowerUps.remove(toCollect);
@@ -1003,10 +1035,13 @@ public class GameViewController extends OptionsController {
             case RANGE_UP -> System.out.println("Joueur " + playerNumber + ": Range augmentée! (" + player.getExplosionRange() + ")");
             case BOMB_UP -> System.out.println("Joueur " + playerNumber + ": Bombes max augmentées! (" + player.getMaxBombs() + ")");
             case SPEED_UP -> System.out.println("Joueur " + playerNumber + ": Vitesse augmentée! (" + player.getSpeed() + ")");
-            case GLOVE -> System.out.println("Joueur " + playerNumber + ": Glove activé! (SHIFT/CTRL pour ramasser/lancer)");
+            case GLOVE -> System.out.println("Joueur " + playerNumber + ": Glove activé! (" +
+                    (playerNumber == 1 ? "SHIFT" : "CTRL") + " pour ramasser/lancer)");
             case KICK -> System.out.println("Joueur " + playerNumber + ": Kick activé! (marcher contre une bombe)");
-            case LINE_BOMB -> System.out.println("Joueur " + playerNumber + ": LineBomb activé! (L/K)");
-            case REMOTE -> System.out.println("Joueur " + playerNumber + ": Remote activé! (R/O)");
+            case LINE_BOMB -> System.out.println("Joueur " + playerNumber + ": LineBomb activé! (" +
+                    (playerNumber == 1 ? "L" : "K") + ")");
+            case REMOTE -> System.out.println("Joueur " + playerNumber + ": Remote activé! (" +
+                    (playerNumber == 1 ? "R" : "O") + ")");
             case SKULL -> System.out.println("Joueur " + playerNumber + ": MALUS SKULL!");
             case BOMB_PASS -> System.out.println("Joueur " + playerNumber + ": BombPass activé!");
             case WALL_PASS -> System.out.println("Joueur " + playerNumber + ": WallPass activé!");
