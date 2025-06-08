@@ -46,19 +46,18 @@ public class OptionsController {
     private static double gameSpeed = 3.0;
 
     // Touches par défaut Joueur 1
-    private static String upKey1 = "Z";
-    private static String downKey1 = "S";
-    private static String leftKey1 = "Q";
-    private static String rightKey1 = "D";
+    private static String upKey1 = "UP";
+    private static String downKey1 = "DOWN";
+    private static String leftKey1 = "LEFT";
+    private static String rightKey1 = "RIGHT";
     private static String bombKey1 = "SPACE";
 
     // Touches par défaut Joueur 2
-    private static String upKey2 = "UP";
-    private static String downKey2 = "DOWN";
-    private static String leftKey2 = "LEFT";
-    private static String rightKey2 = "RIGHT";
+    private static String upKey2 = "Z";
+    private static String downKey2 = "S";
+    private static String leftKey2 = "Q";
+    private static String rightKey2 = "D";
     private static String bombKey2 = "ENTER";
-
     // Touche pause
     private static String pauseKey = "P";
 

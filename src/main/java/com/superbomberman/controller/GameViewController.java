@@ -2,6 +2,7 @@ package com.superbomberman.controller;
 
 import com.superbomberman.model.*;
 import com.superbomberman.service.AuthService;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -142,8 +143,9 @@ public class GameViewController extends OptionsController {
                 map = MapLoader.loadMap("src/main/resources/maps/level2.txt");
             }
 
-            drawMap(map);
             setupGridConstraints();
+            drawMap(map);
+
             enemyCurrDirection = new int[]{1, 0};
         } catch (IOException e) {
             e.printStackTrace();
@@ -168,23 +170,71 @@ public class GameViewController extends OptionsController {
             addEntityToGrid(enemy.getX(), enemy.getY(), enemyPattern);
         }
 
-        // Gestion simple des événements clavier (actions immédiates uniquement)
-        gameGrid.setOnKeyPressed(event -> {
-            pressedKeys.add(event.getCode());
-        });
-
-        gameGrid.setOnKeyReleased(event -> {
-            pressedKeys.remove(event.getCode());
-        });
+        // Configuration des événements clavier AMÉLIORÉE
+        setupKeyboardHandling();
 
         // Démarrer la boucle de jeu
         startGameLoop();
 
-        gameGrid.setFocusTraversable(true);
-        gameGrid.requestFocus();
-
         // Afficher les contrôles
         displayControls();
+    }
+
+    /**
+     * Configuration améliorée de la gestion clavier
+     */
+    private void setupKeyboardHandling() {
+        // Configuration sur le gameGrid
+        gameGrid.setFocusTraversable(true);
+
+        gameGrid.setOnKeyPressed(event -> {
+            System.out.println("DEBUG: Touche pressée sur gameGrid: " + event.getCode());
+            pressedKeys.add(event.getCode());
+            event.consume(); // Empêcher la propagation
+        });
+
+        gameGrid.setOnKeyReleased(event -> {
+            System.out.println("DEBUG: Touche relâchée sur gameGrid: " + event.getCode());
+            pressedKeys.remove(event.getCode());
+            event.consume(); // Empêcher la propagation
+        });
+
+        // Clic pour forcer le focus
+        gameGrid.setOnMouseClicked(event -> {
+            gameGrid.requestFocus();
+            System.out.println("DEBUG: Focus demandé via clic");
+        });
+
+        // Debug du focus
+        gameGrid.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            System.out.println("DEBUG: Focus du gameGrid: " + newVal);
+        });
+
+        // Configuration sur la scene une fois qu'elle est disponible
+        Platform.runLater(() -> {
+            Scene scene = gameGrid.getScene();
+            if (scene != null) {
+                System.out.println("DEBUG: Configuration des événements sur la scene");
+
+                scene.setOnKeyPressed(event -> {
+                    System.out.println("DEBUG: Touche pressée sur scene: " + event.getCode());
+                    pressedKeys.add(event.getCode());
+                    // Ne pas consommer ici pour permettre au gameGrid de recevoir aussi
+                });
+
+                scene.setOnKeyReleased(event -> {
+                    System.out.println("DEBUG: Touche relâchée sur scene: " + event.getCode());
+                    pressedKeys.remove(event.getCode());
+                    // Ne pas consommer ici pour permettre au gameGrid de recevoir aussi
+                });
+
+                // Forcer le focus initial
+                gameGrid.requestFocus();
+                System.out.println("DEBUG: Focus initial demandé");
+            } else {
+                System.err.println("DEBUG: Scene non disponible!");
+            }
+        });
     }
 
     /**
@@ -208,6 +258,7 @@ public class GameViewController extends OptionsController {
             System.out.println("  - Remote: O");
         }
         System.out.println("========================");
+        System.out.println("CLIQUEZ SUR LA GRILLE POUR ACTIVER LES CONTRÔLES !");
     }
 
     /**
@@ -1228,8 +1279,13 @@ public class GameViewController extends OptionsController {
         int cols = map[0].length;
         int rows = map.length;
 
-        gameGrid.getColumnConstraints().clear();
-        gameGrid.getRowConstraints().clear();
+        // Si les contraintes existent déjà, les clear
+        if (!gameGrid.getColumnConstraints().isEmpty()) {
+            gameGrid.getColumnConstraints().clear();
+        }
+        if (!gameGrid.getRowConstraints().isEmpty()) {
+            gameGrid.getRowConstraints().clear();
+        }
 
         // Ajouter les contraintes de colonnes
         for (int i = 0; i < cols; i++) {
