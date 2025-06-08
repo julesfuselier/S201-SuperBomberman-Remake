@@ -267,19 +267,18 @@ public class VisualRenderer {
                 cell.getChildren().removeIf(node -> cell.getChildren().indexOf(node) > 0);
             }
 
-            // Ajouter l'explosion
+            // Ajouter l'explosion avec un ID unique
             Rectangle explosionRect = new Rectangle(50, 50);
             explosionRect.setFill(explosionPattern);
+            explosionRect.setId("explosion"); // ✅ MARQUER L'EXPLOSION
             cell.getChildren().add(explosionRect);
 
-            PauseTransition explosionDuration = new PauseTransition(Duration.seconds(1.65)); // 2 secondes
+            PauseTransition explosionDuration = new PauseTransition(Duration.seconds(0.5));
             explosionDuration.setOnFinished(event -> {
-                // Supprimer l'explosion (garder seulement le fond)
-                if (cell.getChildren().size() > 1) {
-                    cell.getChildren().removeIf(node -> cell.getChildren().indexOf(node) > 0);
-                }
+                // ✅ SUPPRIMER SEULEMENT L'EXPLOSION PAR SON ID
+                cell.getChildren().removeIf(node -> "explosion".equals(node.getId()));
 
-                // Redessiner le fond selon le type de tuile
+                // Redessiner le fond
                 Rectangle background = (Rectangle) cell.getChildren().get(0);
                 switch (map[y][x].getType()) {
                     case FLOOR -> background.setFill(floorPattern);
@@ -287,11 +286,11 @@ public class VisualRenderer {
                     case WALL_BREAKABLE -> background.setFill(wallBreakablePattern);
                 }
 
-                System.out.println("💥 Explosion supprimée à (" + x + ", " + y + ") après 2s");
+                System.out.println("💥 Explosion supprimée à (" + x + ", " + y + ") après 0.5s");
             });
             explosionDuration.play();
 
-            System.out.println("💥 Explosion affichée à (" + x + ", " + y + ") - suppression dans 2s");
+            System.out.println("💥 Explosion affichée à (" + x + ", " + y + ") - suppression dans 0.5s");
         }
     }
 
@@ -313,9 +312,15 @@ public class VisualRenderer {
     public void removePowerUpVisual(PowerUp powerUp) {
         StackPane cell = (StackPane) getNodeFromGridPane(powerUp.getX(), powerUp.getY());
         if (cell != null) {
-            if (cell.getChildren().size() > 1) {
-                cell.getChildren().removeIf(node -> cell.getChildren().indexOf(node) > 0);
-            }
+            // ✅ SUPPRIMER SEULEMENT LE POWER-UP (pas tout!)
+            cell.getChildren().removeIf(node -> {
+                if (node instanceof Rectangle) {
+                    Rectangle rect = (Rectangle) node;
+                    // Supprimer seulement si c'est le power-up
+                    return rect.getFill() == powerUpPattern;
+                }
+                return false;
+            });
         }
     }
 

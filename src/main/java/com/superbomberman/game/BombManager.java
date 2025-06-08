@@ -363,22 +363,22 @@ public class BombManager {
             visualRenderer.showExplosion(x, y);
 
             if (tile.getType() == TileType.WALL_BREAKABLE) {
-                // Délai plus long pour laisser l'explosion se terminer
-                PauseTransition delay = new PauseTransition(Duration.seconds(2)); // 1 seconde après explosion
+
+                map[y][x] = new Tile(TileType.FLOOR);
+
+                if (gameStateManager != null) {
+                    gameStateManager.updateScore(10);
+                }
+
+                PauseTransition delay = new PauseTransition(Duration.seconds(0.6));
                 delay.setOnFinished(event -> {
-                    map[y][x] = new Tile(TileType.FLOOR);
-
-                    if (gameStateManager != null) {
-                        gameStateManager.updateScore(10);
-                    }
-
                     if (powerUpManager != null) {
                         PowerUp powerUp = powerUpManager.generateRandomPowerUp(x, y);
                         if (powerUp != null) {
                             visualRenderer.placePowerUpVisual(powerUp);
                         }
                     }
-
+                    // Redessiner la tuile APRÈS génération du power-up
                     visualRenderer.redrawTile(x, y, powerUpManager != null ? powerUpManager.getActivePowerUps() : new ArrayList<>());
                 });
                 delay.play();
