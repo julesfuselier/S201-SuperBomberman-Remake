@@ -1,32 +1,17 @@
 package com.superbomberman.controller;
 
 import com.superbomberman.model.*;
-import com.superbomberman.service.AuthService;
+import com.superbomberman.game.*;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.RowConstraints;
-import javafx.scene.layout.StackPane;
-import javafx.scene.paint.ImagePattern;
-import javafx.scene.shape.Rectangle;
 import javafx.animation.AnimationTimer;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
-import com.superbomberman.model.powerup.*;
 
 import static com.superbomberman.model.MapLoader.enemy;
 import static com.superbomberman.model.MapLoader.player1;
@@ -35,17 +20,18 @@ import static com.superbomberman.controller.MenuController.isOnePlayer;
 
 /**
  * Contrôleur principal de la vue de jeu pour Super Bomberman.
- * Gère l'initialisation de la grille de jeu, le rendu de la carte,
- * la gestion des entités (joueurs, ennemi, bombes), le déplacement des personnages,
- * la pose et la détonation des bombes, ainsi que les interactions clavier.
- * Support complet du mode 1 et 2 joueurs avec toutes les fonctionnalités de power-ups.
+ * Version refactorisée avec séparation des responsabilités.
  *
- * Contrôles:
- * - Joueur 1: Flèches directionnelles + SPACE (bombe) + SHIFT (glove) + L (line) + R (remote)
- * - Joueur 2: ZQSD + ENTER (bombe) + CTRL (glove) + K (line) + O (remote)
+ * Chaque aspect du jeu est maintenant géré par une classe spécialisée :
+ * - GameStateManager : État du jeu et statistiques
+ * - VisualRenderer : Rendu visuel
+ * - InputHandler : Gestion des entrées clavier
+ * - BombManager : Logique des bombes
+ * - PowerUpManager : Gestion des power-ups
+ * - GameLogic : Logique principale (mouvement, collisions, IA)
  *
  * @author Jules Fuselier
- * @version 2.1
+ * @version 3.1 - Fix bombes et explosion
  * @since 2025-06-08
  */
 public class GameViewController extends OptionsController {
@@ -53,279 +39,137 @@ public class GameViewController extends OptionsController {
     @FXML
     private GridPane gameGrid;
 
+    // Gestionnaires délégués - Chacun a sa responsabilité
+    private GameStateManager gameStateManager;
+    private VisualRenderer visualRenderer;
+    private InputHandler inputHandler;
+    private BombManager bombManager;
+    private PowerUpManager powerUpManager;
+    private GameLogic gameLogic;
+
+    // Données de base
     private Tile[][] map;
-    private int[] enemyCurrDirection;
-    private List<Bomb> activeBombs = new ArrayList<>();
-
-    // Gestion de l'utilisateur et des statistiques
     private User currentUser;
-    private AuthService authService;
-    private int gameScore = 0;
-    private boolean gameWon = false;
-    private long gameStartTime;
 
-    // Compteurs de bombes séparés pour chaque joueur
-    private int currentBombCountPlayer1 = 0;
-    private int currentBombCountPlayer2 = 0;
-
-    // Gestion des touches pressées
-    private Set<javafx.scene.input.KeyCode> pressedKeys = new HashSet<>();
-
-    // Timer pour le mouvement continu
+    // Timer pour la boucle de jeu
     private AnimationTimer gameLoop;
 
-    // Timestamps pour le mouvement
-    private long lastPlayer1MoveTime = 0;
-    private long lastPlayer2MoveTime = 0;
-    private long lastEnemyMoveTime = 0;
-
-    // Délais de mouvement
-    private static final long BASE_MOVE_DELAY = 200_000_000L; // 200ms de base
-    private static final long ENEMY_MOVE_DELAY = 500_000_000L; // 500ms pour l'ennemi
-
-    // Directions des joueurs pour le lancer de bombes
-    private int lastPlayer1DirectionX = 0;
-    private int lastPlayer1DirectionY = 1;
-    private int lastPlayer2DirectionX = 0;
-    private int lastPlayer2DirectionY = 1;
-
-    // Listes pour les bombes spéciales
-    private List<Bomb> flyingBombs = new ArrayList<>();
-    private List<Bomb> kickingBombs = new ArrayList<>();
-    private List<PowerUp> activePowerUps = new ArrayList<>();
-
-    // Images et patterns
-    private Image powerUpImg = new Image(Objects.requireNonNull(getClass().getResource("/images/powerup.png")).toExternalForm());
-    private ImagePattern powerUpPattern = new ImagePattern(powerUpImg);
-
-    private Image playerImg = new Image(Objects.requireNonNull(getClass().getResource("/images/player.png")).toExternalForm());
-    private ImagePattern playerPattern = new ImagePattern(playerImg);
-
-    private Image player2Img = new Image(Objects.requireNonNull(getClass().getResource("/images/player2.png")).toExternalForm());
-    private ImagePattern player2Pattern = new ImagePattern(player2Img);
-
-    private Image wallImg = new Image(Objects.requireNonNull(getClass().getResource("/images/wall.png")).toExternalForm());
-    private ImagePattern wallPattern = new ImagePattern(wallImg);
-
-    private Image wallBreakableImg = new Image(Objects.requireNonNull(getClass().getResource("/images/wall_breakable.png")).toExternalForm());
-    private ImagePattern wallBreakablePattern = new ImagePattern(wallBreakableImg);
-
-    private Image floorImg = new Image(Objects.requireNonNull(getClass().getResource("/images/grass.png")).toExternalForm());
-    private ImagePattern floorPattern = new ImagePattern(floorImg);
-
-    private Image explosionImg = new Image(Objects.requireNonNull(getClass().getResource("/images/explosion.png")).toExternalForm());
-    private ImagePattern explosionPattern = new ImagePattern(explosionImg);
-
-    private Image enemyImg = new Image(Objects.requireNonNull(getClass().getResource("/images/enemy.png")).toExternalForm());
-    private ImagePattern enemyPattern = new ImagePattern(enemyImg);
-
-    private Image bombImg = new Image(Objects.requireNonNull(getClass().getResource("/images/bomb.png")).toExternalForm());
-    private ImagePattern bombPattern = new ImagePattern(bombImg);
-
     /**
-     * Définit l'utilisateur actuel pour le suivi des statistiques
+     * Initialise tous les composants du jeu
      */
-    public void setCurrentUser(User user) {
-        this.currentUser = user;
-        this.authService = new AuthService();
-        this.gameStartTime = System.currentTimeMillis();
-        System.out.println("Jeu démarré par : " + (user != null ? user.getUsername() : "Invité"));
-    }
-
     public void initialize() {
         try {
-            System.out.println("Mode un joueur: " + isOnePlayer);
-            if (isOnePlayer) {
-                System.out.println("Chargement de la carte niveau 1 (1 joueur)");
-                map = MapLoader.loadMap("src/main/resources/maps/level1.txt");
-            } else {
-                System.out.println("Chargement de la carte niveau 2 (2 joueurs)");
-                map = MapLoader.loadMap("src/main/resources/maps/level2.txt");
-            }
+            System.out.println("=== INITIALISATION DU JEU ===");
 
-            setupGridConstraints();
-            drawMap(map);
+            // Étape 1 : Charger la carte
+            initializeMap();
 
-            enemyCurrDirection = new int[]{1, 0};
+            // Étape 2 : Créer tous les gestionnaires
+            initializeManagers();
+
+            // Étape 3 : Placer les entités sur la carte
+            initializeEntities();
+
+            // Étape 4 : Démarrer la boucle de jeu
+            startGameLoop();
+
+            // Étape 5 : Afficher les contrôles
+            inputHandler.displayControls();
+
+            System.out.println("=== JEU INITIALISÉ AVEC SUCCÈS ===");
+
         } catch (IOException e) {
             e.printStackTrace();
-            System.err.println("Erreur lors du chargement de la carte");
+            System.err.println("ERREUR CRITIQUE : Impossible d'initialiser le jeu");
         }
+    }
+
+    /**
+     * Charge la carte selon le mode de jeu
+     */
+    private void initializeMap() throws IOException {
+        System.out.println("Mode un joueur: " + isOnePlayer);
+        if (isOnePlayer) {
+            System.out.println("Chargement de la carte niveau 1 (1 joueur)");
+            map = MapLoader.loadMap("src/main/resources/maps/level1.txt");
+        } else {
+            System.out.println("Chargement de la carte niveau 2 (2 joueurs)");
+            map = MapLoader.loadMap("src/main/resources/maps/level2.txt");
+        }
+        System.out.println("Carte chargée: " + map.length + "x" + map[0].length);
+    }
+
+    /**
+     * Initialise tous les gestionnaires dans le bon ordre
+     */
+    private void initializeManagers() {
+        System.out.println("Initialisation des gestionnaires...");
+
+        // 1. GameStateManager - Gère l'état du jeu
+        gameStateManager = new GameStateManager(currentUser, null);
+
+        // 2. VisualRenderer - Gère l'affichage
+        visualRenderer = new VisualRenderer(gameGrid, map);
+        visualRenderer.setupGridConstraints();
+        visualRenderer.drawMap();
+
+        // 3. InputHandler - Gère les entrées
+        inputHandler = new InputHandler();
+
+        // 4. BombManager - Gère les bombes
+        bombManager = new BombManager(map);
+
+        // 5. PowerUpManager - Gère les power-ups
+        powerUpManager = new PowerUpManager();
+
+        // 6. GameLogic - Logique principale (dépend de tous les autres)
+        gameLogic = new GameLogic(map, bombManager, powerUpManager, gameStateManager);
+
+        // ✅ FIX: CONFIGURER LES RÉFÉRENCES CROISÉES
+        bombManager.setManagers(visualRenderer, powerUpManager, gameStateManager);
+
+        System.out.println("Tous les gestionnaires initialisés!");
+    }
+
+    /**
+     * Place toutes les entités sur la carte
+     */
+    private void initializeEntities() {
+        System.out.println("Placement des entités...");
 
         // Initialiser le joueur 1
         if (map[player1.getY()][player1.getX()].getType() == TileType.FLOOR) {
             map[player1.getY()][player1.getX()] = new Tile(TileType.PLAYER1);
-            addEntityToGrid(player1.getX(), player1.getY(), playerPattern);
+            visualRenderer.addEntityToGrid(player1.getX(), player1.getY(), visualRenderer.getPlayerPattern());
+            System.out.println("Joueur 1 placé à (" + player1.getX() + ", " + player1.getY() + ")");
         }
 
         // Initialiser le joueur 2 (mode 2 joueurs uniquement)
         if (!isOnePlayer && player2 != null && map[player2.getY()][player2.getX()].getType() == TileType.FLOOR) {
             map[player2.getY()][player2.getX()] = new Tile(TileType.PLAYER2);
-            addEntityToGrid(player2.getX(), player2.getY(), player2Pattern);
+            visualRenderer.addEntityToGrid(player2.getX(), player2.getY(), visualRenderer.getPlayer2Pattern());
+            System.out.println("Joueur 2 placé à (" + player2.getX() + ", " + player2.getY() + ")");
         }
 
         // Initialiser l'ennemi
         if (enemy != null && map[enemy.getY()][enemy.getX()].getType() == TileType.FLOOR) {
             map[enemy.getY()][enemy.getX()] = new Tile(TileType.ENEMY);
-            addEntityToGrid(enemy.getX(), enemy.getY(), enemyPattern);
+            visualRenderer.addEntityToGrid(enemy.getX(), enemy.getY(), visualRenderer.getEnemyPattern());
+            System.out.println("Ennemi placé à (" + enemy.getX() + ", " + enemy.getY() + ")");
         }
 
-        // Configuration des événements clavier AMÉLIORÉE
-        setupKeyboardHandling();
+        // Configurer les entrées clavier
+        inputHandler.setupKeyboardHandling(gameGrid);
 
-        // Démarrer la boucle de jeu
-        startGameLoop();
-
-        // Afficher les contrôles
-        displayControls();
+        System.out.println("Entités placées avec succès!");
     }
 
     /**
-     * Configuration améliorée de la gestion clavier
+     * Démarre la boucle principale du jeu
      */
-    private void setupKeyboardHandling() {
-        // Configuration sur le gameGrid
-        gameGrid.setFocusTraversable(true);
-
-        gameGrid.setOnKeyPressed(event -> {
-            System.out.println("DEBUG: Touche pressée sur gameGrid: " + event.getCode());
-            pressedKeys.add(event.getCode());
-            event.consume(); // Empêcher la propagation
-        });
-
-        gameGrid.setOnKeyReleased(event -> {
-            System.out.println("DEBUG: Touche relâchée sur gameGrid: " + event.getCode());
-            pressedKeys.remove(event.getCode());
-            event.consume(); // Empêcher la propagation
-        });
-
-        // Clic pour forcer le focus
-        gameGrid.setOnMouseClicked(event -> {
-            gameGrid.requestFocus();
-            System.out.println("DEBUG: Focus demandé via clic");
-        });
-
-        // Debug du focus
-        gameGrid.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            System.out.println("DEBUG: Focus du gameGrid: " + newVal);
-        });
-
-        // Configuration sur la scene une fois qu'elle est disponible
-        Platform.runLater(() -> {
-            Scene scene = gameGrid.getScene();
-            if (scene != null) {
-                System.out.println("DEBUG: Configuration des événements sur la scene");
-
-                scene.setOnKeyPressed(event -> {
-                    System.out.println("DEBUG: Touche pressée sur scene: " + event.getCode());
-                    pressedKeys.add(event.getCode());
-                    // Ne pas consommer ici pour permettre au gameGrid de recevoir aussi
-                });
-
-                scene.setOnKeyReleased(event -> {
-                    System.out.println("DEBUG: Touche relâchée sur scene: " + event.getCode());
-                    pressedKeys.remove(event.getCode());
-                    // Ne pas consommer ici pour permettre au gameGrid de recevoir aussi
-                });
-
-                // Forcer le focus initial
-                gameGrid.requestFocus();
-                System.out.println("DEBUG: Focus initial demandé");
-            } else {
-                System.err.println("DEBUG: Scene non disponible!");
-            }
-        });
-    }
-
-    /**
-     * Affiche les contrôles dans la console pour information.
-     */
-    private void displayControls() {
-        System.out.println("=== CONTRÔLES DU JEU ===");
-        System.out.println("Joueur 1 (Bleu):");
-        System.out.println("  - Déplacement: Flèches directionnelles");
-        System.out.println("  - Bombe: ESPACE");
-        System.out.println("  - Ramasser/Lancer: SHIFT");
-        System.out.println("  - LineBomb: L");
-        System.out.println("  - Remote: R");
-
-        if (!isOnePlayer) {
-            System.out.println("\nJoueur 2 (Rouge):");
-            System.out.println("  - Déplacement: Z-Q-S-D (AZERTY)");
-            System.out.println("  - Bombe: ENTRÉE");
-            System.out.println("  - Ramasser/Lancer: CTRL");
-            System.out.println("  - LineBomb: K");
-            System.out.println("  - Remote: O");
-        }
-        System.out.println("========================");
-        System.out.println("CLIQUEZ SUR LA GRILLE POUR ACTIVER LES CONTRÔLES !");
-    }
-
-    /**
-     * Met à jour le score du jeu
-     */
-    private void updateScore(int points) {
-        gameScore += points;
-        System.out.println("Score actuel: " + gameScore);
-    }
-
-    /**
-     * Marque le jeu comme gagné
-     */
-    private void setGameWon(boolean won) {
-        this.gameWon = won;
-        if (won) {
-            System.out.println("🎉 Victoire ! Score final: " + gameScore);
-            endGame();
-        }
-    }
-
-    /**
-     * Termine le jeu et met à jour les statistiques utilisateur
-     */
-    private void endGame() {
-        if (currentUser != null && authService != null) {
-            authService.updateUserStats(currentUser, gameWon, gameScore);
-            System.out.println("Statistiques mises à jour pour " + currentUser.getUsername());
-            System.out.println("Score final: " + gameScore + " | Victoire: " + (gameWon ? "Oui" : "Non"));
-        }
-    }
-
-    /**
-     * Vérifie les conditions de fin de jeu
-     */
-    private void checkGameConditions() {
-        // Exemple de conditions de victoire - à adapter selon votre logique
-        if (enemy != null && isEnemyDefeated()) {
-            setGameWon(true);
-        }
-
-        // Vérifier si le joueur est toujours en vie
-        if (isPlayerDefeated()) {
-            setGameWon(false);
-            endGame();
-        }
-    }
-
-    /**
-     * Vérifie si l'ennemi est vaincu
-     */
-    private boolean isEnemyDefeated() {
-        // Logique pour déterminer si l'ennemi est vaincu
-        // Par exemple, si l'ennemi est touché par une explosion
-        return false; // Placeholder - à implémenter selon votre logique
-    }
-
-    /**
-     * Vérifie si le joueur est vaincu
-     */
-    private boolean isPlayerDefeated() {
-        // Logique pour déterminer si le joueur est vaincu
-        // Par exemple, si le joueur est touché par une explosion
-        return false; // Placeholder - à implémenter selon votre logique
-    }
-
     private void startGameLoop() {
+        System.out.println("Démarrage de la boucle de jeu...");
+
         gameLoop = new AnimationTimer() {
             private long lastAutoBombTimePlayer1 = 0;
             private long lastAutoBombTimePlayer2 = 0;
@@ -333,981 +177,282 @@ public class GameViewController extends OptionsController {
 
             @Override
             public void handle(long now) {
-                // Gestion des actions immédiates (bombes, powers)
-                handleImmediateActions();
+                try {
+                    // === PHASE 1 : ACTIONS IMMÉDIATES ===
+                    // Traiter les actions instantanées (bombes, pouvoirs)
+                    inputHandler.processImmediateActions(player1, player2, bombManager, gameLogic);
 
-                // Gestion du mouvement des joueurs
-                handlePlayerMovement(player1, 1, now);
-                if (!isOnePlayer && player2 != null) {
-                    handlePlayerMovement(player2, 2, now);
+                    // === PHASE 2 : MOUVEMENT DES ENTITÉS ===
+                    // Mouvement du joueur 1
+                    gameLogic.handlePlayerMovement(player1, 1, now, inputHandler.getPressedKeys(), visualRenderer);
+
+                    // Mouvement du joueur 2 (si mode 2 joueurs)
+                    if (!isOnePlayer && player2 != null) {
+                        gameLogic.handlePlayerMovement(player2, 2, now, inputHandler.getPressedKeys(), visualRenderer);
+                    }
+
+                    // Mouvement de l'ennemi
+                    gameLogic.handleEnemyMovement(now, visualRenderer);
+
+                    // === PHASE 3 : GESTION DES BOMBES ===
+                    // Mettre à jour les bombes volantes et qui roulent
+                    bombManager.updateBombs();
+
+                    // === PHASE 4 : GESTION DES MALUS AUTO_BOMB ===
+                    if (player1.hasMalus(com.superbomberman.model.powerup.MalusType.AUTO_BOMB) &&
+                            now - lastAutoBombTimePlayer1 >= AUTO_BOMB_INTERVAL) {
+                        bombManager.placeBomb(player1, 1);
+                        lastAutoBombTimePlayer1 = now;
+                    }
+
+                    if (!isOnePlayer && player2 != null &&
+                            player2.hasMalus(com.superbomberman.model.powerup.MalusType.AUTO_BOMB) &&
+                            now - lastAutoBombTimePlayer2 >= AUTO_BOMB_INTERVAL) {
+                        bombManager.placeBomb(player2, 2);
+                        lastAutoBombTimePlayer2 = now;
+                    }
+
+                    // === PHASE 5 : VÉRIFICATIONS FINALES ===
+                    // Mettre à jour toutes les entités
+                    gameLogic.updateEntities(visualRenderer);
+
+                    // Vérifier les conditions de victoire/défaite
+                    gameStateManager.checkGameConditions();
+
+                } catch (Exception e) {
+                    System.err.println("Erreur dans la boucle de jeu: " + e.getMessage());
+                    e.printStackTrace();
                 }
-
-                // Gestion du mouvement de l'ennemi
-                handleEnemyMovement(now);
-
-                // Gestion des bombes spéciales
-                handleFlyingBombs();
-                handleKickingBombs();
-
-                // Gestion du malus AUTO_BOMB
-                if (player1.hasMalus(MalusType.AUTO_BOMB) && now - lastAutoBombTimePlayer1 >= AUTO_BOMB_INTERVAL) {
-                    placeBomb(player1, 1);
-                    lastAutoBombTimePlayer1 = now;
-                }
-
-                if (!isOnePlayer && player2 != null && player2.hasMalus(MalusType.AUTO_BOMB) &&
-                        now - lastAutoBombTimePlayer2 >= AUTO_BOMB_INTERVAL) {
-                    placeBomb(player2, 2);
-                    lastAutoBombTimePlayer2 = now;
-                }
-
-                // Vérifier les conditions de victoire/défaite
-                checkGameConditions();
             }
         };
+
         gameLoop.start();
+        System.out.println("Boucle de jeu démarrée!");
     }
 
-    private void handleImmediateActions() {
-        // Actions du joueur 1 (Flèches + SPACE + SHIFT + L + R)
-        if (pressedKeys.contains(javafx.scene.input.KeyCode.SPACE)) {
-            placeBomb(player1, 1);
-            pressedKeys.remove(javafx.scene.input.KeyCode.SPACE); // Éviter la répétition
-        }
-        if (pressedKeys.contains(javafx.scene.input.KeyCode.SHIFT)) {
-            handleBombPickupOrThrow(player1, 1);
-            pressedKeys.remove(javafx.scene.input.KeyCode.SHIFT);
-        }
-        if (pressedKeys.contains(javafx.scene.input.KeyCode.L)) {
-            placeLineBombs(player1, 1);
-            pressedKeys.remove(javafx.scene.input.KeyCode.L);
-        }
-        if (pressedKeys.contains(javafx.scene.input.KeyCode.R)) {
-            detonateRemoteBombs(player1, 1);
-            pressedKeys.remove(javafx.scene.input.KeyCode.R);
-        }
-
-        // Actions du joueur 2 (ZQSD + ENTER + CTRL + K + O)
-        if (!isOnePlayer && player2 != null) {
-            if (pressedKeys.contains(javafx.scene.input.KeyCode.ENTER)) {
-                placeBomb(player2, 2);
-                pressedKeys.remove(javafx.scene.input.KeyCode.ENTER);
-            }
-            if (pressedKeys.contains(javafx.scene.input.KeyCode.CONTROL)) {
-                handleBombPickupOrThrow(player2, 2);
-                pressedKeys.remove(javafx.scene.input.KeyCode.CONTROL);
-            }
-            if (pressedKeys.contains(javafx.scene.input.KeyCode.K)) {
-                placeLineBombs(player2, 2);
-                pressedKeys.remove(javafx.scene.input.KeyCode.K);
-            }
-            if (pressedKeys.contains(javafx.scene.input.KeyCode.O)) {
-                detonateRemoteBombs(player2, 2);
-                pressedKeys.remove(javafx.scene.input.KeyCode.O);
-            }
-        }
+    /**
+     * Définit l'utilisateur actuel pour le suivi des statistiques
+     */
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
+        System.out.println("Utilisateur défini: " + (user != null ? user.getUsername() : "Invité"));
     }
 
-    private void handlePlayerMovement(Player player, int playerNumber, long currentTime) {
-        // Mettre à jour les malus du joueur
-        player.updateMalus();
-
-        // Calculer le délai basé sur la vitesse du joueur
-        long moveDelay = (long) (BASE_MOVE_DELAY / player.getSpeed());
-
-        // Vérifier si assez de temps s'est écoulé depuis le dernier mouvement
-        long lastMoveTime = (playerNumber == 1) ? lastPlayer1MoveTime : lastPlayer2MoveTime;
-        if (currentTime - lastMoveTime < moveDelay) {
-            return;
-        }
-
-        int newX = player.getX();
-        int newY = player.getY();
-        boolean moved = false;
-
-        // Gérer les contrôles inversés
-        boolean reversed = player.hasMalus(MalusType.REVERSED_CONTROLS);
-
-        // Déterminer les touches selon le joueur
-        javafx.scene.input.KeyCode leftKey, rightKey, upKey, downKey;
-        if (playerNumber == 1) {
-            // Joueur 1: Flèches directionnelles
-            leftKey = javafx.scene.input.KeyCode.LEFT;
-            rightKey = javafx.scene.input.KeyCode.RIGHT;
-            upKey = javafx.scene.input.KeyCode.UP;
-            downKey = javafx.scene.input.KeyCode.DOWN;
-        } else {
-            // Joueur 2: ZQSD (AZERTY français)
-            leftKey = javafx.scene.input.KeyCode.Q;    // Q = gauche
-            rightKey = javafx.scene.input.KeyCode.D;   // D = droite
-            upKey = javafx.scene.input.KeyCode.Z;      // Z = haut
-            downKey = javafx.scene.input.KeyCode.S;    // S = bas
-        }
-
-        // Calculer le mouvement
-        if (pressedKeys.contains(leftKey)) {
-            newX += reversed ? 1 : -1;
-            setLastDirection(playerNumber, reversed ? 1 : -1, 0);
-            moved = true;
-        } else if (pressedKeys.contains(rightKey)) {
-            newX += reversed ? -1 : 1;
-            setLastDirection(playerNumber, reversed ? -1 : 1, 0);
-            moved = true;
-        } else if (pressedKeys.contains(upKey)) {
-            newY += reversed ? 1 : -1;
-            setLastDirection(playerNumber, 0, reversed ? 1 : -1);
-            moved = true;
-        } else if (pressedKeys.contains(downKey)) {
-            newY += reversed ? -1 : 1;
-            setLastDirection(playerNumber, 0, reversed ? -1 : 1);
-            moved = true;
-        }
-
-        // Effectuer le mouvement si possible
-        if (moved && canMoveTo(newX, newY, player)) {
-            player.setPosition(newX, newY);
-            ImagePattern pattern = (playerNumber == 1) ? playerPattern : player2Pattern;
-            updatePlayerPosition(player, pattern);
-
-            // Mettre à jour le timestamp
-            if (playerNumber == 1) {
-                lastPlayer1MoveTime = currentTime;
-            } else {
-                lastPlayer2MoveTime = currentTime;
-            }
-        }
-    }
-
-    private void setLastDirection(int playerNumber, int dirX, int dirY) {
-        if (playerNumber == 1) {
-            lastPlayer1DirectionX = dirX;
-            lastPlayer1DirectionY = dirY;
-        } else {
-            lastPlayer2DirectionX = dirX;
-            lastPlayer2DirectionY = dirY;
-        }
-    }
-
-    private int[] getLastDirection(int playerNumber) {
-        if (playerNumber == 1) {
-            return new int[]{lastPlayer1DirectionX, lastPlayer1DirectionY};
-        } else {
-            return new int[]{lastPlayer2DirectionX, lastPlayer2DirectionY};
-        }
-    }
-
-    private void handleEnemyMovement(long currentTime) {
-        if (currentTime - lastEnemyMoveTime < ENEMY_MOVE_DELAY) {
-            return;
-        }
-
-        if (enemy != null) {
-            moveEnemy(enemy);
-            lastEnemyMoveTime = currentTime;
-        }
-    }
-
-    private void placeBomb(Player player, int playerNumber) {
-        // Vérifier le malus NO_BOMB
-        if (player.hasMalus(MalusType.NO_BOMB)) {
-            System.out.println("Joueur " + playerNumber + ": Impossible de poser une bombe à cause du malus!");
-            return;
-        }
-
-        // Vérifier qu'on n'est pas dans un mur destructible
-        if (map[player.getY()][player.getX()].getType() == TileType.WALL_BREAKABLE) {
-            System.out.println("Joueur " + playerNumber + ": Impossible de poser une bombe à l'intérieur d'un mur destructible!");
-            return;
-        }
-
-        int currentBombCount = (playerNumber == 1) ? currentBombCountPlayer1 : currentBombCountPlayer2;
-
-        if (currentBombCount < player.getMaxBombs()) {
-            System.out.println("Joueur " + playerNumber + ": Pose d'une bombe (" + (currentBombCount + 1) + "/" + player.getMaxBombs() + ")");
-
-            Bomb bomb = new Bomb(player.getX(), player.getY(), 10, player.getExplosionRange());
-            bomb.setOwner(player);
-
-            placeBombVisual(bomb);
-            activeBombs.add(bomb);
-
-            // Incrémenter le bon compteur
-            if (playerNumber == 1) {
-                currentBombCountPlayer1++;
-            } else {
-                currentBombCountPlayer2++;
-            }
-
-            // Gérer Remote Power
-            if (player.hasRemoteDetonation()) {
-                System.out.println("Joueur " + playerNumber + ": Remote Power activé ! Bombe en attente de détonation manuelle.");
-            } else {
-                bomb.startCountdown(() -> {
-                    handleExplosion(bomb);
-                    activeBombs.remove(bomb);
-                    flyingBombs.remove(bomb);
-                    kickingBombs.remove(bomb);
-
-                    // Décrémenter le bon compteur
-                    if (playerNumber == 1) {
-                        currentBombCountPlayer1--;
-                    } else {
-                        currentBombCountPlayer2--;
-                    }
-
-                    System.out.println("Joueur " + playerNumber + ": Bombe explosée. Bombes restantes : " +
-                            ((playerNumber == 1) ? currentBombCountPlayer1 : currentBombCountPlayer2) + "/" + player.getMaxBombs());
-                });
-            }
-        } else {
-            System.out.println("Joueur " + playerNumber + ": Limite de bombes atteinte (" + player.getMaxBombs() + ")");
-        }
-    }
-
-    private void handleBombPickupOrThrow(Player player, int playerNumber) {
-        if (!player.canThrowBombs()) {
-            System.out.println("Joueur " + playerNumber + ": Pas le pouvoir Glove !");
-            return;
-        }
-
-        if (player.isHoldingBomb()) {
-            throwHeldBomb(player, playerNumber);
-        } else {
-            tryPickupBomb(player, playerNumber);
-        }
-    }
-
-    private void tryPickupBomb(Player player, int playerNumber) {
-        Bomb bombToPickup = null;
-
-        // Chercher une bombe à ramasser
-        for (Bomb bomb : activeBombs) {
-            if (bomb.getX() == player.getX() && bomb.getY() == player.getY() &&
-                    bomb.getOwner() == player && !bomb.isFlying() && !bomb.isMoving()) {
-                bombToPickup = bomb;
-                break;
-            }
-        }
-
-        if (bombToPickup != null) {
-            bombToPickup.stopCountdown();
-
-            if (player.pickUpBomb(bombToPickup)) {
-                activeBombs.remove(bombToPickup);
-                kickingBombs.remove(bombToPickup);
-
-                // Décrémenter le bon compteur
-                if (playerNumber == 1) {
-                    currentBombCountPlayer1--;
-                } else {
-                    currentBombCountPlayer2--;
-                }
-
-                removeBombVisual(bombToPickup);
-                System.out.println("Joueur " + playerNumber + ": Bombe ramassée !");
-            }
-        } else {
-            System.out.println("Joueur " + playerNumber + ": Aucune bombe à ramasser !");
-        }
-    }
-
-    private void throwHeldBomb(Player player, int playerNumber) {
-        int[] direction = getLastDirection(playerNumber);
-        Bomb thrownBomb = player.throwHeldBomb(direction[0], direction[1]);
-
-        if (thrownBomb != null) {
-            thrownBomb.setPosition(player.getX(), player.getY());
-            activeBombs.add(thrownBomb);
-            flyingBombs.add(thrownBomb);
-
-            // Incrémenter le bon compteur
-            if (playerNumber == 1) {
-                currentBombCountPlayer1++;
-            } else {
-                currentBombCountPlayer2++;
-            }
-
-            thrownBomb.throwBomb(direction[0], direction[1], () -> {
-                // Logique gérée dans handleFlyingBombs()
-            });
-
-            thrownBomb.startCountdown(() -> {
-                handleExplosion(thrownBomb);
-                activeBombs.remove(thrownBomb);
-                flyingBombs.remove(thrownBomb);
-                kickingBombs.remove(thrownBomb);
-
-                // Décrémenter le bon compteur
-                if (playerNumber == 1) {
-                    currentBombCountPlayer1--;
-                } else {
-                    currentBombCountPlayer2--;
-                }
-
-                System.out.println("Joueur " + playerNumber + ": Bombe lancée explosée !");
-            });
-
-            placeBombVisual(thrownBomb);
-            System.out.println("Joueur " + playerNumber + ": Bombe lancée !");
-        }
-    }
-
-    private void placeLineBombs(Player player, int playerNumber) {
-        if (!player.hasLineBombs()) {
-            System.out.println("Joueur " + playerNumber + ": Pas le pouvoir LineBomb !");
-            return;
-        }
-
-        if (player.hasMalus(MalusType.NO_BOMB)) {
-            System.out.println("Joueur " + playerNumber + ": Impossible de poser des bombes à cause du malus !");
-            return;
-        }
-
-        int currentBombCount = (playerNumber == 1) ? currentBombCountPlayer1 : currentBombCountPlayer2;
-        int bombsToPlace = player.getMaxBombs() - currentBombCount;
-
-        if (bombsToPlace <= 0) {
-            System.out.println("Joueur " + playerNumber + ": Limite de bombes atteinte !");
-            return;
-        }
-
-        int[] direction = getLastDirection(playerNumber);
-        int dirX = direction[0];
-        int dirY = direction[1];
-
-        // Direction par défaut si aucune détectée
-        if (dirX == 0 && dirY == 0) {
-            dirX = 0;
-            dirY = 1;
-        }
-
-        System.out.println("Joueur " + playerNumber + ": LineBomb activé ! Pose de " + bombsToPlace + " bombes...");
-
-        int bombsPlaced = 0;
-        for (int i = 1; i <= bombsToPlace; i++) {
-            int bombX = player.getX() + (dirX * i);
-            int bombY = player.getY() + (dirY * i);
-
-            if (!canPlaceBombAt(bombX, bombY)) {
-                break;
-            }
-
-            Bomb bomb = new Bomb(bombX, bombY, 10, player.getExplosionRange());
-            bomb.setOwner(player);
-
-            placeBombVisual(bomb);
-            activeBombs.add(bomb);
-
-            // Incrémenter le bon compteur
-            if (playerNumber == 1) {
-                currentBombCountPlayer1++;
-            } else {
-                currentBombCountPlayer2++;
-            }
-            bombsPlaced++;
-
-            if (player.hasRemoteDetonation()) {
-                System.out.println("Joueur " + playerNumber + ": Bombe LineBomb en attente de détonation manuelle.");
-            } else {
-                bomb.startCountdown(() -> {
-                    handleExplosion(bomb);
-                    activeBombs.remove(bomb);
-                    flyingBombs.remove(bomb);
-                    kickingBombs.remove(bomb);
-
-                    // Décrémenter le bon compteur
-                    if (playerNumber == 1) {
-                        currentBombCountPlayer1--;
-                    } else {
-                        currentBombCountPlayer2--;
-                    }
-                });
-            }
-        }
-
-        System.out.println("Joueur " + playerNumber + ": LineBomb terminé ! " + bombsPlaced + " bombes posées.");
-    }
-
-    private void detonateRemoteBombs(Player player, int playerNumber) {
-        if (!player.hasRemoteDetonation()) {
-            System.out.println("Joueur " + playerNumber + ": Pas le pouvoir Remote !");
-            return;
-        }
-
-        List<Bomb> bombsToDetonate = new ArrayList<>();
-        for (Bomb bomb : activeBombs) {
-            if (bomb.getOwner() == player && !bomb.isFlying() && !bomb.isMoving()) {
-                bombsToDetonate.add(bomb);
-            }
-        }
-
-        if (bombsToDetonate.isEmpty()) {
-            System.out.println("Joueur " + playerNumber + ": Aucune bombe à faire exploser !");
-            return;
-        }
-
-        System.out.println("Joueur " + playerNumber + ": Remote Power activé ! Explosion de " + bombsToDetonate.size() + " bombe(s) !");
-
-        for (Bomb bomb : bombsToDetonate) {
-            handleExplosion(bomb);
-            activeBombs.remove(bomb);
-            flyingBombs.remove(bomb);
-            kickingBombs.remove(bomb);
-
-            // Décrémenter le bon compteur
-            if (playerNumber == 1) {
-                currentBombCountPlayer1--;
-            } else {
-                currentBombCountPlayer2--;
-            }
-        }
-    }
-
-    private boolean canPlaceBombAt(int x, int y) {
-        if (x < 0 || y < 0 || y >= map.length || x >= map[0].length) {
-            return false;
-        }
-
-        Tile tile = map[y][x];
-        if (tile.getType() == TileType.WALL || tile.getType() == TileType.WALL_BREAKABLE) {
-            return false;
-        }
-
-        // Vérifier s'il y a déjà une bombe
-        for (Bomb existingBomb : activeBombs) {
-            if (existingBomb.getX() == x && existingBomb.getY() == y) {
-                return false;
-            }
-        }
-
-        // Vérifier s'il y a des entités
-        if ((player1.getX() == x && player1.getY() == y) ||
-                (!isOnePlayer && player2 != null && player2.getX() == x && player2.getY() == y) ||
-                (enemy != null && enemy.getX() == x && enemy.getY() == y)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private void handleFlyingBombs() {
-        List<Bomb> bombsToStop = new ArrayList<>();
-
-        for (Bomb bomb : flyingBombs) {
-            if (!bomb.isFlying()) continue;
-
-            int[] nextPos = bomb.getNextPosition();
-            int newX = nextPos[0];
-            int newY = nextPos[1];
-
-            // Vérifier collision
-            if (newX < 0 || newX >= map[0].length || newY < 0 || newY >= map.length ||
-                    map[newY][newX].getType() == TileType.WALL ||
-                    map[newY][newX].getType() == TileType.WALL_BREAKABLE) {
-
-                bomb.stopFlying();
-                bombsToStop.add(bomb);
-            } else {
-                bomb.moveToNextPosition();
-                updateBombVisual(bomb);
-            }
-        }
-
-        flyingBombs.removeAll(bombsToStop);
-    }
-
-    private void handleKickingBombs() {
-        List<Bomb> bombsToStop = new ArrayList<>();
-
-        for (Bomb bomb : kickingBombs) {
-            if (!bomb.isMoving()) continue;
-
-            int[] nextPos = bomb.getNextKickPosition();
-            int newX = nextPos[0];
-            int newY = nextPos[1];
-
-            if (!canBombMoveTo(newX, newY)) {
-                bomb.stopMoving();
-                bombsToStop.add(bomb);
-            } else {
-                bomb.moveToNextKickPosition();
-                updateBombVisual(bomb);
-            }
-        }
-
-        kickingBombs.removeAll(bombsToStop);
-    }
-
-    private boolean canBombMoveTo(int x, int y) {
-        if (x < 0 || y < 0 || y >= map.length || x >= map[0].length) {
-            return false;
-        }
-
-        Tile tile = map[y][x];
-        if (tile.getType() == TileType.WALL || tile.getType() == TileType.WALL_BREAKABLE) {
-            return false;
-        }
-
-        // Vérifier les autres bombes immobiles
-        for (Bomb otherBomb : activeBombs) {
-            if (otherBomb.getX() == x && otherBomb.getY() == y &&
-                    !otherBomb.isFlying() && !otherBomb.isMoving()) {
-                return false;
-            }
-        }
-
-        // Vérifier les joueurs
-        if ((player1.getX() == x && player1.getY() == y) ||
-                (!isOnePlayer && player2 != null && player2.getX() == x && player2.getY() == y) ||
-                (enemy != null && enemy.getX() == x && enemy.getY() == y)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    private boolean tryKickBomb(Bomb bomb, int directionX, int directionY) {
-        if (Math.abs(directionX) + Math.abs(directionY) != 1) {
-            return false;
-        }
-
-        int newX = bomb.getX() + directionX;
-        int newY = bomb.getY() + directionY;
-
-        if (!canBombMoveTo(newX, newY)) {
-            return false;
-        }
-
-        kickingBombs.add(bomb);
-        bomb.kickBomb(directionX, directionY, () -> {
-            // Logique gérée dans handleKickingBombs()
-        });
-
-        return true;
-    }
-
-    private boolean canMoveTo(int x, int y, Object entity) {
-        if (x < 0 || y < 0 || y >= map.length || x >= map[0].length) {
-            return false;
-        }
-
-        Tile tile = map[y][x];
-
-        if (tile.getType() == TileType.WALL) {
-            return false;
-        }
-
-        if (tile.getType() == TileType.WALL_BREAKABLE) {
-            // Vérifier WallPass
-            if ((entity == player1 && player1.canPassThroughWalls()) ||
-                    (!isOnePlayer && entity == player2 && player2 != null && player2.canPassThroughWalls())) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        // Vérifier les bombes
-        for (Bomb bomb : activeBombs) {
-            if (bomb.getX() == x && bomb.getY() == y) {
-                // Vérifier Kick Power
-                if (((entity == player1 && player1.canKickBombs()) ||
-                        (!isOnePlayer && entity == player2 && player2 != null && player2.canKickBombs()))
-                        && !bomb.isFlying() && !bomb.isMoving()) {
-
-                    Player currentPlayer = (Player) entity;
-                    int kickDirX = x - currentPlayer.getX();
-                    int kickDirY = y - currentPlayer.getY();
-
-                    if (tryKickBomb(bomb, kickDirX, kickDirY)) {
-                        return true;
-                    }
-                }
-
-                // Vérifier BombPass
-                if (((entity == player1 && player1.canPassThroughBombs() && bomb.getOwner() == player1) ||
-                        (!isOnePlayer && entity == player2 && player2 != null && player2.canPassThroughBombs() && bomb.getOwner() == player2))) {
-                    continue;
-                }
-
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private void updateBombVisual(Bomb bomb) {
-        removeBombVisual(bomb.getPreviousX(), bomb.getPreviousY());
-        placeBombVisual(bomb);
-    }
-
-    private void removeBombVisual(int x, int y) {
-        StackPane cell = (StackPane) getNodeFromGridPane(gameGrid, x, y);
-        if (cell != null && cell.getChildren().size() > 1) {
-            cell.getChildren().removeIf(node -> cell.getChildren().indexOf(node) > 0);
-        }
-    }
-
-    private void removeBombVisual(Bomb bomb) {
-        removeBombVisual(bomb.getX(), bomb.getY());
-    }
-
-    private void updatePlayerPosition(Player player, ImagePattern pattern) {
-        int prevX = player.getPreviousX();
-        int prevY = player.getPreviousY();
-
-        StackPane prevCell = (StackPane) getNodeFromGridPane(gameGrid, prevX, prevY);
-        if (prevCell != null) {
-            boolean hasBombAtPrevPos = activeBombs.stream()
-                    .anyMatch(bomb -> bomb.getX() == prevX && bomb.getY() == prevY);
-
-            if (hasBombAtPrevPos) {
-                if (prevCell.getChildren().size() > 2) {
-                    prevCell.getChildren().removeIf(node -> prevCell.getChildren().indexOf(node) > 1);
-                }
-            } else {
-                if (prevCell.getChildren().size() > 1) {
-                    prevCell.getChildren().removeIf(node -> prevCell.getChildren().indexOf(node) > 0);
-                }
-            }
-        }
-
-        addEntityToGrid(player.getX(), player.getY(), pattern);
-        checkPlayerOnPowerUp(player);
-    }
-
-    private void updateEnemyPosition(Enemy enemy) {
-        int prevX = enemy.getPreviousX();
-        int prevY = enemy.getPreviousY();
-
-        StackPane prevCell = (StackPane) getNodeFromGridPane(gameGrid, prevX, prevY);
-        if (prevCell != null) {
-            boolean hasBombAtPrevPos = activeBombs.stream()
-                    .anyMatch(bomb -> bomb.getX() == prevX && bomb.getY() == prevY);
-
-            if (hasBombAtPrevPos) {
-                if (prevCell.getChildren().size() > 2) {
-                    prevCell.getChildren().removeIf(node -> prevCell.getChildren().indexOf(node) > 1);
-                }
-            } else {
-                if (prevCell.getChildren().size() > 1) {
-                    prevCell.getChildren().removeIf(node -> prevCell.getChildren().indexOf(node) > 0);
-                }
-            }
-        }
-
-        addEntityToGrid(enemy.getX(), enemy.getY(), enemyPattern);
-    }
-
-    public void moveEnemy(Enemy enemy) {
-        int currentX = enemy.getX();
-        int currentY = enemy.getY();
-
-        int newX = currentX + enemyCurrDirection[0];
-        int newY = currentY + enemyCurrDirection[1];
-
-        if (canMoveTo(newX, newY, enemy)) {
-            enemy.setPosition(newX, newY);
-            updateEnemyPosition(enemy);
-        } else {
-            // Changer de direction
-            int[][] directions = {{1,0}, {-1,0}, {0,1}, {0,-1}};
-            int[][] possibleDirections = new int[3][2];
-            int idx = 0;
-
-            for (int[] dir : directions) {
-                if (!(dir[0] == enemyCurrDirection[0] && dir[1] == enemyCurrDirection[1])) {
-                    possibleDirections[idx++] = dir;
-                }
-            }
-
-            int randomIndex = (int) (Math.random() * possibleDirections.length);
-            enemyCurrDirection = possibleDirections[randomIndex];
-
-            newX = currentX + enemyCurrDirection[0];
-            newY = currentY + enemyCurrDirection[1];
-
-            if (canMoveTo(newX, newY, enemy)) {
-                enemy.setPosition(newX, newY);
-                updateEnemyPosition(enemy);
-            }
-        }
-    }
-
-    private void handleExplosion(Bomb bomb) {
-        int x = bomb.getX();
-        int y = bomb.getY();
-        int range = bomb.getRange();
-
-        destroyTile(x, y);
-
-        int[][] directions = {{1,0}, {-1,0}, {0,1}, {0,-1}};
-
-        for (int[] direction : directions) {
-            for (int rangeStep = 1; rangeStep <= range; rangeStep++) {
-                int nx = x + direction[0] * rangeStep;
-                int ny = y + direction[1] * rangeStep;
-
-                if (!isInBounds(nx, ny)) break;
-
-                boolean continueExplosion = destroyTile(nx, ny);
-                if (!continueExplosion) break;
-            }
-        }
-    }
-
-    private boolean destroyTile(int x, int y) {
-        Tile tile = map[y][x];
-
-        if (tile.getType() == TileType.WALL) {
-            return false;
-        }
-
-        StackPane cell = (StackPane) getNodeFromGridPane(gameGrid, x, y);
-        if (cell != null) {
-            if (cell.getChildren().size() > 1) {
-                cell.getChildren().removeIf(node -> cell.getChildren().indexOf(node) > 0);
-            }
-
-            Rectangle explosionRect = new Rectangle(50, 50);
-            explosionRect.setFill(explosionPattern);
-            cell.getChildren().add(explosionRect);
-        }
-
-        javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(2));
-        delay.setOnFinished(event -> {
-            if (tile.getType() == TileType.WALL_BREAKABLE) {
-                map[y][x] = new Tile(TileType.FLOOR);
-
-                // Ajouter des points pour la destruction de murs
-                updateScore(10);
-
-                // 25% de chance de générer un power-up
-                if (Math.random() < 0.25) {
-                    try {
-                        PowerUpType type = PowerUpType.randomType();
-                        PowerUp powerUp = PowerUpFactory.create(type, x, y);
-
-                        if (powerUp != null) {
-                            activePowerUps.add(powerUp);
-                            placePowerUpVisual(powerUp);
-                        }
-                    } catch (Exception e) {
-                        System.out.println("Erreur lors de la création du power-up: " + e.getMessage());
-                    }
-                }
-            }
-            redrawTile(x, y);
-        });
-        delay.play();
-
-        return switch (tile.getType()) {
-            case FLOOR -> true;
-            case WALL -> false;
-            case WALL_BREAKABLE -> false;
-            default -> true;
-        };
-    }
-
-    private boolean isInBounds(int x, int y) {
-        return x >= 0 && y >= 0 && y < map.length && x < map[0].length;
-    }
-
-    private void redrawTile(int x, int y) {
-        StackPane cell = (StackPane) getNodeFromGridPane(gameGrid, x, y);
-        if (cell != null) {
-            boolean hasPowerUp = activePowerUps.stream()
-                    .anyMatch(powerUp -> powerUp.getX() == x && powerUp.getY() == y);
-
-            if (!hasPowerUp && cell.getChildren().size() > 1) {
-                cell.getChildren().removeIf(node -> cell.getChildren().indexOf(node) > 0);
-            }
-
-            Rectangle background = (Rectangle) cell.getChildren().get(0);
-            switch (map[y][x].getType()) {
-                case FLOOR -> background.setFill(floorPattern);
-                case WALL -> background.setFill(wallPattern);
-                case WALL_BREAKABLE -> background.setFill(wallBreakablePattern);
-            }
-        }
-    }
-
-    private void placePowerUpVisual(PowerUp powerUp) {
-        StackPane cell = (StackPane) getNodeFromGridPane(gameGrid, powerUp.getX(), powerUp.getY());
-        if (cell != null) {
-            Rectangle powerUpRect = new Rectangle(50, 50);
-            powerUpRect.setFill(powerUpPattern);
-            cell.getChildren().add(powerUpRect);
-        }
-    }
-
-    private void checkPlayerOnPowerUp(Player player) {
-        PowerUp toCollect = null;
-        for (PowerUp powerUp : activePowerUps) {
-            if (powerUp.getX() == player.getX() && powerUp.getY() == player.getY()) {
-                toCollect = powerUp;
-                break;
-            }
-        }
-
-        if (toCollect != null) {
-            int playerNumber = (player == player1) ? 1 : 2;
-            System.out.println("Joueur " + playerNumber + ": Power-up collecté: " + toCollect.getType());
-
-            applyPowerUpEffect(player, toCollect, playerNumber);
-            removePowerUpVisual(toCollect);
-            activePowerUps.remove(toCollect);
-        }
-    }
-
-    private void removePowerUpVisual(PowerUp powerUp) {
-        StackPane cell = (StackPane) getNodeFromGridPane(gameGrid, powerUp.getX(), powerUp.getY());
-        if (cell != null) {
-            if (cell.getChildren().size() > 1) {
-                cell.getChildren().removeIf(node -> cell.getChildren().indexOf(node) > 0);
-            }
-        }
-    }
-
-    private void applyPowerUpEffect(Player player, PowerUp powerUp, int playerNumber) {
-        powerUp.applyTo(player);
-
-        // Ajouter des points pour les power-ups collectés
-        updateScore(50);
-
-        switch (powerUp.getType()) {
-            case RANGE_UP -> System.out.println("Joueur " + playerNumber + ": Range augmentée! (" + player.getExplosionRange() + ")");
-            case BOMB_UP -> System.out.println("Joueur " + playerNumber + ": Bombes max augmentées! (" + player.getMaxBombs() + ")");
-            case SPEED_UP -> System.out.println("Joueur " + playerNumber + ": Vitesse augmentée! (" + player.getSpeed() + ")");
-            case GLOVE -> System.out.println("Joueur " + playerNumber + ": Glove activé! (" +
-                    (playerNumber == 1 ? "SHIFT" : "CTRL") + " pour ramasser/lancer)");
-            case KICK -> System.out.println("Joueur " + playerNumber + ": Kick activé! (marcher contre une bombe)");
-            case LINE_BOMB -> System.out.println("Joueur " + playerNumber + ": LineBomb activé! (" +
-                    (playerNumber == 1 ? "L" : "K") + ")");
-            case REMOTE -> System.out.println("Joueur " + playerNumber + ": Remote activé! (" +
-                    (playerNumber == 1 ? "R" : "O") + ")");
-            case SKULL -> System.out.println("Joueur " + playerNumber + ": MALUS SKULL!");
-            case BOMB_PASS -> System.out.println("Joueur " + playerNumber + ": BombPass activé!");
-            case WALL_PASS -> System.out.println("Joueur " + playerNumber + ": WallPass activé!");
-        }
-    }
-
+    /**
+     * Arrête la boucle de jeu
+     */
     public void stopGameLoop() {
         if (gameLoop != null) {
             gameLoop.stop();
+            System.out.println("Boucle de jeu arrêtée");
         }
     }
 
+    /**
+     * Retourne au menu principal
+     */
     @FXML
     private void handleBackToMenu() {
-        // Sauvegarder les statistiques avant de quitter
-        endGame();
+        System.out.println("Retour au menu demandé...");
+
+        // Arrêter la boucle de jeu
+        stopGameLoop();
+
+        // Sauvegarder les statistiques
+        gameStateManager.endGame();
 
         try {
+            // Charger la vue du menu
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu.fxml"));
             Parent menuRoot = loader.load();
 
-            // Passer l'utilisateur de retour au menu
+            // Passer l'utilisateur au contrôleur du menu
             MenuController menuController = loader.getController();
-            if (currentUser != null) {
-                menuController.setCurrentUser(currentUser);
+            if (gameStateManager.getCurrentUser() != null) {
+                menuController.setCurrentUser(gameStateManager.getCurrentUser());
             }
 
+            // Changer de scène
             Scene menuScene = new Scene(menuRoot);
             Stage stage = (Stage) gameGrid.getScene().getWindow();
             stage.setScene(menuScene);
             stage.setTitle("Super Bomberman - Menu");
+
+            System.out.println("Retour au menu réussi!");
+
         } catch (IOException e) {
             e.printStackTrace();
+            System.err.println("Erreur lors du retour au menu");
         }
     }
 
-    private void drawMap(Tile[][] map) {
-        for (int row = 0; row < map.length; row++) {
-            for (int col = 0; col < map[row].length; col++) {
-                Tile tile = map[row][col];
-                StackPane cell = new StackPane();
-                Rectangle background = new Rectangle(50, 50);
-
-                switch (tile.getType()) {
-                    case WALL -> background.setFill(wallPattern);
-                    case FLOOR -> background.setFill(floorPattern);
-                    case WALL_BREAKABLE -> background.setFill(wallBreakablePattern);
-                    case PLAYER1, PLAYER2, ENEMY -> background.setFill(floorPattern);
-                }
-
-                cell.getChildren().add(background);
-                gameGrid.add(cell, col, row);
-            }
+    /**
+     * Gère la mise en pause du jeu
+     */
+    public void pauseGame() {
+        if (gameLoop != null) {
+            gameLoop.stop();
+            inputHandler.clearPressedKeys();
+            System.out.println("Jeu mis en pause");
         }
     }
 
-    private void addEntityToGrid(int x, int y, ImagePattern entityPattern) {
-        StackPane cell = (StackPane) getNodeFromGridPane(gameGrid, x, y);
-        if (cell != null) {
-            Rectangle entity = new Rectangle(50, 50);
-            entity.setFill(entityPattern);
-            cell.getChildren().add(entity);
+    /**
+     * Reprend le jeu après une pause
+     */
+    public void resumeGame() {
+        if (gameLoop != null) {
+            startGameLoop();
+            System.out.println("Jeu repris");
         }
     }
 
-    private javafx.scene.Node getNodeFromGridPane(GridPane gridPane, int col, int row) {
-        for (javafx.scene.Node node : gridPane.getChildren()) {
-            Integer columnIndex = GridPane.getColumnIndex(node);
-            Integer rowIndex = GridPane.getRowIndex(node);
-            if (columnIndex != null && rowIndex != null && columnIndex == col && rowIndex == row) {
-                return node;
-            }
-        }
-        return null;
+    /**
+     * Nettoie toutes les ressources (utile pour les tests)
+     */
+    public void cleanup() {
+        stopGameLoop();
+        if (bombManager != null) bombManager.clearAllBombs();
+        if (powerUpManager != null) powerUpManager.clearAllPowerUps();
+        System.out.println("Nettoyage terminé");
     }
 
-    private void placeBombVisual(Bomb bomb) {
-        StackPane cell = (StackPane) getNodeFromGridPane(gameGrid, bomb.getX(), bomb.getY());
-        if (cell != null) {
-            if (cell.getChildren().size() > 1) {
-                cell.getChildren().removeIf(node -> cell.getChildren().indexOf(node) > 0);
-            }
-            Rectangle bombRect = new Rectangle(50, 50);
-            bombRect.setFill(bombPattern);
-            cell.getChildren().add(bombRect);
+    // === GETTERS POUR LES TESTS ET LE DEBUG ===
+
+    public GameStateManager getGameStateManager() { return gameStateManager; }
+    public VisualRenderer getVisualRenderer() { return visualRenderer; }
+    public InputHandler getInputHandler() { return inputHandler; }
+    public BombManager getBombManager() { return bombManager; }
+    public PowerUpManager getPowerUpManager() { return powerUpManager; }
+    public GameLogic getGameLogic() { return gameLogic; }
+    public Tile[][] getMap() { return map; }
+
+    /**
+     * Affiche des statistiques de debug
+     */
+    public void printDebugStats() {
+        System.out.println("=== STATISTIQUES DE DEBUG ===");
+        System.out.println("Score actuel: " + gameStateManager.getGameScore());
+        System.out.println("Bombes actives: " + bombManager.getActiveBombs().size());
+        System.out.println("Power-ups actifs: " + powerUpManager.getActivePowerUpCount());
+        System.out.println("Joueur 1 - Position: (" + player1.getX() + ", " + player1.getY() + ")");
+        if (!isOnePlayer && player2 != null) {
+            System.out.println("Joueur 2 - Position: (" + player2.getX() + ", " + player2.getY() + ")");
+        }
+        if (enemy != null) {
+            System.out.println("Ennemi - Position: (" + enemy.getX() + ", " + enemy.getY() + ")");
+        }
+
+        // Stats des bombes par joueur
+        System.out.println("Bombes J1: " + bombManager.getCurrentBombCountPlayer1() + "/" + player1.getMaxBombs());
+        if (!isOnePlayer && player2 != null) {
+            System.out.println("Bombes J2: " + bombManager.getCurrentBombCountPlayer2() + "/" + player2.getMaxBombs());
+        }
+
+        // Stats des malus actifs
+        if (player1.hasActiveMalus()) {
+            System.out.println("Joueur 1 - Malus actif: " + player1.getCurrentMalus() +
+                    " (reste " + (player1.getMalusTimeRemaining()/1000) + "s)");
+        }
+        if (!isOnePlayer && player2 != null && player2.hasActiveMalus()) {
+            System.out.println("Joueur 2 - Malus actif: " + player2.getCurrentMalus() +
+                    " (reste " + (player2.getMalusTimeRemaining()/1000) + "s)");
+        }
+
+        System.out.println("==============================");
+    }
+
+    /**
+     * Force l'affichage des contrôles dans la console (utile pour debug)
+     */
+    public void showControls() {
+        if (inputHandler != null) {
+            inputHandler.displayControls();
         }
     }
 
-    private void setupGridConstraints() {
-        int cols = map[0].length;
-        int rows = map.length;
-
-        // Si les contraintes existent déjà, les clear
-        if (!gameGrid.getColumnConstraints().isEmpty()) {
-            gameGrid.getColumnConstraints().clear();
+    /**
+     * Force le focus sur la grille de jeu (utile si les contrôles ne répondent pas)
+     */
+    public void forceFocus() {
+        if (gameGrid != null) {
+            Platform.runLater(() -> {
+                gameGrid.requestFocus();
+                System.out.println("Focus forcé sur la grille de jeu");
+            });
         }
-        if (!gameGrid.getRowConstraints().isEmpty()) {
-            gameGrid.getRowConstraints().clear();
+    }
+
+    /**
+     * Méthode utilitaire pour tester la pose de bombes (debug)
+     */
+    public void testPlaceBomb(int playerNumber) {
+        if (playerNumber == 1) {
+            bombManager.placeBomb(player1, 1);
+        } else if (playerNumber == 2 && !isOnePlayer && player2 != null) {
+            bombManager.placeBomb(player2, 2);
+        }
+    }
+
+    /**
+     * Méthode utilitaire pour tester l'explosion manuelle (debug)
+     */
+    public void testRemoteExplosion(int playerNumber) {
+        if (playerNumber == 1) {
+            bombManager.detonateRemoteBombs(player1, 1);
+        } else if (playerNumber == 2 && !isOnePlayer && player2 != null) {
+            bombManager.detonateRemoteBombs(player2, 2);
+        }
+    }
+
+    /**
+     * Active les power-ups de debug pour tester les fonctionnalités
+     */
+    public void enableDebugPowers(int playerNumber) {
+        Player player = (playerNumber == 1) ? player1 : player2;
+        if (player == null) return;
+
+        // Activer tous les pouvoirs pour les tests
+        player.setCanKickBombs(true);
+        player.setCanThrowBombs(true);
+        player.setRemoteDetonation(true);
+        player.setCanPassThroughWalls(true);
+        player.setCanPassThroughBombs(true);
+        player.setHasLineBombs(true);
+
+        // Augmenter les stats
+        for (int i = 0; i < 3; i++) {
+            player.increaseMaxBombs();
+            player.increaseExplosionRange();
+            player.increaseSpeed();
         }
 
-        // Ajouter les contraintes de colonnes
-        for (int i = 0; i < cols; i++) {
-            ColumnConstraints colConstraint = new ColumnConstraints();
-            colConstraint.setPrefWidth(50);
-            colConstraint.setMinWidth(50);
-            colConstraint.setMaxWidth(50);
-            gameGrid.getColumnConstraints().add(colConstraint);
+        System.out.println("Joueur " + playerNumber + ": Tous les pouvoirs de debug activés!");
+    }
+
+    /**
+     * Affiche l'état détaillé d'un joueur (debug)
+     */
+    public void printPlayerState(int playerNumber) {
+        Player player = (playerNumber == 1) ? player1 : player2;
+        if (player == null) {
+            System.out.println("Joueur " + playerNumber + " non disponible");
+            return;
         }
 
-        // Ajouter les contraintes de lignes
-        for (int i = 0; i < rows; i++) {
-            RowConstraints rowConstraint = new RowConstraints();
-            rowConstraint.setPrefHeight(50);
-            rowConstraint.setMinHeight(50);
-            rowConstraint.setMaxHeight(50);
-            gameGrid.getRowConstraints().add(rowConstraint);
-        }
-
-        // Configurer le GridPane
-        gameGrid.setHgap(0);
-        gameGrid.setVgap(0);
-        gameGrid.setStyle("-fx-background-color: black; -fx-grid-lines-visible: false;");
+        System.out.println("=== ÉTAT JOUEUR " + playerNumber + " ===");
+        System.out.println("Position: (" + player.getX() + ", " + player.getY() + ")");
+        System.out.println("Vitesse: " + player.getSpeed());
+        System.out.println("Bombes max: " + player.getMaxBombs());
+        System.out.println("Portée explosion: " + player.getExplosionRange());
+        System.out.println("Kick: " + player.canKickBombs());
+        System.out.println("Glove: " + player.canThrowBombs());
+        System.out.println("Remote: " + player.hasRemoteDetonation());
+        System.out.println("WallPass: " + player.canPassThroughWalls());
+        System.out.println("BombPass: " + player.canPassThroughBombs());
+        System.out.println("LineBomb: " + player.hasLineBombs());
+        System.out.println("Tient une bombe: " + player.isHoldingBomb());
+        System.out.println("Malus actif: " + (player.hasActiveMalus() ? player.getCurrentMalus() : "Aucun"));
+        System.out.println("========================");
     }
 }
