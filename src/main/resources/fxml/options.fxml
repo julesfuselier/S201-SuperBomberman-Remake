@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
+
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.superbomberman.controller.OptionsController"
+            prefWidth="600" prefHeight="500" style="-fx-background-color: #2c3e50;">
+
+    <!-- Titre -->
+    <top>
+        <VBox alignment="CENTER" spacing="10">
+            <padding>
+                <Insets top="20" bottom="20" />
+            </padding>
+            <Label text="OPTIONS" textFill="#ecf0f1">
+                <font>
+                    <Font name="System Bold" size="32" />
+                </font>
+            </Label>
+            <Separator prefWidth="400" style="-fx-background: #ecf0f1;" />
+        </VBox>
+    </top>
+
+    <!-- Contenu principal -->
+    <center>
+        <VBox spacing="25" alignment="CENTER">
+            <padding>
+                <Insets left="50" right="50" />
+            </padding>
+
+            <!-- Section Audio -->
+            <VBox spacing="15">
+                <Label text="AUDIO" textFill="#f39c12" style="-fx-font-weight: bold; -fx-font-size: 18px;" />
+
+                <HBox spacing="20" alignment="CENTER_LEFT">
+                    <Label text="Volume Effets:" textFill="#ecf0f1" style="-fx-font-size: 14px;" />
+                    <Slider fx:id="soundVolumeSlider" min="0" max="100" value="80"
+                            prefWidth="200" style="-fx-control-inner-background: #34495e;" />
+                    <Label fx:id="soundVolumeLabel" text="80%" textFill="#ecf0f1"
+                           style="-fx-font-size: 14px; -fx-min-width: 40px;" />
+                </HBox>
+            </VBox>
+
+            <!--
+            <VBox spacing="15">
+                <Label text="JEU" textFill="#e74c3c" style="-fx-font-weight: bold; -fx-font-size: 18px;" />
+
+                <HBox spacing="20" alignment="CENTER_LEFT">
+                    <Label text="Difficulté:" textFill="#ecf0f1" style="-fx-font-size: 14px;" />
+                    <ComboBox fx:id="difficultyComboBox" prefWidth="150"
+                              style="-fx-background-color: #34495e; -fx-text-fill: #ecf0f1;">
+                        <items>
+                            <FXCollections fx:factory="observableArrayList">
+                                <String fx:value="Facile" />
+                                <String fx:value="Normal" />
+                                <String fx:value="Difficile" />
+                            </FXCollections>
+                        </items>
+                        <value>
+                            <String fx:value="Normal" />
+                        </value>
+                    </ComboBox>
+                </HBox>
+
+                <HBox spacing="20" alignment="CENTER_LEFT">
+                    <Label text="Vitesse de jeu:" textFill="#ecf0f1" style="-fx-font-size: 14px;" />
+                    <Slider fx:id="gameSpeedSlider" min="1" max="5" value="3"
+                            prefWidth="200" majorTickUnit="1" minorTickCount="0"
+                            snapToTicks="true" showTickLabels="true" showTickMarks="true"
+                            style="-fx-control-inner-background: #34495e;" />
+                </HBox>
+            </VBox>   -->
+
+            <!-- Section Contrôles -->
+            <VBox spacing="15">
+                <Label text="JOUEUR 1" textFill="#9b59b6" style="-fx-font-weight: bold; -fx-font-size: 18px;" />
+
+                <GridPane hgap="30" vgap="10" alignment="CENTER">
+                    <Label text="Haut:" textFill="#ecf0f1" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                    <Button fx:id="upKeyButton1" text="Z" prefWidth="120"
+                            GridPane.columnIndex="1" GridPane.rowIndex="0"
+                            style="-fx-background-color: #34495e; -fx-text-fill: #ecf0f1; -fx-border-color: #7f8c8d;" />
+
+                    <Label text="Bas:" textFill="#ecf0f1" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                    <Button fx:id="downKeyButton1" text="S" prefWidth="120"
+                            GridPane.columnIndex="1" GridPane.rowIndex="1"
+                            style="-fx-background-color: #34495e; -fx-text-fill: #ecf0f1; -fx-border-color: #7f8c8d;" />
+
+                    <Label text="Gauche:" textFill="#ecf0f1" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                    <Button fx:id="leftKeyButton1" text="Q" prefWidth="120"
+                            GridPane.columnIndex="1" GridPane.rowIndex="2"
+                            style="-fx-background-color: #34495e; -fx-text-fill: #ecf0f1; -fx-border-color: #7f8c8d;" />
+
+                    <Label text="Droite:" textFill="#ecf0f1" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                    <Button fx:id="rightKeyButton1" text="D" prefWidth="120"
+                            GridPane.columnIndex="1" GridPane.rowIndex="3"
+                            style="-fx-background-color: #34495e; -fx-text-fill: #ecf0f1; -fx-border-color: #7f8c8d;" />
+
+                    <Label text="Bombe:" textFill="#ecf0f1" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                    <Button fx:id="bombKeyButton1" text="SPACE" prefWidth="120"
+                            GridPane.columnIndex="3" GridPane.rowIndex="0"
+                            style="-fx-background-color: #e74c3c; -fx-text-fill: #ecf0f1; -fx-border-color: #c0392b;" />
+                </GridPane>
+
+                <Label text="JOUEUR 2" textFill="#9b59b6" style="-fx-font-weight: bold; -fx-font-size: 18px;" />
+
+                <GridPane hgap="30" vgap="10" alignment="CENTER">
+                    <Label text="Haut:" textFill="#ecf0f1" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                    <Button fx:id="upKeyButton2" text="UP" prefWidth="120"
+                            GridPane.columnIndex="1" GridPane.rowIndex="0"
+                            style="-fx-background-color: #34495e; -fx-text-fill: #ecf0f1; -fx-border-color: #7f8c8d;" />
+
+                    <Label text="Bas:" textFill="#ecf0f1" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                    <Button fx:id="downKeyButton2" text="DOWN" prefWidth="120"
+                            GridPane.columnIndex="1" GridPane.rowIndex="1"
+                            style="-fx-background-color: #34495e; -fx-text-fill: #ecf0f1; -fx-border-color: #7f8c8d;" />
+
+                    <Label text="Gauche:" textFill="#ecf0f1" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                    <Button fx:id="leftKeyButton2" text="LEFT" prefWidth="120"
+                            GridPane.columnIndex="1" GridPane.rowIndex="2"
+                            style="-fx-background-color: #34495e; -fx-text-fill: #ecf0f1; -fx-border-color: #7f8c8d;" />
+
+                    <Label text="Droite:" textFill="#ecf0f1" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+                    <Button fx:id="rightKeyButton2" text="RIGHT" prefWidth="120"
+                            GridPane.columnIndex="1" GridPane.rowIndex="3"
+                            style="-fx-background-color: #34495e; -fx-text-fill: #ecf0f1; -fx-border-color: #7f8c8d;" />
+
+                    <Label text="Bombe:" textFill="#ecf0f1" GridPane.columnIndex="2" GridPane.rowIndex="0" />
+                    <Button fx:id="bombKeyButton2" text="ENTER" prefWidth="120"
+                            GridPane.columnIndex="3" GridPane.rowIndex="0"
+                            style="-fx-background-color: #e74c3c; -fx-text-fill: #ecf0f1; -fx-border-color: #c0392b;" />
+                </GridPane>
+
+                <Label text="PAUSE" textFill="#9b59b6" style="-fx-font-weight: bold; -fx-font-size: 18px;" />
+
+                <GridPane hgap="30" vgap="10" alignment="CENTER">
+                    <Label text="Pause:" textFill="#ecf0f1" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                    <Button fx:id="pauseKeyButton" text="P" prefWidth="120"
+                            GridPane.columnIndex="1" GridPane.rowIndex="0"
+                            style="-fx-background-color: #f39c12; -fx-text-fill: #ecf0f1; -fx-border-color: #d68910;" />
+                </GridPane>
+            </VBox>
+        </VBox>
+    </center>
+
+    <!-- Boutons du bas -->
+    <bottom>
+        <HBox spacing="20" alignment="CENTER">
+            <padding>
+                <Insets top="20" bottom="30" />
+            </padding>
+
+            <Button fx:id="applyButton" onAction="#handleApply" text="APPLIQUER"
+                    prefWidth="120" prefHeight="40"
+                    style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5;" />
+
+            <Button fx:id="resetButton" onAction="#handleReset" text="RESET"
+                    prefWidth="120" prefHeight="40"
+                    style="-fx-background-color: #e67e22; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5;" />
+
+            <Button fx:id="backButton" onAction="#handleBack" text="RETOUR"
+                    prefWidth="120" prefHeight="40"
+                    style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5;" />
+        </HBox>
+    </bottom>
+</BorderPane>

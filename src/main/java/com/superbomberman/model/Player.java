@@ -8,16 +8,15 @@ import com.superbomberman.model.powerup.MalusType;
  * Représente un joueur dans le jeu Super Bomberman, avec sa position, ses capacités et ses bonus.
  * <p>
  * Cette classe gère la position courante et précédente du joueur, le nombre maximum de bombes
- * qu'il peut poser, la portée de ses explosions, sa vitesse de déplacement et sa capacité à
- * pousser les bombes. Elle fournit des méthodes pour manipuler et interroger ces propriétés,
- * notamment lors de l'obtention de bonus en jeu.
+ * qu'il peut poser, la portée de ses explosions, sa vitesse de déplacement et toutes ses capacités
+ * spéciales (kick, throw, remote, etc.). Elle fournit des méthodes pour manipuler et interroger 
+ * ces propriétés, notamment lors de l'obtention de bonus en jeu.
  * </p>
  *
  * @author Jules Fuselier
- * @version 1.0
- * @since 2025-06-05
+ * @version 2.0
+ * @since 2025-06-08
  */
-
 public class Player {
     /** Position actuelle sur l'axe X du joueur. */
     private int x;
@@ -40,17 +39,22 @@ public class Player {
     /** Vitesse de déplacement du joueur. */
     private double speed = 1.0;
 
-    /** Indique si le joueur peut pousser les bombes. */
+    /** Indique si le joueur peut donner des coups de pied aux bombes. */
     private boolean canKickBombs = false;
 
+    /** Indique si le joueur peut ramasser et lancer des bombes. */
     private boolean canThrowBombs = false;
 
+    /** Indique si le joueur peut faire exploser ses bombes à distance. */
     private boolean hasRemoteDetonation = false;
 
+    /** Indique si le joueur peut traverser les murs destructibles. */
     private boolean canPassThroughWalls = false;
 
+    /** Indique si le joueur peut traverser ses propres bombes. */
     private boolean canPassThroughBombs = false;
 
+    /** Indique si le joueur peut poser des bombes en ligne droite. */
     private boolean hasLineBombs = false;
 
     /** Bombe actuellement tenue par le joueur (null si aucune) */
@@ -92,49 +96,63 @@ public class Player {
      *
      * @return La coordonnée X actuelle.
      */
-    public int getX() { return x; }
+    public int getX() { 
+        return x; 
+    }
 
     /**
      * Retourne la position actuelle Y du joueur.
      *
      * @return La coordonnée Y actuelle.
      */
-    public int getY() { return y; }
+    public int getY() { 
+        return y; 
+    }
 
     /**
      * Retourne la dernière position X enregistrée avant le dernier déplacement.
      *
      * @return La coordonnée X précédente.
      */
-    public int getPreviousX() { return previousX; }
+    public int getPreviousX() { 
+        return previousX; 
+    }
 
     /**
      * Retourne la dernière position Y enregistrée avant le dernier déplacement.
      *
      * @return La coordonnée Y précédente.
      */
-    public int getPreviousY() { return previousY; }
+    public int getPreviousY() { 
+        return previousY; 
+    }
 
     /**
      * Retourne le nombre maximum de bombes que le joueur peut poser simultanément.
      *
      * @return Le nombre maximum de bombes.
      */
-    public int getMaxBombs() { return maxBombs; }
+    public int getMaxBombs() { 
+        return maxBombs; 
+    }
 
     /**
      * Retourne la portée d'explosion des bombes posées par le joueur.
      *
      * @return La portée d'explosion.
      */
-    public int getExplosionRange() { return explosionRange; }
+    public int getExplosionRange() { 
+        return explosionRange; 
+    }
 
     /**
      * Retourne la vitesse de déplacement du joueur.
      *
      * @return La vitesse du joueur.
      */
-    public double getSpeed() { return speed; }
+    public double getSpeed() { 
+        return speed; 
+    }
 
     /**
      * Augmente de 1 le nombre maximum de bombes que le joueur peut poser.
@@ -158,59 +176,109 @@ public class Player {
     }
 
     /**
-     * Définit la capacité du joueur à pousser les bombes.
+     * Définit la capacité du joueur à donner des coups de pied aux bombes.
      *
-     * @param value true si le joueur peut pousser les bombes, sinon false.
+     * @param value true si le joueur peut donner des coups de pied aux bombes, sinon false.
      */
     public void setCanKickBombs(boolean value) {
         canKickBombs = value;
     }
 
     /**
-     * Indique si le joueur peut actuellement pousser les bombes.
+     * Indique si le joueur peut actuellement donner des coups de pied aux bombes.
      *
-     * @return true si le joueur peut pousser les bombes, sinon false.
+     * @return true si le joueur peut donner des coups de pied aux bombes, sinon false.
      */
     public boolean canKickBombs() {
         return canKickBombs;
     }
 
+    /**
+     * Définit la capacité du joueur à ramasser et lancer des bombes.
+     *
+     * @param value true si le joueur peut ramasser/lancer des bombes, sinon false.
+     */
     public void setCanThrowBombs(boolean value) {
         canThrowBombs = value;
     }
 
+    /**
+     * Indique si le joueur peut ramasser et lancer des bombes.
+     *
+     * @return true si le joueur peut ramasser/lancer des bombes, sinon false.
+     */
     public boolean canThrowBombs() {
         return canThrowBombs;
     }
 
+    /**
+     * Définit la capacité du joueur à faire exploser ses bombes à distance.
+     *
+     * @param value true si le joueur peut faire exploser à distance, sinon false.
+     */
     public void setRemoteDetonation(boolean value) {
         hasRemoteDetonation = value;
     }
 
+    /**
+     * Indique si le joueur peut faire exploser ses bombes à distance.
+     *
+     * @return true si le joueur a le Remote Power, sinon false.
+     */
     public boolean hasRemoteDetonation() {
         return hasRemoteDetonation;
     }
 
+    /**
+     * Définit la capacité du joueur à traverser les murs destructibles.
+     *
+     * @param value true si le joueur peut traverser les murs, sinon false.
+     */
     public void setCanPassThroughWalls(boolean value) {
         canPassThroughWalls = value;
     }
 
+    /**
+     * Indique si le joueur peut traverser les murs destructibles.
+     *
+     * @return true si le joueur a le WallPass, sinon false.
+     */
     public boolean canPassThroughWalls() {
         return canPassThroughWalls;
     }
 
+    /**
+     * Définit la capacité du joueur à traverser ses propres bombes.
+     *
+     * @param value true si le joueur peut traverser ses bombes, sinon false.
+     */
     public void setCanPassThroughBombs(boolean value) {
         canPassThroughBombs = value;
     }
 
+    /**
+     * Indique si le joueur peut traverser ses propres bombes.
+     *
+     * @return true si le joueur a le BombPass, sinon false.
+     */
     public boolean canPassThroughBombs() {
         return canPassThroughBombs;
     }
 
+    /**
+     * Définit la capacité du joueur à poser des bombes en ligne droite.
+     *
+     * @param value true si le joueur peut poser des bombes en ligne, sinon false.
+     */
     public void setHasLineBombs(boolean value) {
         hasLineBombs = value;
     }
 
+    /**
+     * Indique si le joueur peut poser des bombes en ligne droite.
+     *
+     * @return true si le joueur a le LineBomb Power, sinon false.
+     */
     public boolean hasLineBombs() {
         return hasLineBombs;
     }
@@ -358,6 +426,9 @@ public class Player {
 
     /**
      * Vérifie si le joueur a un malus spécifique.
+     *
+     * @param malusType Le type de malus à vérifier
+     * @return true si le joueur a ce malus actif, false sinon
      */
     public boolean hasMalus(MalusType malusType) {
         return currentMalus == malusType;
@@ -365,6 +436,8 @@ public class Player {
 
     /**
      * Retourne le malus actuel du joueur.
+     *
+     * @return Le malus actuel, ou null si aucun
      */
     public MalusType getCurrentMalus() {
         return currentMalus;
@@ -372,6 +445,8 @@ public class Player {
 
     /**
      * Vérifie si le joueur a un malus actif.
+     *
+     * @return true si le joueur a un malus actif, false sinon
      */
     public boolean hasActiveMalus() {
         return currentMalus != null;
@@ -379,6 +454,8 @@ public class Player {
 
     /**
      * Retourne le temps restant du malus en millisecondes.
+     *
+     * @return Le temps restant en millisecondes, 0 si aucun malus
      */
     public long getMalusTimeRemaining() {
         if (currentMalus == null) return 0;
