@@ -1,6 +1,7 @@
 module com.superbomberman {
     requires javafx.controls;
     requires javafx.fxml;
+    requires java.desktop;
 
     requires org.controlsfx.controls;
     requires org.kordamp.bootstrapfx.core;
@@ -13,6 +14,10 @@ module com.superbomberman {
 
     opens com.superbomberman.controller to javafx.fxml;
     exports com.superbomberman.controller;
+
+    opens com.superbomberman.service to javafx.fxml;
+    exports com.superbomberman.service;
+
     exports com.superbomberman.model.powerup;
     opens com.superbomberman.model.powerup to javafx.fxml;
 }

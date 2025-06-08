@@ -1,6 +1,7 @@
 package com.superbomberman.controller;
 
 import com.superbomberman.model.*;
+import com.superbomberman.service.AuthService;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -8,7 +9,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.ImagePattern;
 import javafx.scene.shape.Rectangle;
@@ -52,6 +55,13 @@ public class GameViewController extends OptionsController {
     private Tile[][] map;
     private int[] enemyCurrDirection;
     private List<Bomb> activeBombs = new ArrayList<>();
+
+    // Gestion de l'utilisateur et des statistiques
+    private User currentUser;
+    private AuthService authService;
+    private int gameScore = 0;
+    private boolean gameWon = false;
+    private long gameStartTime;
 
     // Compteurs de bombes séparés pour chaque joueur
     private int currentBombCountPlayer1 = 0;
@@ -111,6 +121,16 @@ public class GameViewController extends OptionsController {
     private Image bombImg = new Image(Objects.requireNonNull(getClass().getResource("/images/bomb.png")).toExternalForm());
     private ImagePattern bombPattern = new ImagePattern(bombImg);
 
+    /**
+     * Définit l'utilisateur actuel pour le suivi des statistiques
+     */
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
+        this.authService = new AuthService();
+        this.gameStartTime = System.currentTimeMillis();
+        System.out.println("Jeu démarré par : " + (user != null ? user.getUsername() : "Invité"));
+    }
+
     public void initialize() {
         try {
             System.out.println("Mode un joueur: " + isOnePlayer);
@@ -123,6 +143,7 @@ public class GameViewController extends OptionsController {
             }
 
             drawMap(map);
+            setupGridConstraints();
             enemyCurrDirection = new int[]{1, 0};
         } catch (IOException e) {
             e.printStackTrace();
@@ -189,6 +210,70 @@ public class GameViewController extends OptionsController {
         System.out.println("========================");
     }
 
+    /**
+     * Met à jour le score du jeu
+     */
+    private void updateScore(int points) {
+        gameScore += points;
+        System.out.println("Score actuel: " + gameScore);
+    }
+
+    /**
+     * Marque le jeu comme gagné
+     */
+    private void setGameWon(boolean won) {
+        this.gameWon = won;
+        if (won) {
+            System.out.println("🎉 Victoire ! Score final: " + gameScore);
+            endGame();
+        }
+    }
+
+    /**
+     * Termine le jeu et met à jour les statistiques utilisateur
+     */
+    private void endGame() {
+        if (currentUser != null && authService != null) {
+            authService.updateUserStats(currentUser, gameWon, gameScore);
+            System.out.println("Statistiques mises à jour pour " + currentUser.getUsername());
+            System.out.println("Score final: " + gameScore + " | Victoire: " + (gameWon ? "Oui" : "Non"));
+        }
+    }
+
+    /**
+     * Vérifie les conditions de fin de jeu
+     */
+    private void checkGameConditions() {
+        // Exemple de conditions de victoire - à adapter selon votre logique
+        if (enemy != null && isEnemyDefeated()) {
+            setGameWon(true);
+        }
+
+        // Vérifier si le joueur est toujours en vie
+        if (isPlayerDefeated()) {
+            setGameWon(false);
+            endGame();
+        }
+    }
+
+    /**
+     * Vérifie si l'ennemi est vaincu
+     */
+    private boolean isEnemyDefeated() {
+        // Logique pour déterminer si l'ennemi est vaincu
+        // Par exemple, si l'ennemi est touché par une explosion
+        return false; // Placeholder - à implémenter selon votre logique
+    }
+
+    /**
+     * Vérifie si le joueur est vaincu
+     */
+    private boolean isPlayerDefeated() {
+        // Logique pour déterminer si le joueur est vaincu
+        // Par exemple, si le joueur est touché par une explosion
+        return false; // Placeholder - à implémenter selon votre logique
+    }
+
     private void startGameLoop() {
         gameLoop = new AnimationTimer() {
             private long lastAutoBombTimePlayer1 = 0;
@@ -224,6 +309,9 @@ public class GameViewController extends OptionsController {
                     placeBomb(player2, 2);
                     lastAutoBombTimePlayer2 = now;
                 }
+
+                // Vérifier les conditions de victoire/défaite
+                checkGameConditions();
             }
         };
         gameLoop.start();
@@ -931,7 +1019,7 @@ public class GameViewController extends OptionsController {
                 cell.getChildren().removeIf(node -> cell.getChildren().indexOf(node) > 0);
             }
 
-            Rectangle explosionRect = new Rectangle(40, 40);
+            Rectangle explosionRect = new Rectangle(50, 50);
             explosionRect.setFill(explosionPattern);
             cell.getChildren().add(explosionRect);
         }
@@ -940,6 +1028,9 @@ public class GameViewController extends OptionsController {
         delay.setOnFinished(event -> {
             if (tile.getType() == TileType.WALL_BREAKABLE) {
                 map[y][x] = new Tile(TileType.FLOOR);
+
+                // Ajouter des points pour la destruction de murs
+                updateScore(10);
 
                 // 25% de chance de générer un power-up
                 if (Math.random() < 0.25) {
@@ -994,7 +1085,7 @@ public class GameViewController extends OptionsController {
     private void placePowerUpVisual(PowerUp powerUp) {
         StackPane cell = (StackPane) getNodeFromGridPane(gameGrid, powerUp.getX(), powerUp.getY());
         if (cell != null) {
-            Rectangle powerUpRect = new Rectangle(40, 40);
+            Rectangle powerUpRect = new Rectangle(50, 50);
             powerUpRect.setFill(powerUpPattern);
             cell.getChildren().add(powerUpRect);
         }
@@ -1031,6 +1122,9 @@ public class GameViewController extends OptionsController {
     private void applyPowerUpEffect(Player player, PowerUp powerUp, int playerNumber) {
         powerUp.applyTo(player);
 
+        // Ajouter des points pour les power-ups collectés
+        updateScore(50);
+
         switch (powerUp.getType()) {
             case RANGE_UP -> System.out.println("Joueur " + playerNumber + ": Range augmentée! (" + player.getExplosionRange() + ")");
             case BOMB_UP -> System.out.println("Joueur " + playerNumber + ": Bombes max augmentées! (" + player.getMaxBombs() + ")");
@@ -1056,9 +1150,19 @@ public class GameViewController extends OptionsController {
 
     @FXML
     private void handleBackToMenu() {
+        // Sauvegarder les statistiques avant de quitter
+        endGame();
+
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu.fxml"));
             Parent menuRoot = loader.load();
+
+            // Passer l'utilisateur de retour au menu
+            MenuController menuController = loader.getController();
+            if (currentUser != null) {
+                menuController.setCurrentUser(currentUser);
+            }
+
             Scene menuScene = new Scene(menuRoot);
             Stage stage = (Stage) gameGrid.getScene().getWindow();
             stage.setScene(menuScene);
@@ -1073,7 +1177,7 @@ public class GameViewController extends OptionsController {
             for (int col = 0; col < map[row].length; col++) {
                 Tile tile = map[row][col];
                 StackPane cell = new StackPane();
-                Rectangle background = new Rectangle(40, 40);
+                Rectangle background = new Rectangle(50, 50);
 
                 switch (tile.getType()) {
                     case WALL -> background.setFill(wallPattern);
@@ -1091,7 +1195,7 @@ public class GameViewController extends OptionsController {
     private void addEntityToGrid(int x, int y, ImagePattern entityPattern) {
         StackPane cell = (StackPane) getNodeFromGridPane(gameGrid, x, y);
         if (cell != null) {
-            Rectangle entity = new Rectangle(40, 40);
+            Rectangle entity = new Rectangle(50, 50);
             entity.setFill(entityPattern);
             cell.getChildren().add(entity);
         }
@@ -1114,9 +1218,40 @@ public class GameViewController extends OptionsController {
             if (cell.getChildren().size() > 1) {
                 cell.getChildren().removeIf(node -> cell.getChildren().indexOf(node) > 0);
             }
-            Rectangle bombRect = new Rectangle(40, 40);
+            Rectangle bombRect = new Rectangle(50, 50);
             bombRect.setFill(bombPattern);
             cell.getChildren().add(bombRect);
         }
+    }
+
+    private void setupGridConstraints() {
+        int cols = map[0].length;
+        int rows = map.length;
+
+        gameGrid.getColumnConstraints().clear();
+        gameGrid.getRowConstraints().clear();
+
+        // Ajouter les contraintes de colonnes
+        for (int i = 0; i < cols; i++) {
+            ColumnConstraints colConstraint = new ColumnConstraints();
+            colConstraint.setPrefWidth(50);
+            colConstraint.setMinWidth(50);
+            colConstraint.setMaxWidth(50);
+            gameGrid.getColumnConstraints().add(colConstraint);
+        }
+
+        // Ajouter les contraintes de lignes
+        for (int i = 0; i < rows; i++) {
+            RowConstraints rowConstraint = new RowConstraints();
+            rowConstraint.setPrefHeight(50);
+            rowConstraint.setMinHeight(50);
+            rowConstraint.setMaxHeight(50);
+            gameGrid.getRowConstraints().add(rowConstraint);
+        }
+
+        // Configurer le GridPane
+        gameGrid.setHgap(0);
+        gameGrid.setVgap(0);
+        gameGrid.setStyle("-fx-background-color: black; -fx-grid-lines-visible: false;");
     }
 }

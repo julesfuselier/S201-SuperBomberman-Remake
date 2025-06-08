@@ -10,7 +10,7 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         // Charger le menu principal au démarrage au lieu du jeu directement
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/auth.fxml"));
         Parent root = loader.load();
         Scene scene = new Scene(root);
         primaryStage.setTitle("Bomberman JavaFX");
