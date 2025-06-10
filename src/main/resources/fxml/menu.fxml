@@ -43,7 +43,7 @@
         <VBox alignment="CENTER_LEFT" spacing="25">
             <Button fx:id="onePlayerBtn" onAction="#handleOnePlayer"
                     prefWidth="280" prefHeight="60" text="PARTIE 1 JOUEUR"
-                    style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
+                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
                 <font>
                     <Font size="18.0" />
                 </font>
@@ -51,7 +51,7 @@
 
             <Button fx:id="twoPlayerBtn" onAction="#handleTwoPlayer"
                     prefWidth="280" prefHeight="60" text="PARTIE 2 JOUEURS"
-                    style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
+                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
                 <font>
                     <Font size="18.0" />
                 </font>
@@ -59,7 +59,7 @@
 
             <Button fx:id="optionsButton" onAction="#handleOptions"
                     prefWidth="280" prefHeight="60" text="OPTIONS"
-                    style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
+                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
                 <font>
                     <Font size="18.0" />
                 </font>
@@ -69,7 +69,7 @@
             <HBox alignment="CENTER_LEFT" spacing="20">
                 <Button fx:id="logoutButton" onAction="#handleLogout" text="DÉCONNEXION"
                         prefWidth="150" prefHeight="45" visible="false"
-                        style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 22px; -fx-border-radius: 22px; -fx-cursor: hand;">
+                        style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
                     <font>
                         <Font size="14.0" />
                     </font>
@@ -77,7 +77,7 @@
 
                 <Button fx:id="backToMenuButton" onAction="#handleBackToMenu" text="RETOUR À L'ACCUEIL"
                         prefWidth="200" prefHeight="45"
-                        style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 20px; -fx-border-radius: 20px; -fx-cursor: hand;">
+                        style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
                     <font>
                         <Font size="14.0" />
                     </font>

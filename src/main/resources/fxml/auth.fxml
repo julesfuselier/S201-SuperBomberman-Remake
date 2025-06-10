@@ -74,7 +74,7 @@
 
             <Button fx:id="loginButton" onAction="#handleLogin" text="SE CONNECTER"
                     prefWidth="160" prefHeight="45"
-                    style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 22px; -fx-border-radius: 22px; -fx-cursor: hand;">
+                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 22px; -fx-border-radius: 22px; -fx-cursor: hand;">
                 <font>
                     <Font size="15.0" />
                 </font>
@@ -87,7 +87,7 @@
         <HBox alignment="CENTER" spacing="18">
             <Button fx:id="registerPageButton" onAction="#handleGoToRegister" text="CRÉER UN COMPTE"
                     prefWidth="160" prefHeight="36"
-                    style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 18px; -fx-border-radius: 18px; -fx-cursor: hand;">
+                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 18px; -fx-border-radius: 18px; -fx-cursor: hand;">
                 <font>
                     <Font size="13.0" />
                 </font>
@@ -95,7 +95,7 @@
 
             <Button fx:id="backToMenuButton" onAction="#handleBackToMenu" text="RETOUR À L'ACCUEIL"
                     prefWidth="160" prefHeight="36"
-                    style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 18px; -fx-border-radius: 18px; -fx-cursor: hand;">
+                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 18px; -fx-border-radius: 18px; -fx-cursor: hand;">
                 <font>
                     <Font size="13.0" />
                 </font>
@@ -103,7 +103,7 @@
 
             <Button fx:id="exitButton" onAction="#handleExit" text="QUITTER"
                     prefWidth="160" prefHeight="36"
-                    style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 18px; -fx-border-radius: 18px; -fx-cursor: hand;">
+                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 18px; -fx-border-radius: 18px; -fx-cursor: hand;">
                 <font>
                     <Font size="13.0" />
                 </font>

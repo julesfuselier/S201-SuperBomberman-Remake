@@ -38,7 +38,7 @@
         <VBox alignment="CENTER_LEFT" spacing="25">
             <Button fx:id="guestButton" onAction="#handleGuestMode" text="JOUER EN TANT QU'INVITÉ"
                     prefWidth="320" prefHeight="60"
-                    style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
+                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
                 <font>
                     <Font size="16.0" />
                 </font>
@@ -46,7 +46,7 @@
 
             <Button fx:id="loginButton" onAction="#handleLogin" text="CONNEXION"
                     prefWidth="320" prefHeight="60"
-                    style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
+                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
                 <font>
                     <Font size="16.0" />
                 </font>
@@ -54,7 +54,7 @@
 
             <Button fx:id="registerButton" onAction="#handleRegister" text="INSCRIPTION"
                     prefWidth="320" prefHeight="60"
-                    style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
+                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
                 <font>
                     <Font size="16.0" />
                 </font>
@@ -62,7 +62,7 @@
 
             <Button fx:id="exitButton" onAction="#handleExit" text="QUITTER"
                     prefWidth="320" prefHeight="60"
-                    style="-fx-background-color: #95a5a6; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
+                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
                 <font>
                     <Font size="16.0" />
                 </font>
