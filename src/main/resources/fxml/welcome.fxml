@@ -9,7 +9,12 @@
 <VBox xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
       fx:controller="com.superbomberman.controller.WelcomeController"
       alignment="CENTER" spacing="40" prefWidth="600" prefHeight="500"
-      style="-fx-background: linear-gradient(to bottom, #1a1a2e, #16213e); -fx-border-color: #e74c3c; -fx-border-width: 3px;">
+      style="-fx-background-image: url('/images/menu_background.png');
+       -fx-background-size: cover;
+       -fx-background-position: center;
+       -fx-background-repeat: no-repeat;
+       -fx-border-color: #e74c3c;
+       -fx-border-width: 3px;">
 
     <padding>
         <Insets bottom="50" left="50" right="50" top="50" />
