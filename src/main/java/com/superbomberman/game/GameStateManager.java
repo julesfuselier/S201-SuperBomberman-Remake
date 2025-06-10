@@ -20,7 +20,7 @@ import static com.superbomberman.controller.MenuController.isOnePlayer;
  * Gestionnaire de l'état du jeu et des statistiques
  *
  * @author Jules Fuselier
- * @version 2.0 - Système de fin de jeu implémenté
+ * @version 2.1 - Fix logique victoire mode 2 joueurs
  * @since 2025-06-08
  */
 public class GameStateManager {
@@ -29,6 +29,7 @@ public class GameStateManager {
     private int gameScore = 0;
     private boolean gameWon = false;
     private boolean gameEnded = false; //  : Éviter les fins multiples
+    private String victoryMessage = ""; // Message de victoire personnalisé
     private long gameStartTime;
     private Stage gameStage; // Référence au stage du jeu
 
@@ -96,6 +97,35 @@ public class GameStateManager {
     }
 
     /**
+     * Marque le jeu comme gagné ou perdu avec un message personnalisé
+     */
+    public void setGameWonWithMessage(boolean won, String message) {
+        if (gameEnded) return; // Éviter les doublons
+
+        this.gameWon = won;
+        this.gameEnded = true;
+        this.victoryMessage = message;
+
+        System.out.println(message);
+        System.out.println("Score final: " + gameScore);
+
+        if (won) {
+            showVictoryScreen();
+        } else {
+            showGameOverScreen();
+        }
+
+        endGame();
+
+        // Arrêter le jeu après un court délai
+        Platform.runLater(() -> {
+            if (onGameEndCallback != null) {
+                onGameEndCallback.run();
+            }
+        });
+    }
+
+    /**
      * Affiche l'écran de victoire
      */
     public void showVictoryScreen() {
@@ -107,8 +137,15 @@ public class GameStateManager {
                 // Passer les données au contrôleur si nécessaire
                 VictoryController controller = loader.getController();
                 if (controller != null) {
-                    // Appeler des méthodes sur le contrôleur pour passer les données
-                    // Par exemple: ((VictoryController) controller).setGameData(gameScore, currentUser, etc.);
+                    // Utiliser le message personnalisé si disponible
+                    String messageToShow = victoryMessage.isEmpty() ? "Victoire !" : victoryMessage;
+                    controller.initializeVictoryScreen(
+                            currentUser,
+                            gameScore,
+                            gameTime,
+                            isOnePlayer,
+                            messageToShow
+                    );
                 }
 
                 if (gameStage != null) {
@@ -134,12 +171,14 @@ public class GameStateManager {
                 // Passer les données au contrôleur si nécessaire
                 GameOverController controller = loader.getController();
                 if (controller != null) {
+                    // Utiliser le message personnalisé si disponible
+                    String messageToShow = victoryMessage.isEmpty() ? "Vous avez perdu !" : victoryMessage;
                     controller.initializeGameOverScreen(
                             currentUser,
                             gameScore,
                             gameTime,
                             isOnePlayer,
-                            "Vous avez perdu !"
+                            messageToShow
                     );
                 }
 
@@ -202,8 +241,6 @@ public class GameStateManager {
     /**
      *  Vérifie les conditions de fin de jeu selon le mode
      */
-
-    // TODO : FAIRE LES DEFEATREASON POUR CHAQUE TYPE DE DEFAITE
     public void checkGameConditions() {
         if (gameEnded) return; // Éviter les vérifications multiples
 
@@ -224,17 +261,16 @@ public class GameStateManager {
 
             if (player1Dead && player2Dead) {
                 System.out.println("⚖️ Mode 2 joueurs : Égalité ! Les deux joueurs sont morts.");
-                setGameWon(false); // Considéré comme défaite mutuelle
+                setGameWonWithMessage(false, "💀 Match nul ! Les deux joueurs ont été éliminés !");
             } else if (player1Dead && !player2Dead) {
                 System.out.println("🎉 Mode 2 joueurs : Joueur 2 gagne !");
-                // Si tu es le joueur 1, c'est une défaite, sinon victoire
-                setGameWon(false); // À adapter selon ta logique
+                setGameWonWithMessage(true, "🎉 Victoire du Joueur 2 ! Le Joueur 1 a été éliminé !");
             } else if (player2Dead && !player1Dead) {
                 System.out.println("🎉 Mode 2 joueurs : Joueur 1 gagne !");
-                setGameWon(true); // Joueur 1 = joueur principal
+                setGameWonWithMessage(true, "🎉 Victoire du Joueur 1 ! Le Joueur 2 a été éliminé !");
             } else if (allEnemiesDead && !player1Dead && !player2Dead) {
                 System.out.println("🎉 Mode 2 joueurs : Les deux joueurs survivent ! Victoire partagée !");
-                setGameWon(true);
+                setGameWonWithMessage(true, "🎉 Victoire partagée ! Les deux joueurs ont survécu !");
             }
         }
     }
@@ -283,6 +319,10 @@ public class GameStateManager {
         return gameEnded;
     }
 
+    public String getVictoryMessage() {
+        return victoryMessage;
+    }
+
     public User getCurrentUser() {
         return currentUser;
     }
@@ -306,6 +346,7 @@ public class GameStateManager {
         System.out.println("Ennemi vivant: " + (enemy != null ? enemy.isAlive() : "null"));
         System.out.println("Jeu terminé: " + gameEnded);
         System.out.println("Score: " + gameScore);
+        System.out.println("Message: " + victoryMessage);
         System.out.println("==================");
     }
 }
