@@ -113,7 +113,7 @@
                         <items>
                             <FXCollections fx:factory="observableArrayList">
                                 <String fx:value="classique" />
-                                <String fx:value="hivert" />
+                                <String fx:value="hiver" />
                                 <String fx:value="été" />
                                 <String fx:value="automne" />
                                 <String fx:value="printemps" />
