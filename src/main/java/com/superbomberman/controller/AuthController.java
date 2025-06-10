@@ -319,4 +319,5 @@ public class AuthController {
             welcomeAlert.showAndWait();
         }
     }
+
 }
