@@ -79,7 +79,7 @@ public class GameOverController {
             System.out.println("🔄 Nouvelle tentative...");
 
             // Charger la vue de jeu
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/game.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/game-view.fxml"));
             Parent gameRoot = loader.load();
 
             // Passer l'utilisateur au contrôleur de jeu

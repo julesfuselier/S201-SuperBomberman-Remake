@@ -112,17 +112,23 @@ public class GameViewController extends OptionsController {
         // 1. GameStateManager - Gère l'état du jeu
         gameStateManager = new GameStateManager(currentUser, null);
 
-        // ✅ NOUVELLE FONCTIONNALITÉ : Callback de fin de jeu
+        // Callback de fin de jeu
         gameStateManager.setOnGameEndCallback(() -> {
             // Arrêter la boucle de jeu
             stopGameLoop();
+            if(gameStateManager.isGameWon()) {
+                gameStateManager.showVictoryScreen();
+            }
+            else {
+                gameStateManager.showGameOverScreen();
+            }
 
             // Afficher un message temporaire (on fera mieux à l'étape 2)
             System.out.println("🎮 Jeu terminé ! Retour au menu dans 3 secondes...");
 
             // Optionnel : retour automatique au menu après quelques secondes
             javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(3));
-            delay.setOnFinished(event -> handleBackToMenu());
+            delay.setOnFinished(event -> handleBackToEnd());
             delay.play();
         });
 
@@ -276,7 +282,7 @@ public class GameViewController extends OptionsController {
      * Retourne au menu principal
      */
     @FXML
-    private void handleBackToMenu() {
+    private void handleBackToEnd() {
         System.out.println("Retour au menu demandé...");
 
         // Arrêter la boucle de jeu
@@ -286,27 +292,51 @@ public class GameViewController extends OptionsController {
         gameStateManager.endGame();
 
         try {
-            // Charger la vue du menu
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu.fxml"));
-            Parent menuRoot = loader.load();
+            if (gameStateManager.isGameWon()) {
+                // Charger la vue du menu
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/victory.fxml"));
+                Parent victoryRoot = loader.load();
 
-            // Passer l'utilisateur au contrôleur du menu
-            MenuController menuController = loader.getController();
-            if (gameStateManager.getCurrentUser() != null) {
-                menuController.setCurrentUser(gameStateManager.getCurrentUser());
+                // Passer l'utilisateur au contrôleur du menu
+                VictoryController victoryController = loader.getController();
+//                if (gameStateManager.getCurrentUser() != null) {
+//                    menuController.setCurrentUser(gameStateManager.getCurrentUser());
+//                }
+
+                // Changer de scène
+                Scene victoryScene = new Scene(victoryRoot);
+                Stage stage = (Stage) gameGrid.getScene().getWindow();
+                stage.setScene(victoryScene);
+                stage.setTitle("SuperBomberman - Victory");
+
+                System.out.println("GG !");
             }
 
-            // Changer de scène
-            Scene menuScene = new Scene(menuRoot);
-            Stage stage = (Stage) gameGrid.getScene().getWindow();
-            stage.setScene(menuScene);
-            stage.setTitle("Super Bomberman - Menu");
+            else {
 
-            System.out.println("Retour au menu réussi!");
+                // Charger la vue du menu
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/gameOver.fxml"));
+                Parent gameOverRoot = loader.load();
+
+                // Passer l'utilisateur au contrôleur du menu
+                GameOverController gameOverController = loader.getController();
+//                if (gameStateManager.getCurrentUser() != null) {
+//                    menuController.setCurrentUser(gameStateManager.getCurrentUser());
+//                }
+
+                // Changer de scène
+                Scene gameOverScene = new Scene(gameOverRoot);
+                Stage stage = (Stage) gameGrid.getScene().getWindow();
+                stage.setScene(gameOverScene);
+                stage.setTitle("SuperBomberman - Defeat");
+
+                System.out.println("GG !");
+            }
+
 
         } catch (IOException e) {
             e.printStackTrace();
-            System.err.println("Erreur lors du retour au menu");
+            System.err.println("Erreur lors du transfert !");
         }
     }
 

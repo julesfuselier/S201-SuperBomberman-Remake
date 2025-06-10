@@ -3,6 +3,11 @@ package com.superbomberman.game;
 import com.superbomberman.model.User;
 import com.superbomberman.service.AuthService;
 import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+
+import java.io.IOException;
 
 import static com.superbomberman.model.MapLoader.enemy;
 import static com.superbomberman.model.MapLoader.player1;
@@ -23,6 +28,7 @@ public class GameStateManager {
     private boolean gameWon = false;
     private boolean gameEnded = false; //  : Éviter les fins multiples
     private long gameStartTime;
+    private Stage gameStage; // Référence au stage du jeu
 
     private boolean player1Killed = false;
     private boolean player2Killed = false;
@@ -34,6 +40,13 @@ public class GameStateManager {
         this.currentUser = currentUser;
         this.authService = authService;
         this.gameStartTime = System.currentTimeMillis();
+    }
+
+    /**
+     * Définit la référence au stage du jeu pour les redirections
+     */
+    public void setGameStage(Stage gameStage) {
+        this.gameStage = gameStage;
     }
 
     /**
@@ -62,8 +75,10 @@ public class GameStateManager {
 
         if (won) {
             System.out.println("🎉 Victoire ! Score final: " + gameScore);
+            showVictoryScreen();
         } else {
             System.out.println("💀 Défaite ! Score final: " + gameScore);
+            showGameOverScreen();
         }
 
         endGame();
@@ -72,6 +87,60 @@ public class GameStateManager {
         Platform.runLater(() -> {
             if (onGameEndCallback != null) {
                 onGameEndCallback.run();
+            }
+        });
+    }
+
+    /**
+     * Affiche l'écran de victoire
+     */
+    public void showVictoryScreen() {
+        Platform.runLater(() -> {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/victory.fxml"));
+                Scene scene = new Scene(loader.load());
+
+                // Passer les données au contrôleur si nécessaire
+                Object controller = loader.getController();
+                if (controller != null) {
+                    // Appeler des méthodes sur le contrôleur pour passer les données
+                    // Par exemple: ((VictoryController) controller).setGameData(gameScore, currentUser, etc.);
+                }
+
+                if (gameStage != null) {
+                    gameStage.setScene(scene);
+                    gameStage.setTitle("Victoire !");
+                }
+            } catch (IOException e) {
+                System.err.println("Erreur lors du chargement de victory.fxml: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
+    }
+
+    /**
+     * Affiche l'écran de défaite
+     */
+    public void showGameOverScreen() {
+        Platform.runLater(() -> {
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/gameOver.fxml"));
+                Scene scene = new Scene(loader.load());
+
+                // Passer les données au contrôleur si nécessaire
+                Object controller = loader.getController();
+                if (controller != null) {
+                    // Appeler des méthodes sur le contrôleur pour passer les données
+                    // Par exemple: ((GameOverController) controller).setGameData(gameScore, currentUser, etc.);
+                }
+
+                if (gameStage != null) {
+                    gameStage.setScene(scene);
+                    gameStage.setTitle("Game Over");
+                }
+            } catch (IOException e) {
+                System.err.println("Erreur lors du chargement de gameOver.fxml: " + e.getMessage());
+                e.printStackTrace();
             }
         });
     }
