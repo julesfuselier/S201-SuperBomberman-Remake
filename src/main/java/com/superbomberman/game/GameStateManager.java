@@ -73,51 +73,51 @@ public class GameStateManager {
             scoreSystem.displayScoreSummary();
         }
         // 🆕 Affichage de l'écran de fin adapté solo/multi
-        javafx.application.Platform.runLater(() -> {
-            try {
-                if (isOnePlayer) {
-                    javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/endgame-solo.fxml"));
-                    javafx.scene.Parent root = loader.load();
-                    com.superbomberman.controller.EndGameSoloController controller = loader.getController();
-                    if (gameWon) {
-                        controller.setVictory(gameScore);
-                    } else {
-                        controller.setDefeat(gameScore);
-                    }
-                    controller.getReplayButton().setOnAction(e -> restartGame());
-                    controller.getMenuButton().setOnAction(e -> returnToMenu());
-                    controller.getQuitButton().setOnAction(e -> quitGame());
-                    javafx.stage.Stage stage = (javafx.stage.Stage) javafx.stage.Window.getWindows().filtered(javafx.stage.Window::isShowing).get(0);
-                    stage.setScene(new javafx.scene.Scene(root));
-                } else {
-                    javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/endgame-multi.fxml"));
-                    javafx.scene.Parent root = loader.load();
-                    com.superbomberman.controller.EndGameMultiController controller = loader.getController();
-                    // Récupérer les scores et noms des joueurs
-                    String winnerName = player1 != null ? player1.getName() : "";
-                    int winnerScore = scoreSystem.getPlayerScore(player1);
-                    String loserName = (player2 != null) ? player2.getName() : "";
-                    int loserScore = (player2 != null) ? scoreSystem.getPlayerScore(player2) : 0;
-                    if (!gameWon) {
-                        // Inverser si le joueur 2 a gagné
-                        String tmpName = winnerName;
-                        int tmpScore = winnerScore;
-                        winnerName = loserName;
-                        winnerScore = loserScore;
-                        loserName = tmpName;
-                        loserScore = tmpScore;
-                    }
-                    controller.setPodium(winnerName, winnerScore, loserName, loserScore);
-                    controller.getReplayButton().setOnAction(e -> restartGame());
-                    controller.getMenuButton().setOnAction(e -> returnToMenu());
-                    controller.getQuitButton().setOnAction(e -> quitGame());
-                    javafx.stage.Stage stage = (javafx.stage.Stage) javafx.stage.Window.getWindows().filtered(javafx.stage.Window::isShowing).get(0);
-                    stage.setScene(new javafx.scene.Scene(root));
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+//        javafx.application.Platform.runLater(() -> {
+//            try {
+//                if (isOnePlayer) {
+//                    javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/endgame-solo.fxml"));
+//                    javafx.scene.Parent root = loader.load();
+//                    com.superbomberman.controller.EndGameSoloController controller = loader.getController();
+//                    if (gameWon) {
+//                        controller.setVictory(gameScore);
+//                    } else {
+//                        controller.setDefeat(gameScore);
+//                    }
+//                    controller.getReplayButton().setOnAction(e -> restartGame());
+//                    controller.getMenuButton().setOnAction(e -> returnToMenu());
+//                    controller.getQuitButton().setOnAction(e -> quitGame());
+//                    javafx.stage.Stage stage = (javafx.stage.Stage) javafx.stage.Window.getWindows().filtered(javafx.stage.Window::isShowing).get(0);
+//                    stage.setScene(new javafx.scene.Scene(root));
+//                } else {
+//                    javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/endgame-multi.fxml"));
+//                    javafx.scene.Parent root = loader.load();
+//                    com.superbomberman.controller.EndGameMultiController controller = loader.getController();
+//                    // Récupérer les scores et noms des joueurs
+//                    String winnerName = player1 != null ? player1.getName() : "";
+//                    int winnerScore = scoreSystem.getPlayerScore(player1);
+//                    String loserName = (player2 != null) ? player2.getName() : "";
+//                    int loserScore = (player2 != null) ? scoreSystem.getPlayerScore(player2) : 0;
+//                    if (!gameWon) {
+//                        // Inverser si le joueur 2 a gagné
+//                        String tmpName = winnerName;
+//                        int tmpScore = winnerScore;
+//                        winnerName = loserName;
+//                        winnerScore = loserScore;
+//                        loserName = tmpName;
+//                        loserScore = tmpScore;
+//                    }
+//                    controller.setPodium(winnerName, winnerScore, loserName, loserScore);
+//                    controller.getReplayButton().setOnAction(e -> restartGame());
+//                    controller.getMenuButton().setOnAction(e -> returnToMenu());
+//                    controller.getQuitButton().setOnAction(e -> quitGame());
+//                    javafx.stage.Stage stage = (javafx.stage.Stage) javafx.stage.Window.getWindows().filtered(javafx.stage.Window::isShowing).get(0);
+//                    stage.setScene(new javafx.scene.Scene(root));
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        });
     }
 
     // Méthodes pour les actions des boutons

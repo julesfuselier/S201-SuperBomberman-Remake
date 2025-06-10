@@ -307,9 +307,9 @@ public class GameLogic {
             player2.setAlive(false);
         }
         // Vérifier si l'ennemi est sur la case (optionnel)
-        if (enemy != null && enemy.getX() == x && enemy.getY() == y) {
-            enemy.setDead(true); // à adapter selon ta logique Enemy
-        }
+//        if (enemy != null && enemy.getX() == x && enemy.getY() == y) {
+//            enemy.setDead(true); // à adapter selon ta logique Enemy
+//        }
         // Vérifier la fin de partie
         gameStateManager.checkGameConditions();
     }
