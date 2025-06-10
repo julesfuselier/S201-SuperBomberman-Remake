@@ -37,8 +37,9 @@ public class AuthController {
     @FXML private CheckBox rememberMe;
     @FXML private Button registerPageButton;
 
-    // Bouton de navigation
+    // Boutons de navigation
     @FXML private Button exitButton;
+    @FXML private Button backToMenuButton;  // AJOUT : Déclaration du nouveau bouton
 
     private AuthService authService;
 
@@ -64,6 +65,7 @@ public class AuthController {
             timeline.play();
         }
     }
+
     /**
      * Affiche un message de connexion automatique
      */
@@ -128,25 +130,33 @@ public class AuthController {
     private void setupAnimations() {
         setupButtonAnimation(loginButton);
         setupButtonAnimation(exitButton);
+        setupButtonAnimation(backToMenuButton);  // AJOUT : Animation pour le nouveau bouton
+
+        // Vérification de sécurité pour les boutons optionnels
+        if (registerPageButton != null) {
+            setupButtonAnimation(registerPageButton);
+        }
     }
 
     /**
      * Ajoute une animation hover à un bouton
      */
     private void setupButtonAnimation(Button button) {
-        button.setOnMouseEntered(e -> {
-            ScaleTransition st = new ScaleTransition(Duration.millis(100), button);
-            st.setToX(1.05);
-            st.setToY(1.05);
-            st.play();
-        });
+        if (button != null) {  // AJOUT : Vérification de sécurité
+            button.setOnMouseEntered(e -> {
+                ScaleTransition st = new ScaleTransition(Duration.millis(100), button);
+                st.setToX(1.05);
+                st.setToY(1.05);
+                st.play();
+            });
 
-        button.setOnMouseExited(e -> {
-            ScaleTransition st = new ScaleTransition(Duration.millis(100), button);
-            st.setToX(1.0);
-            st.setToY(1.0);
-            st.play();
-        });
+            button.setOnMouseExited(e -> {
+                ScaleTransition st = new ScaleTransition(Duration.millis(100), button);
+                st.setToX(1.0);
+                st.setToY(1.0);
+                st.play();
+            });
+        }
     }
 
     /**
@@ -198,8 +208,8 @@ public class AuthController {
     private void handleExit(ActionEvent event) {
         // Confirmation de fermeture
         Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmAlert.setTitle("Quitter l'application");
-        confirmAlert.setHeaderText("Êtes-vous sûr de vouloir quitter ?");
+        confirmAlert.setTitle("Quitter Bomberman");
+        confirmAlert.setHeaderText("Êtes-vous sûr de vouloir quitter Bomberman ?");
         confirmAlert.setContentText("Toute progression non sauvegardée sera perdue.");
 
         confirmAlert.showAndWait().ifPresent(response -> {
@@ -346,6 +356,27 @@ public class AuthController {
                     navigateToMainMenu(null);
                 }
             });
+        }
+    }
+
+    /**
+     * MÉTHODE FONCTIONNELLE : Retour vers l'accueil (welcome.fxml)
+     */
+    @FXML
+    private void handleBackToMenu(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/welcome.fxml"));
+            Parent welcomeRoot = loader.load();
+
+            Scene welcomeScene = new Scene(welcomeRoot);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+            stage.setScene(welcomeScene);
+            stage.setTitle("Super Bomberman - Accueil");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Erreur lors du retour à l'accueil");
         }
     }
 

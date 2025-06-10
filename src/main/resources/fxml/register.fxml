@@ -156,7 +156,7 @@
                 <Insets top="20" bottom="25" left="25" right="25" />
             </padding>
 
-            <Button fx:id="backToLoginButton" onAction="#handleBackToLogin" text="RETOUR À LA CONNEXION"
+            <Button fx:id="backToLoginButton" onAction="#handleBackToLogin" text="SE CONNECTER"
                     prefWidth="220" prefHeight="45"
                     style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 20px; -fx-border-radius: 20px; -fx-cursor: hand;">
                 <font>
@@ -164,13 +164,14 @@
                 </font>
             </Button>
 
-            <Button fx:id="guestButton" onAction="#handleGuestMode" text="JOUER EN INVITÉ"
-                    prefWidth="180" prefHeight="45"
-                    style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 20px; -fx-border-radius: 20px; -fx-cursor: hand;">
+            <Button fx:id="backToMenuButton" onAction="#handleBackToMenu" text="RETOUR A L'ACCUEIL"
+                    prefWidth="220" prefHeight="45"
+                    style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 20px; -fx-border-radius: 20px; -fx-cursor: hand;">
                 <font>
                     <Font size="14.0" />
                 </font>
             </Button>
+
 
             <Button fx:id="exitButton" onAction="#handleExit" text="QUITTER"
                     prefWidth="120" prefHeight="45"
