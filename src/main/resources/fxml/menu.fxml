@@ -15,20 +15,20 @@
            prefWidth="600" prefHeight="385">
 
     <!-- Image de fond -->
-    <ImageView fitWidth="700" fitHeight="900" preserveRatio="true">
+    <ImageView fitWidth="800" fitHeight="1000" preserveRatio="true">
         <Image url="@../images/menu_background.jpg" />
     </ImageView>
 
     <!-- Contenu principal -->
-    <VBox alignment="CENTER_LEFT" spacing="30" style="-fx-background-color: transparent; -fx-border-color: #e74c3c; -fx-border-width: 4px;">
+    <VBox alignment="CENTER_LEFT" spacing="30">
         <padding>
-            <Insets bottom="30" left="30" right="30" top="30" />
+            <Insets bottom="50" left="50" right="50" top="50" />
         </padding>
 
         <!-- Titre du jeu -->
         <Label text="SUPER BOMBERMAN" textAlignment="CENTER" textFill="#f39c12">
             <font>
-                <Font name="System Bold" size="36.0" />
+                <Font name="System Bold" size="32.0" />
             </font>
         </Label>
 
@@ -40,7 +40,7 @@
         </Label>
 
         <!-- Boutons du menu -->
-        <VBox alignment="CENTER_LEFT" spacing="20">
+        <VBox alignment="CENTER_LEFT" spacing="25">
             <Button fx:id="onePlayerBtn" onAction="#handleOnePlayer"
                     prefWidth="280" prefHeight="60" text="PARTIE 1 JOUEUR"
                     style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
@@ -64,26 +64,25 @@
                     <Font size="18.0" />
                 </font>
             </Button>
+
+            <!-- Boutons de navigation -->
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <Button fx:id="logoutButton" onAction="#handleLogout" text="DÉCONNEXION"
+                        prefWidth="150" prefHeight="45" visible="false"
+                        style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 22px; -fx-border-radius: 22px; -fx-cursor: hand;">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+                </Button>
+
+                <Button fx:id="backToMenuButton" onAction="#handleBackToMenu" text="RETOUR À L'ACCUEIL"
+                        prefWidth="200" prefHeight="45"
+                        style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 20px; -fx-border-radius: 20px; -fx-cursor: hand;">
+                    <font>
+                        <Font size="14.0" />
+                    </font>
+                </Button>
+            </HBox>
         </VBox>
-
-        <!-- Boutons de navigation -->
-        <HBox alignment="CENTER_LEFT" spacing="20">
-            <Button fx:id="logoutButton" onAction="#handleLogout" text="DÉCONNEXION"
-                    prefWidth="150" prefHeight="45" visible="false"
-                    style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 22px; -fx-border-radius: 22px; -fx-cursor: hand;">
-                <font>
-                    <Font size="14.0" />
-                </font>
-            </Button>
-
-            <Button fx:id="backToMenuButton" onAction="#handleBackToMenu" text="RETOUR À L'ACCUEIL"
-                    prefWidth="200" prefHeight="45"
-                    style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 20px; -fx-border-radius: 20px; -fx-cursor: hand;">
-                <font>
-                    <Font size="14.0" />
-                </font>
-            </Button>
-
-        </HBox>
     </VBox>
 </StackPane>

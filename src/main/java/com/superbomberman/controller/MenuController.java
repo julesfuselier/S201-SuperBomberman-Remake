@@ -117,7 +117,7 @@ public class MenuController {
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 
             stage.setScene(optionsScene);
-            stage.setTitle("Bomberman JavaFX - Options");
+            stage.setTitle("Super Bomberman - Options");
             stage.sizeToScene();
 
         } catch (IOException e) {

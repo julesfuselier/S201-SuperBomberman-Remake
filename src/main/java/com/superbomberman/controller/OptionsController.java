@@ -224,7 +224,7 @@ public class OptionsController {
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 
             stage.setScene(menuScene);
-            stage.setTitle("Bomberman JavaFX");
+            stage.setTitle("Super Bomberman - Menu Principal");
 
         } catch (IOException e) {
             e.printStackTrace();

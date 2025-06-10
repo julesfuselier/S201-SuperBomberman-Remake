@@ -14,12 +14,12 @@
            prefWidth="600" prefHeight="385">
 
     <!-- Image de fond -->
-    <ImageView fitWidth="700" fitHeight="900" preserveRatio="true">
+    <ImageView fitWidth="800" fitHeight="1000" preserveRatio="true">
         <Image url="@../images/menu_background.jpg" />
     </ImageView>
 
     <!-- Contenu principal -->
-    <VBox alignment="CENTER_LEFT" spacing="30" style="-fx-background-color: transparent; -fx-border-color: #e74c3c; -fx-border-width: 3px;">
+    <VBox alignment="CENTER_LEFT" spacing="30" >
         <padding>
             <Insets bottom="50" left="50" right="50" top="50" />
         </padding>
@@ -30,7 +30,7 @@
         <!-- Sous-titre -->
         <Label text="Bienvenue dans l'arène explosive !" textAlignment="CENTER" textFill="#ecf0f1">
             <font>
-                <Font size="18.0" />
+                <Font name="System Bold" size="18.0" />
             </font>
         </Label>
 
