@@ -29,7 +29,7 @@ public class WelcomeController {
 
     @FXML
     private void handleLogin(ActionEvent event) {
-        navigateToAuth(event, "login");
+        navigateToAuth(event, "auth");
     }
 
     @FXML
@@ -59,7 +59,7 @@ public class WelcomeController {
 
     private void navigateToAuth(ActionEvent event, String mode) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/auth.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/" + mode + ".fxml"));
             Parent authRoot = loader.load();
 
             // Optionnel : configurer l'onglet actif selon le mode

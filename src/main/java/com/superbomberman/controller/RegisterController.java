@@ -19,13 +19,12 @@ import javafx.util.Duration;
 
 import java.io.IOException;
 
-/**
- * Contrôleur pour l'écran de connexion.
- * Gère l'authentification utilisateur et la navigation vers le menu principal.
- */
-public class AuthController {
+public class RegisterController {
 
-    @FXML private VBox loginForm;
+    @FXML
+    private VBox loginForm;
+    @FXML private VBox registerForm;
+    @FXML private TabPane authTabPane;
 
     // Éléments de connexion
     @FXML private TextField loginUsername;
@@ -34,7 +33,16 @@ public class AuthController {
     @FXML private Label loginMessage;
     @FXML private CheckBox rememberMe;
 
-    // Bouton de navigation
+    // Éléments d'inscription
+    @FXML private TextField registerUsername;
+    @FXML private TextField registerEmail;
+    @FXML private PasswordField registerPassword;
+    @FXML private PasswordField confirmPassword;
+    @FXML private Button registerButton;
+    @FXML private Label registerMessage;
+
+    // Boutons de navigation
+    @FXML private Button guestButton;
     @FXML private Button exitButton;
 
     private AuthService authService;
@@ -58,6 +66,9 @@ public class AuthController {
         // Entrée pour se connecter
         loginPassword.setOnKeyPressed(this::handleKeyPressed);
         loginUsername.setOnKeyPressed(this::handleKeyPressed);
+
+        // Entrée pour s'inscrire
+        confirmPassword.setOnKeyPressed(this::handleRegisterKeyPressed);
     }
 
     /**
@@ -65,6 +76,8 @@ public class AuthController {
      */
     private void setupAnimations() {
         setupButtonAnimation(loginButton);
+        setupButtonAnimation(registerButton);
+        setupButtonAnimation(guestButton);
         setupButtonAnimation(exitButton);
     }
 
@@ -97,6 +110,15 @@ public class AuthController {
     }
 
     /**
+     * Gère les touches pressées sur les champs d'inscription
+     */
+    private void handleRegisterKeyPressed(KeyEvent event) {
+        if (event.getCode() == KeyCode.ENTER) {
+            handleRegister(null);
+        }
+    }
+
+    /**
      * Gère la tentative de connexion
      */
     @FXML
@@ -110,17 +132,8 @@ public class AuthController {
             return;
         }
 
-        // Désactiver le bouton pendant la connexion
-        loginButton.setDisable(true);
-        loginButton.setText("CONNEXION...");
-
         // Tentative de connexion
         if (authService.login(username, password)) {
-            // Gérer "Se souvenir de moi" après connexion réussie
-            if (rememberMe.isSelected()) {
-                // authService.saveSession(); // À implémenter si nécessaire
-            }
-
             showLoginMessage("Connexion réussie ! Bienvenue " + username + " !", true);
 
             // Animation de succès puis navigation
@@ -135,10 +148,77 @@ public class AuthController {
             // Animation de shake pour les champs
             shakeNode(loginUsername);
             shakeNode(loginPassword);
-
-            // Réactiver le bouton
-            resetLoginButton();
         }
+    }
+
+    /**
+     * Gère la tentative d'inscription
+     */
+    @FXML
+    private void handleRegister(ActionEvent event) {
+        String username = registerUsername.getText().trim();
+        String email = registerEmail.getText().trim();
+        String password = registerPassword.getText();
+        String confirmPwd = confirmPassword.getText();
+
+        // Validation des champs
+        if (username.isEmpty() || password.isEmpty() || confirmPwd.isEmpty()) {
+            showRegisterMessage("Veuillez remplir tous les champs obligatoires.", false);
+            return;
+        }
+
+        // Validation du nom d'utilisateur
+        if (username.length() < 3) {
+            showRegisterMessage("Le nom d'utilisateur doit contenir au moins 3 caractères.", false);
+            return;
+        }
+
+        if (!username.matches("^[a-zA-Z0-9_-]+$")) {
+            showRegisterMessage("Le nom d'utilisateur ne peut contenir que des lettres, chiffres, tirets et underscores.", false);
+            return;
+        }
+
+        // Validation du mot de passe
+        if (password.length() < 4) {
+            showRegisterMessage("Le mot de passe doit contenir au moins 4 caractères.", false);
+            return;
+        }
+
+        if (!password.equals(confirmPwd)) {
+            showRegisterMessage("Les mots de passe ne correspondent pas.", false);
+            shakeNode(confirmPassword);
+            return;
+        }
+
+        // Validation de l'email (optionnel mais format)
+        if (!email.isEmpty() && !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            showRegisterMessage("Format d'email invalide.", false);
+            return;
+        }
+
+        // Tentative d'inscription
+        if (authService.register(username, password, email)) {
+            showRegisterMessage("Inscription réussie ! Bienvenue " + username + " !", true);
+
+            // Animation de succès puis navigation
+            FadeTransition fade = new FadeTransition(Duration.millis(1000), registerMessage);
+            fade.setFromValue(1.0);
+            fade.setToValue(0.3);
+            fade.setOnFinished(e -> navigateToMainMenu(event));
+            fade.play();
+
+        } else {
+            showRegisterMessage("Ce nom d'utilisateur existe déjà.", false);
+            shakeNode(registerUsername);
+        }
+    }
+
+    /**
+     * Permet de continuer en tant qu'invité
+     */
+    @FXML
+    private void handleGuestMode(ActionEvent event) {
+        navigateToMainMenu(event);
     }
 
     /**
@@ -146,92 +226,34 @@ public class AuthController {
      */
     @FXML
     private void handleExit(ActionEvent event) {
-        // Confirmation de fermeture
-        Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
-        confirmAlert.setTitle("Quitter l'application");
-        confirmAlert.setHeaderText("Êtes-vous sûr de vouloir quitter ?");
-        confirmAlert.setContentText("Toute progression non sauvegardée sera perdue.");
-
-        confirmAlert.showAndWait().ifPresent(response -> {
-            if (response == ButtonType.OK) {
-                Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-                stage.close();
-            }
-        });
+        Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        stage.close();
     }
 
     /**
      * Navigation vers le menu principal
-     * MÉTHODE CORRIGÉE : gère le cas où event peut être null
      */
     private void navigateToMainMenu(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu.fxml"));
             Parent menuRoot = loader.load();
 
-            // Passer les informations utilisateur au contrôleur du menu
+            // Passer les informations utilisateur au contrôleur du menu si nécessaire
             MenuController menuController = loader.getController();
             if (authService.isLoggedIn()) {
                 menuController.setCurrentUser(authService.getCurrentUser());
             }
 
             Scene menuScene = new Scene(menuRoot);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 
-            // CORRECTION : obtenir le Stage de manière sécurisée
-            Stage stage = getCurrentStage(event);
-            if (stage == null) {
-                System.err.println("Impossible de récupérer la fenêtre actuelle");
-                return;
-            }
-
-            // Animation de transition
-            FadeTransition sceneTransition = new FadeTransition(Duration.millis(300), stage.getScene().getRoot());
-            sceneTransition.setFromValue(1.0);
-            sceneTransition.setToValue(0.0);
-            sceneTransition.setOnFinished(e -> {
-                stage.setScene(menuScene);
-                stage.setTitle("Super Bomberman - Menu Principal");
-
-                // Animation d'entrée pour la nouvelle scène
-                FadeTransition enterTransition = new FadeTransition(Duration.millis(300), menuRoot);
-                enterTransition.setFromValue(0.0);
-                enterTransition.setToValue(1.0);
-                enterTransition.play();
-            });
-            sceneTransition.play();
+            stage.setScene(menuScene);
+            stage.setTitle("Super Bomberman - Menu Principal");
 
         } catch (IOException e) {
             e.printStackTrace();
-            showLoginMessage("Erreur lors du chargement du menu principal.", false);
-            resetLoginButton();
+            System.err.println("Erreur lors du chargement du menu principal");
         }
-    }
-
-    /**
-     * NOUVELLE MÉTHODE : Obtient le Stage actuel de manière sécurisée
-     */
-    private Stage getCurrentStage(ActionEvent event) {
-        // Méthode 1 : Si event n'est pas null, utiliser la source
-        if (event != null && event.getSource() instanceof Node) {
-            return (Stage) ((Node) event.getSource()).getScene().getWindow();
-        }
-
-        // Méthode 2 : Utiliser un des éléments FXML du contrôleur
-        if (loginButton != null && loginButton.getScene() != null) {
-            return (Stage) loginButton.getScene().getWindow();
-        }
-
-        // Méthode 3 : Utiliser loginForm comme fallback
-        if (loginForm != null && loginForm.getScene() != null) {
-            return (Stage) loginForm.getScene().getWindow();
-        }
-
-        // Méthode 4 : Utiliser exitButton comme dernière option
-        if (exitButton != null && exitButton.getScene() != null) {
-            return (Stage) exitButton.getScene().getWindow();
-        }
-
-        return null;
     }
 
     /**
@@ -240,11 +262,27 @@ public class AuthController {
     private void showLoginMessage(String message, boolean isSuccess) {
         loginMessage.setText(message);
         loginMessage.setStyle(isSuccess ?
-                "-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 14px;" :
-                "-fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-font-size: 14px;");
+                "-fx-text-fill: #27ae60; -fx-font-weight: bold;" :
+                "-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
 
         // Animation d'apparition
         FadeTransition fade = new FadeTransition(Duration.millis(300), loginMessage);
+        fade.setFromValue(0.0);
+        fade.setToValue(1.0);
+        fade.play();
+    }
+
+    /**
+     * Affiche un message d'inscription
+     */
+    private void showRegisterMessage(String message, boolean isSuccess) {
+        registerMessage.setText(message);
+        registerMessage.setStyle(isSuccess ?
+                "-fx-text-fill: #27ae60; -fx-font-weight: bold;" :
+                "-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+
+        // Animation d'apparition
+        FadeTransition fade = new FadeTransition(Duration.millis(300), registerMessage);
         fade.setFromValue(0.0);
         fade.setToValue(1.0);
         fade.play();
@@ -263,15 +301,7 @@ public class AuthController {
     }
 
     /**
-     * Remet le bouton de connexion dans son état normal
-     */
-    private void resetLoginButton() {
-        loginButton.setDisable(false);
-        loginButton.setText("SE CONNECTER");
-    }
-
-    /**
-     * MÉTHODE CORRIGÉE : Affiche un message de bienvenue pour les sessions restaurées
+     * Affiche un message de bienvenue pour les sessions restaurées
      */
     private void showWelcomeMessage() {
         User currentUser = authService.getCurrentUser();
@@ -283,36 +313,7 @@ public class AuthController {
                     "Parties jouées : " + currentUser.getGamesPlayed() + "\n" +
                     "Taux de victoire : " + String.format("%.1f", currentUser.getWinRate()) + "%");
 
-            // Créer des boutons personnalisés
-            ButtonType goToMenuButton = new ButtonType("Continuer");
-            ButtonType stayHereButton = new ButtonType("Changer de Compte", ButtonBar.ButtonData.CANCEL_CLOSE);
-
-            welcomeAlert.getButtonTypes().clear();
-            welcomeAlert.getButtonTypes().addAll(goToMenuButton, stayHereButton);
-
-            welcomeAlert.showAndWait().ifPresent(response -> {
-                if (response == goToMenuButton) {
-                    // CORRECTION : Passer null comme event est maintenant géré
-                    navigateToMainMenu(null);
-                }
-            });
+            welcomeAlert.showAndWait();
         }
-    }
-
-    /**
-     * Vide les champs de connexion
-     */
-    public void clearFields() {
-        loginUsername.clear();
-        loginPassword.clear();
-        rememberMe.setSelected(false);
-        loginMessage.setText("");
-    }
-
-    /**
-     * Met le focus sur le champ nom d'utilisateur
-     */
-    public void focusUsernameField() {
-        loginUsername.requestFocus();
     }
 }
