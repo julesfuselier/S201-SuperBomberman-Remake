@@ -37,6 +37,12 @@ public class GameLogic {
     private int lastPlayer2DirectionX = 0;
     private int lastPlayer2DirectionY = 1;
 
+    // 🆕 Variables pour détecter les morts
+    private boolean player1Dead = false;
+    private boolean player2Dead = false;
+    private boolean enemyDead = false;
+    private Player winner = null;
+
     // Délais de mouvement
     private static final long BASE_MOVE_DELAY = 200_000_000L; // 200ms de base
     private static final long ENEMY_MOVE_DELAY = 500_000_000L; // 500ms pour l'ennemi
@@ -58,6 +64,11 @@ public class GameLogic {
      * Gère le mouvement d'un joueur
      */
     public void handlePlayerMovement(Player player, int playerNumber, long currentTime, Set<KeyCode> pressedKeys, VisualRenderer visualRenderer) {
+        // 🆕 Ne pas bouger si le joueur est mort
+        if ((playerNumber == 1 && player1Dead) || (playerNumber == 2 && player2Dead)) {
+            return;
+        }
+
         // Mettre à jour les malus du joueur
         player.updateMalus();
 
@@ -127,11 +138,6 @@ public class GameLogic {
                 lastPlayer1MoveTime = currentTime;
             } else {
                 lastPlayer2MoveTime = currentTime;
-            }
-
-            // Vérifier la victoire solo (tous les ennemis morts + porte)
-            if (isOnePlayer) {
-                checkSoloVictory();
             }
         }
     }
@@ -419,61 +425,11 @@ public class GameLogic {
         return bestMove;
     }
 
-    /**
-     * Gère la mort d'un joueur et vérifie la condition de victoire/défaite (mode Battle)
-     */
-    public void handlePlayerDeath(Player player) {
-        player.setAlive(false);
-        System.out.println("💀 Joueur mort : " + player);
-        // Vérifier le nombre de joueurs vivants
-        int aliveCount = 0;
-        Player lastAlive = null;
-        if (player1 != null && player1.isAlive()) {
-            aliveCount++;
-            lastAlive = player1;
-        }
-        if (!isOnePlayer && player2 != null && player2.isAlive()) {
-            aliveCount++;
-            lastAlive = player2;
-        }
-        if (aliveCount == 1) {
-            System.out.println("🏆 Victoire du dernier survivant : " + lastAlive);
-            gameStateManager.setGameWon(true);
-        } else if (aliveCount == 0) {
-            System.out.println("❌ Tous les joueurs sont morts. Fin de partie.");
-            gameStateManager.setGameWon(false);
-        }
-    }
-
-    /**
-     * À appeler après l'initialisation pour connecter BombManager à GameLogic
-     */
-    public void connectManagers() {
-        bombManager.setGameLogic(this);
-    }
-
-    /**
-     * Vérifie la victoire solo : tous les ennemis morts + joueur sur la porte
-     */
-    public void checkSoloVictory() {
-        boolean allEnemiesDead = true;
-        // Si tu as plusieurs ennemis, adapte ce test !
-        if (enemy != null && !enemy.isDead()) {
-            allEnemiesDead = false;
-        }
-        if (allEnemiesDead && player1 != null && player1.isAlive() && isPlayerOnExit(player1)) {
-            System.out.println("🎉 Niveau terminé ! Joueur sur la porte après avoir tué tous les ennemis.");
-            gameStateManager.setGameWon(true);
-        }
-    }
-
-    /**
-     * Vérifie si le joueur est sur la porte de sortie
-     */
-    private boolean isPlayerOnExit(Player player) {
-        Tile tile = map[player.getY()][player.getX()];
-        return tile.getType() == TileType.EXIT;
-    }
+    // 🆕 Getters pour les états de mort
+    public boolean isPlayer1Dead() { return player1Dead; }
+    public boolean isPlayer2Dead() { return player2Dead; }
+    public boolean isEnemyDead() { return enemyDead; }
+    public Player getWinner() { return winner; }
 
     // Getters pour les directions
     public int getLastPlayer1DirectionX() { return lastPlayer1DirectionX; }

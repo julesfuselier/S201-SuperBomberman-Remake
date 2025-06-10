@@ -33,6 +33,9 @@ public class BombManager {
     private GameStateManager gameStateManager;
     private ScoreSystem scoreSystem;
 
+    // 🆕 Référence vers GameLogic pour notifier les morts
+    private GameLogic gameLogic;
+
     // Compteurs de bombes par joueur
     private int currentBombCountPlayer1 = 0;
     private int currentBombCountPlayer2 = 0;
@@ -56,6 +59,9 @@ public class BombManager {
         }
     }
 
+    /**
+     * 🆕 Configure la référence vers GameLogic
+     */
     public void setGameLogic(GameLogic gameLogic) {
         this.gameLogic = gameLogic;
     }
@@ -402,9 +408,12 @@ public class BombManager {
             }
         }
 
-        // Détection de la mort des joueurs et ennemis (centralisé)
-        if (gameLogic != null) {
-            gameLogic.handleExplosionAt(x, y);
+        // Gérer la mort de l'ennemi si touché par l'explosion
+        if (enemy != null && enemy.getX() == x && enemy.getY() == y) {
+            if (scoreSystem != null && owner != null) {
+                scoreSystem.addEnemyKilled(owner);
+                scoreSystem.processExplosionCombo(owner);
+            }
         }
 
         return true; // Continuer l'explosion
@@ -604,3 +613,4 @@ public class BombManager {
         System.out.println("Toutes les bombes ont été supprimées");
     }
 }
+
