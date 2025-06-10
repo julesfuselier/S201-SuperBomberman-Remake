@@ -78,6 +78,10 @@ public class Player {
     /** Range sauvegardée avant le malus de range */
     private int savedRange = 0;
 
+    // ✨ NOUVEAUX ATTRIBUTS POUR LE SYSTÈME DE VICTOIRE ✨
+    /** Indique si le joueur est vivant */
+    private boolean isAlive = true;
+
     /**
      * Définit la position du joueur et met à jour la position précédente.
      *
@@ -96,8 +100,8 @@ public class Player {
      *
      * @return La coordonnée X actuelle.
      */
-    public int getX() { 
-        return x; 
+    public int getX() {
+        return x;
     }
 
     /**
@@ -105,8 +109,8 @@ public class Player {
      *
      * @return La coordonnée Y actuelle.
      */
-    public int getY() { 
-        return y; 
+    public int getY() {
+        return y;
     }
 
     /**
@@ -114,8 +118,8 @@ public class Player {
      *
      * @return La coordonnée X précédente.
      */
-    public int getPreviousX() { 
-        return previousX; 
+    public int getPreviousX() {
+        return previousX;
     }
 
     /**
@@ -123,8 +127,8 @@ public class Player {
      *
      * @return La coordonnée Y précédente.
      */
-    public int getPreviousY() { 
-        return previousY; 
+    public int getPreviousY() {
+        return previousY;
     }
 
     /**
@@ -132,8 +136,8 @@ public class Player {
      *
      * @return Le nombre maximum de bombes.
      */
-    public int getMaxBombs() { 
-        return maxBombs; 
+    public int getMaxBombs() {
+        return maxBombs;
     }
 
     /**
@@ -141,8 +145,8 @@ public class Player {
      *
      * @return La portée d'explosion.
      */
-    public int getExplosionRange() { 
-        return explosionRange; 
+    public int getExplosionRange() {
+        return explosionRange;
     }
 
     /**
@@ -150,8 +154,8 @@ public class Player {
      *
      * @return La vitesse du joueur.
      */
-    public double getSpeed() { 
-        return speed; 
+    public double getSpeed() {
+        return speed;
     }
 
     /**
@@ -460,5 +464,39 @@ public class Player {
     public long getMalusTimeRemaining() {
         if (currentMalus == null) return 0;
         return Math.max(0, malusEndTime - System.currentTimeMillis());
+    }
+
+    // ✨ NOUVELLES MÉTHODES POUR LE SYSTÈME DE VICTOIRE ✨
+
+    /**
+     * Tue le joueur (le marque comme mort)
+     */
+    public void kill() {
+        this.isAlive = false;
+        System.out.println("💀 Joueur éliminé à la position (" + x + ", " + y + ")");
+    }
+
+    /**
+     * Ressuscite le joueur (pour les cas spéciaux ou reset)
+     */
+    public void revive() {
+        this.isAlive = true;
+        System.out.println("✨ Joueur ressuscité");
+    }
+
+    /**
+     * Vérifie si le joueur est vivant
+     * @return true si le joueur est vivant, false sinon
+     */
+    public boolean isAlive() {
+        return isAlive;
+    }
+
+    /**
+     * Vérifie si le joueur est mort
+     * @return true si le joueur est mort, false sinon
+     */
+    public boolean isDead() {
+        return !isAlive;
     }
 }
