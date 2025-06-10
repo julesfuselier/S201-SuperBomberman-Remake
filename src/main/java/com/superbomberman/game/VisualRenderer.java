@@ -38,6 +38,8 @@ public class VisualRenderer {
     private ImagePattern bombPattern;
     private ImagePattern explosionPattern;
     private ImagePattern powerUpPattern;
+    private ImagePattern rangePowerUpPattern;
+    private ImagePattern bombPassPattern;
 
     public VisualRenderer(GridPane gameGrid, Tile[][] map) {
         this.gameGrid = gameGrid;
@@ -60,6 +62,8 @@ public class VisualRenderer {
             bombPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/bomb.png")).toExternalForm()));
             explosionPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/explosion.png")).toExternalForm()));
             powerUpPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/powerup.png")).toExternalForm()));
+            rangePowerUpPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/LineBomb.png")).toExternalForm()));
+            bombPassPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/BombPass.png")).toExternalForm()));
 
             System.out.println("✅ Patterns chargés avec succès depuis /images/!");
         } catch (Exception e) {
@@ -301,6 +305,11 @@ public class VisualRenderer {
         StackPane cell = (StackPane) getNodeFromGridPane(powerUp.getX(), powerUp.getY());
         if (cell != null) {
             Rectangle powerUpRect = new Rectangle(50, 50);
+            ImagePattern pattern = switch (powerUp.getType()){
+                case RANGE_UP -> rangePowerUpPattern;
+                case BOMB_UP, SPEED_UP, KICK, GLOVE, REMOTE, WALL_PASS, LINE_BOMB, SKULL -> powerUpPattern;
+                case BOMB_PASS -> bombPassPattern;
+            };
             powerUpRect.setFill(powerUpPattern);
             cell.getChildren().add(powerUpRect);
         }
@@ -312,12 +321,10 @@ public class VisualRenderer {
     public void removePowerUpVisual(PowerUp powerUp) {
         StackPane cell = (StackPane) getNodeFromGridPane(powerUp.getX(), powerUp.getY());
         if (cell != null) {
-            // ✅ SUPPRIMER SEULEMENT LE POWER-UP (pas tout!)
             cell.getChildren().removeIf(node -> {
                 if (node instanceof Rectangle) {
                     Rectangle rect = (Rectangle) node;
-                    // Supprimer seulement si c'est le power-up
-                    return rect.getFill() == powerUpPattern;
+                    return rect.getFill() == rangePowerUpPattern;
                 }
                 return false;
             });
@@ -362,7 +369,10 @@ public class VisualRenderer {
         return null;
     }
 
+
+
     // Getters pour les patterns
+    public ImagePattern getRangePowerUpPattern() { return rangePowerUpPattern; }
     public ImagePattern getFloorPattern() { return floorPattern; }
     public ImagePattern getWallPattern() { return wallPattern; }
     public ImagePattern getWallBreakablePattern() { return wallBreakablePattern; }

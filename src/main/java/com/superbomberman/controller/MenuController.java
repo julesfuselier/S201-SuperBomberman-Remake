@@ -133,6 +133,8 @@ public class MenuController {
         stage.close();
     }
 
+
+
     /**
      * Navigation vers l'écran d'authentification
      */
