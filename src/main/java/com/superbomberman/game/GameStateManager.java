@@ -12,7 +12,7 @@ import static com.superbomberman.controller.MenuController.isOnePlayer;
  * Gestionnaire de l'état du jeu et des statistiques
  *
  * @author Jules Fuselier
- * @version 1.0
+ * @version 2.0 - Intégration ScoreSystem
  * @since 2025-06-08
  */
 public class GameStateManager {
@@ -22,10 +22,16 @@ public class GameStateManager {
     private boolean gameWon = false;
     private long gameStartTime;
 
+    // 🆕 NOUVEAU : Système de score avancé
+    private ScoreSystem scoreSystem;
+
     public GameStateManager(User currentUser, AuthService authService) {
         this.currentUser = currentUser;
         this.authService = authService;
         this.gameStartTime = System.currentTimeMillis();
+
+        // 🆕 Initialiser le système de score
+        this.scoreSystem = new ScoreSystem(this);
     }
 
     /**
@@ -42,6 +48,13 @@ public class GameStateManager {
     public void setGameWon(boolean won) {
         this.gameWon = won;
         if (won) {
+            // 🆕 Calculer le bonus de temps quand le niveau est terminé
+            long gameEndTime = System.currentTimeMillis();
+            int usedTimeSeconds = (int) ((gameEndTime - gameStartTime) / 1000);
+            int maxTimeSeconds = 120; // 2 minutes par défaut
+
+            scoreSystem.finishLevel(maxTimeSeconds, usedTimeSeconds);
+
             System.out.println("🎉 Victoire ! Score final: " + gameScore);
             endGame();
         }
@@ -55,6 +68,9 @@ public class GameStateManager {
             authService.updateUserStats(currentUser, gameWon, gameScore);
             System.out.println("Statistiques mises à jour pour " + currentUser.getUsername());
             System.out.println("Score final: " + gameScore + " | Victoire: " + (gameWon ? "Oui" : "Non"));
+
+            // 🆕 Afficher le résumé du score
+            scoreSystem.displayScoreSummary();
         }
     }
 
@@ -78,9 +94,8 @@ public class GameStateManager {
      * Vérifie si l'ennemi est vaincu
      */
     private boolean isEnemyDefeated() {
-        // Logique pour déterminer si l'ennemi est vaincu
-        // Par exemple, si l'ennemi est touché par une explosion
-        return false; // Placeholder - à implémenter selon votre logique
+        // 🆕 Vérifier si l'ennemi est mort
+        return enemy != null && enemy.isDead();
     }
 
     /**
@@ -107,5 +122,10 @@ public class GameStateManager {
 
     public long getGameStartTime() {
         return gameStartTime;
+    }
+
+    //  Getter pour le système de score
+    public ScoreSystem getScoreSystem() {
+        return scoreSystem;
     }
 }

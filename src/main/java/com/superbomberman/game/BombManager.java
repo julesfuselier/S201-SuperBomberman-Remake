@@ -31,6 +31,7 @@ public class BombManager {
     private VisualRenderer visualRenderer;
     private PowerUpManager powerUpManager;
     private GameStateManager gameStateManager;
+    private ScoreSystem scoreSystem;
 
     // Compteurs de bombes par joueur
     private int currentBombCountPlayer1 = 0;
@@ -47,6 +48,9 @@ public class BombManager {
         this.visualRenderer = visualRenderer;
         this.powerUpManager = powerUpManager;
         this.gameStateManager = gameStateManager;
+        if (gameStateManager != null) {
+            this.scoreSystem = gameStateManager.getScoreSystem();
+        }
     }
 
     /**
@@ -325,6 +329,7 @@ public class BombManager {
         int x = bomb.getX();
         int y = bomb.getY();
         int range = bomb.getRange();
+        Player owner = bomb.getOwner();
 
         // AFFICHER L'EXPLOSION QUI SE SUPPRIME AUTO
         if (visualRenderer != null) {
@@ -334,16 +339,21 @@ public class BombManager {
 
         // Explosion dans les 4 directions
         int[][] directions = {{1,0}, {-1,0}, {0,1}, {0,-1}};
-
         for (int[] direction : directions) {
             for (int rangeStep = 1; rangeStep <= range; rangeStep++) {
                 int nx = x + direction[0] * rangeStep;
                 int ny = y + direction[1] * rangeStep;
-
                 if (!isInBounds(nx, ny)) break;
-
-                boolean continueExplosion = destroyTile(nx, ny);
+                boolean continueExplosion = destroyTile(nx, ny, owner);
                 if (!continueExplosion) break;
+            }
+        }
+
+        // Gérer la mort de l'ennemi si touché par l'explosion
+        if (enemy != null && enemy.getX() == x && enemy.getY() == y) {
+            if (scoreSystem != null && owner != null) {
+                scoreSystem.addEnemyKilled(owner);
+                scoreSystem.processExplosionCombo(owner);
             }
         }
     }
@@ -351,14 +361,13 @@ public class BombManager {
     /**
      * Détruit une tuile lors d'une explosion
      */
-    private boolean destroyTile(int x, int y) {
+    private boolean destroyTile(int x, int y, Player owner) {
         Tile tile = map[y][x];
 
         if (tile.getType() == TileType.WALL) {
             return false; // Arrêter l'explosion
         }
 
-        // AFFICHER L'EXPLOSION QUI SE SUPPRIME AUTO
         if (visualRenderer != null) {
             visualRenderer.showExplosion(x, y);
 
@@ -366,8 +375,8 @@ public class BombManager {
 
                 map[y][x] = new Tile(TileType.FLOOR);
 
-                if (gameStateManager != null) {
-                    gameStateManager.updateScore(10);
+                if (scoreSystem != null && owner != null) {
+                    scoreSystem.addWallDestroyed(owner);
                 }
 
                 PauseTransition delay = new PauseTransition(Duration.seconds(0.6));
@@ -383,6 +392,14 @@ public class BombManager {
                 });
                 delay.play();
                 return false; // Arrêter l'explosion
+            }
+        }
+
+        // Gérer la mort de l'ennemi si touché par l'explosion
+        if (enemy != null && enemy.getX() == x && enemy.getY() == y) {
+            if (scoreSystem != null && owner != null) {
+                scoreSystem.addEnemyKilled(owner);
+                scoreSystem.processExplosionCombo(owner);
             }
         }
 
@@ -583,3 +600,4 @@ public class BombManager {
         System.out.println("Toutes les bombes ont été supprimées");
     }
 }
+

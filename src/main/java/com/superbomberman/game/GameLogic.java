@@ -23,6 +23,7 @@ public class GameLogic {
     private BombManager bombManager;
     private PowerUpManager powerUpManager;
     private GameStateManager gameStateManager;
+    private ScoreSystem scoreSystem;
 
     // Gestion du mouvement
     private long lastPlayer1MoveTime = 0;
@@ -45,6 +46,12 @@ public class GameLogic {
         this.bombManager = bombManager;
         this.powerUpManager = powerUpManager;
         this.gameStateManager = gameStateManager;
+        this.scoreSystem = gameStateManager.getScoreSystem();
+        // Enregistrer les joueurs dans le système de score
+        scoreSystem.registerPlayer(player1);
+        if (!isOnePlayer && player2 != null) {
+            scoreSystem.registerPlayer(player2);
+        }
     }
 
     /**
@@ -263,27 +270,20 @@ public class GameLogic {
     /**
      * Gère la logique d'explosion et la génération de power-ups
      */
-    public void handleExplosion(int x, int y, VisualRenderer visualRenderer) {
+    public void handleExplosion(int x, int y, VisualRenderer visualRenderer, Player player) {
         visualRenderer.showExplosion(x, y);
-
-        // Délai pour l'animation d'explosion
         javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(2));
         delay.setOnFinished(event -> {
             Tile tile = map[y][x];
-
             if (tile.getType() == TileType.WALL_BREAKABLE) {
                 map[y][x] = new Tile(TileType.FLOOR);
-
-                // Ajouter des points pour la destruction de murs
-                gameStateManager.updateScore(10);
-
-                // Générer un power-up aléatoire
+                // Ajouter des points pour la destruction de murs au bon joueur
+                scoreSystem.addWallDestroyed(player);
                 PowerUp powerUp = powerUpManager.generateRandomPowerUp(x, y);
                 if (powerUp != null) {
                     visualRenderer.placePowerUpVisual(powerUp);
                 }
             }
-
             visualRenderer.redrawTile(x, y, powerUpManager.getActivePowerUps());
         });
         delay.play();
