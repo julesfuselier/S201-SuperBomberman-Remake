@@ -53,4 +53,28 @@ public class MapLoader {
 
         return map;
     }
+
+    /**
+     *  Réinitialise toutes les entités pour une nouvelle partie
+     */
+    public static void resetEntities() {
+        System.out.println("🔄 Réinitialisation des entités...");
+
+        if (player1 != null) {
+            player1.revive(); // Utilise ta méthode revive()
+            System.out.println("✅ Joueur 1 réinitialisé");
+        }
+
+        if (player2 != null) {
+            player2.revive(); // Utilise ta méthode revive()
+            System.out.println("✅ Joueur 2 réinitialisé");
+        }
+
+        if (enemy != null) {
+            enemy.revive(); // Utilise ta méthode revive()
+            System.out.println("✅ Ennemi réinitialisé");
+        }
+
+        System.out.println("🔄 Réinitialisation terminée !");
+    }
 }
