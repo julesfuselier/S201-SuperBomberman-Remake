@@ -112,6 +112,14 @@
                     <Font size="16.0" />
                 </font>
             </Button>
+
+            <Button fx:id="registerPageButton" onAction="#handleGoToRegister" text="CRÉER UN COMPTE"
+                    prefWidth="180" prefHeight="45"
+                    style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 20px; -fx-border-radius: 20px; -fx-cursor: hand;">
+                <font>
+                    <Font size="14.0" />
+                </font>
+            </Button>
         </HBox>
     </bottom>
 

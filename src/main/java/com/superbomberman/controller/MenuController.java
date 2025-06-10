@@ -13,7 +13,10 @@ import javafx.scene.Node;
 import javafx.event.ActionEvent;
 
 import java.io.IOException;
-
+/**
+ * @author Hugo Brest Lestrade
+ * @version 1.3
+ **/
 public class MenuController {
 
     public static boolean isOnePlayer = false;

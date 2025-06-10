@@ -10,7 +10,10 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-
+/**
+ * @author Hugo Brest Lestrade
+ * @version 1.3
+ **/
 public class OptionsController {
 
     @FXML private Slider soundVolumeSlider;

@@ -1,6 +1,5 @@
 package com.superbomberman.controller;
 
-import com.superbomberman.model.User;
 import com.superbomberman.service.AuthService;
 import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
@@ -19,29 +18,28 @@ import javafx.util.Duration;
 
 import java.io.IOException;
 
+/**
+ * Contrôleur pour la page d'inscription dédiée.
+ * Gère la création de nouveaux comptes utilisateur.
+ *
+ * @author Hugo Brest Lestrade
+ * @version 1.3
+ */
 public class RegisterController {
 
-    @FXML
-    private VBox loginForm;
     @FXML private VBox registerForm;
-    @FXML private TabPane authTabPane;
-
-    // Éléments de connexion
-    @FXML private TextField loginUsername;
-    @FXML private PasswordField loginPassword;
-    @FXML private Button loginButton;
-    @FXML private Label loginMessage;
-    @FXML private CheckBox rememberMe;
 
     // Éléments d'inscription
     @FXML private TextField registerUsername;
     @FXML private TextField registerEmail;
     @FXML private PasswordField registerPassword;
     @FXML private PasswordField confirmPassword;
+    @FXML private ComboBox<String> favoriteCharacterComboBox;
     @FXML private Button registerButton;
     @FXML private Label registerMessage;
 
     // Boutons de navigation
+    @FXML private Button backToLoginButton;
     @FXML private Button guestButton;
     @FXML private Button exitButton;
 
@@ -52,10 +50,11 @@ public class RegisterController {
         authService = new AuthService();
         setupKeyboardShortcuts();
         setupAnimations();
+        setupFormValidation();
 
-        // Tentative de restauration de session
-        if (authService.restoreSession()) {
-            showWelcomeMessage();
+        // Initialiser le ComboBox avec une valeur par défaut
+        if (favoriteCharacterComboBox.getValue() == null) {
+            favoriteCharacterComboBox.setValue("Bomberman");
         }
     }
 
@@ -63,22 +62,52 @@ public class RegisterController {
      * Configure les raccourcis clavier
      */
     private void setupKeyboardShortcuts() {
-        // Entrée pour se connecter
-        loginPassword.setOnKeyPressed(this::handleKeyPressed);
-        loginUsername.setOnKeyPressed(this::handleKeyPressed);
-
         // Entrée pour s'inscrire
         confirmPassword.setOnKeyPressed(this::handleRegisterKeyPressed);
+        registerPassword.setOnKeyPressed(this::handleRegisterKeyPressed);
+        registerUsername.setOnKeyPressed(this::handleRegisterKeyPressed);
+        registerEmail.setOnKeyPressed(this::handleRegisterKeyPressed);
     }
 
     /**
      * Configure les animations des boutons
      */
     private void setupAnimations() {
-        setupButtonAnimation(loginButton);
         setupButtonAnimation(registerButton);
+        setupButtonAnimation(backToLoginButton);
         setupButtonAnimation(guestButton);
         setupButtonAnimation(exitButton);
+    }
+
+    /**
+     * Configure la validation en temps réel
+     */
+    private void setupFormValidation() {
+        // Validation en temps réel du nom d'utilisateur
+        registerUsername.textProperty().addListener((obs, oldText, newText) -> {
+            if (!newText.isEmpty()) {
+                if (newText.length() < 3) {
+                    registerUsername.setStyle("-fx-border-color: #e74c3c; -fx-background-color: #2c3e50; -fx-text-fill: #ecf0f1; -fx-border-radius: 8px; -fx-background-radius: 8px;");
+                } else if (!newText.matches("^[a-zA-Z0-9_-]+$")) {
+                    registerUsername.setStyle("-fx-border-color: #f39c12; -fx-background-color: #2c3e50; -fx-text-fill: #ecf0f1; -fx-border-radius: 8px; -fx-background-radius: 8px;");
+                } else {
+                    registerUsername.setStyle("-fx-border-color: #27ae60; -fx-background-color: #2c3e50; -fx-text-fill: #ecf0f1; -fx-border-radius: 8px; -fx-background-radius: 8px;");
+                }
+            } else {
+                registerUsername.setStyle("-fx-border-color: #34495e; -fx-background-color: #2c3e50; -fx-text-fill: #ecf0f1; -fx-border-radius: 8px; -fx-background-radius: 8px;");
+            }
+        });
+
+        // Validation des mots de passe
+        confirmPassword.textProperty().addListener((obs, oldText, newText) -> {
+            if (!newText.isEmpty() && !registerPassword.getText().isEmpty()) {
+                if (newText.equals(registerPassword.getText())) {
+                    confirmPassword.setStyle("-fx-border-color: #27ae60; -fx-background-color: #2c3e50; -fx-text-fill: #ecf0f1; -fx-border-radius: 8px; -fx-background-radius: 8px;");
+                } else {
+                    confirmPassword.setStyle("-fx-border-color: #e74c3c; -fx-background-color: #2c3e50; -fx-text-fill: #ecf0f1; -fx-border-radius: 8px; -fx-background-radius: 8px;");
+                }
+            }
+        });
     }
 
     /**
@@ -101,53 +130,11 @@ public class RegisterController {
     }
 
     /**
-     * Gère les touches pressées sur les champs de connexion
-     */
-    private void handleKeyPressed(KeyEvent event) {
-        if (event.getCode() == KeyCode.ENTER) {
-            handleLogin(null);
-        }
-    }
-
-    /**
      * Gère les touches pressées sur les champs d'inscription
      */
     private void handleRegisterKeyPressed(KeyEvent event) {
         if (event.getCode() == KeyCode.ENTER) {
             handleRegister(null);
-        }
-    }
-
-    /**
-     * Gère la tentative de connexion
-     */
-    @FXML
-    private void handleLogin(ActionEvent event) {
-        String username = loginUsername.getText().trim();
-        String password = loginPassword.getText();
-
-        // Validation des champs
-        if (username.isEmpty() || password.isEmpty()) {
-            showLoginMessage("Veuillez remplir tous les champs.", false);
-            return;
-        }
-
-        // Tentative de connexion
-        if (authService.login(username, password)) {
-            showLoginMessage("Connexion réussie ! Bienvenue " + username + " !", true);
-
-            // Animation de succès puis navigation
-            FadeTransition fade = new FadeTransition(Duration.millis(1000), loginMessage);
-            fade.setFromValue(1.0);
-            fade.setToValue(0.3);
-            fade.setOnFinished(e -> navigateToMainMenu(event));
-            fade.play();
-
-        } else {
-            showLoginMessage("Nom d'utilisateur ou mot de passe incorrect.", false);
-            // Animation de shake pour les champs
-            shakeNode(loginUsername);
-            shakeNode(loginPassword);
         }
     }
 
@@ -160,6 +147,7 @@ public class RegisterController {
         String email = registerEmail.getText().trim();
         String password = registerPassword.getText();
         String confirmPwd = confirmPassword.getText();
+        String favoriteCharacter = favoriteCharacterComboBox.getValue();
 
         // Validation des champs
         if (username.isEmpty() || password.isEmpty() || confirmPwd.isEmpty()) {
@@ -170,17 +158,20 @@ public class RegisterController {
         // Validation du nom d'utilisateur
         if (username.length() < 3) {
             showRegisterMessage("Le nom d'utilisateur doit contenir au moins 3 caractères.", false);
+            shakeNode(registerUsername);
             return;
         }
 
         if (!username.matches("^[a-zA-Z0-9_-]+$")) {
             showRegisterMessage("Le nom d'utilisateur ne peut contenir que des lettres, chiffres, tirets et underscores.", false);
+            shakeNode(registerUsername);
             return;
         }
 
         // Validation du mot de passe
         if (password.length() < 4) {
             showRegisterMessage("Le mot de passe doit contenir au moins 4 caractères.", false);
+            shakeNode(registerPassword);
             return;
         }
 
@@ -193,15 +184,16 @@ public class RegisterController {
         // Validation de l'email (optionnel mais format)
         if (!email.isEmpty() && !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
             showRegisterMessage("Format d'email invalide.", false);
+            shakeNode(registerEmail);
             return;
         }
 
-        // Tentative d'inscription
+        // Tentative d'inscription (utiliser la méthode existante sans personnage favori pour l'instant)
         if (authService.register(username, password, email)) {
             showRegisterMessage("Inscription réussie ! Bienvenue " + username + " !", true);
 
             // Animation de succès puis navigation
-            FadeTransition fade = new FadeTransition(Duration.millis(1000), registerMessage);
+            FadeTransition fade = new FadeTransition(Duration.millis(1500), registerMessage);
             fade.setFromValue(1.0);
             fade.setToValue(0.3);
             fade.setOnFinished(e -> navigateToMainMenu(event));
@@ -210,6 +202,27 @@ public class RegisterController {
         } else {
             showRegisterMessage("Ce nom d'utilisateur existe déjà.", false);
             shakeNode(registerUsername);
+        }
+    }
+
+    /**
+     * Retour à la page de connexion
+     */
+    @FXML
+    private void handleBackToLogin(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/auth.fxml"));
+            Parent authRoot = loader.load();
+
+            Scene authScene = new Scene(authRoot);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+            stage.setScene(authScene);
+            stage.setTitle("Super Bomberman - Authentification");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Erreur lors du chargement de la page de connexion");
         }
     }
 
@@ -238,7 +251,7 @@ public class RegisterController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu.fxml"));
             Parent menuRoot = loader.load();
 
-            // Passer les informations utilisateur au contrôleur du menu si nécessaire
+            // Passer les informations utilisateur au contrôleur du menu
             MenuController menuController = loader.getController();
             if (authService.isLoggedIn()) {
                 menuController.setCurrentUser(authService.getCurrentUser());
@@ -257,29 +270,13 @@ public class RegisterController {
     }
 
     /**
-     * Affiche un message de connexion
-     */
-    private void showLoginMessage(String message, boolean isSuccess) {
-        loginMessage.setText(message);
-        loginMessage.setStyle(isSuccess ?
-                "-fx-text-fill: #27ae60; -fx-font-weight: bold;" :
-                "-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
-
-        // Animation d'apparition
-        FadeTransition fade = new FadeTransition(Duration.millis(300), loginMessage);
-        fade.setFromValue(0.0);
-        fade.setToValue(1.0);
-        fade.play();
-    }
-
-    /**
      * Affiche un message d'inscription
      */
     private void showRegisterMessage(String message, boolean isSuccess) {
         registerMessage.setText(message);
         registerMessage.setStyle(isSuccess ?
-                "-fx-text-fill: #27ae60; -fx-font-weight: bold;" :
-                "-fx-text-fill: #e74c3c; -fx-font-weight: bold;");
+                "-fx-text-fill: #27ae60; -fx-font-weight: bold; -fx-font-size: 16px;" :
+                "-fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-font-size: 16px;");
 
         // Animation d'apparition
         FadeTransition fade = new FadeTransition(Duration.millis(300), registerMessage);
@@ -298,22 +295,5 @@ public class RegisterController {
         shake.setCycleCount(4);
         shake.setAutoReverse(true);
         shake.play();
-    }
-
-    /**
-     * Affiche un message de bienvenue pour les sessions restaurées
-     */
-    private void showWelcomeMessage() {
-        User currentUser = authService.getCurrentUser();
-        if (currentUser != null) {
-            Alert welcomeAlert = new Alert(Alert.AlertType.INFORMATION);
-            welcomeAlert.setTitle("Session restaurée");
-            welcomeAlert.setHeaderText("Bon retour, " + currentUser.getUsername() + " !");
-            welcomeAlert.setContentText("Votre session précédente a été restaurée.\n" +
-                    "Parties jouées : " + currentUser.getGamesPlayed() + "\n" +
-                    "Taux de victoire : " + String.format("%.1f", currentUser.getWinRate()) + "%");
-
-            welcomeAlert.showAndWait();
-        }
     }
 }

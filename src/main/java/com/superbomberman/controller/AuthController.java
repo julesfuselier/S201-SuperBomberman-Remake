@@ -16,6 +16,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import javafx.animation.Timeline;
+import javafx.animation.KeyFrame;
 
 import java.io.IOException;
 
@@ -33,6 +35,7 @@ public class AuthController {
     @FXML private Button loginButton;
     @FXML private Label loginMessage;
     @FXML private CheckBox rememberMe;
+    @FXML private Button registerPageButton;
 
     // Bouton de navigation
     @FXML private Button exitButton;
@@ -45,10 +48,69 @@ public class AuthController {
         setupKeyboardShortcuts();
         setupAnimations();
 
-        // Tentative de restauration de session
+        // Tentative de restauration de session avec connexion automatique
         if (authService.restoreSession()) {
-            showWelcomeMessage();
+            // Connexion automatique si l'utilisateur a coché "Se souvenir de moi"
+            showAutoLoginMessage();
+
+            // Redirection automatique vers le menu après 2 secondes
+            Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(2), e -> {
+                try {
+                    navigateToMainMenuDirect();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }));
+            timeline.play();
         }
+    }
+    /**
+     * Affiche un message de connexion automatique
+     */
+    private void showAutoLoginMessage() {
+        User currentUser = authService.getCurrentUser();
+        if (currentUser != null) {
+            showLoginMessage("Connexion automatique... Bienvenue " + currentUser.getUsername() + " !", true);
+        }
+    }
+
+    @FXML
+    private void handleGoToRegister(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/register.fxml"));
+            Parent registerRoot = loader.load();
+
+            Scene registerScene = new Scene(registerRoot);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+            stage.setScene(registerScene);
+            stage.setTitle("Super Bomberman - Inscription");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Erreur lors du chargement de la page d'inscription");
+        }
+    }
+
+    /**
+     * Navigation directe vers le menu principal (sans événement)
+     */
+    private void navigateToMainMenuDirect() throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu.fxml"));
+        Parent menuRoot = loader.load();
+
+        // Passer les informations utilisateur au contrôleur du menu
+        MenuController menuController = loader.getController();
+        if (authService.isLoggedIn()) {
+            menuController.setCurrentUser(authService.getCurrentUser());
+        }
+
+        Scene menuScene = new Scene(menuRoot);
+
+        // Récupérer le stage depuis n'importe quel élément de la scène actuelle
+        Stage stage = (Stage) loginButton.getScene().getWindow();
+        stage.setScene(menuScene);
+        stage.setTitle("Super Bomberman - Menu Principal");
     }
 
     /**
@@ -110,17 +172,8 @@ public class AuthController {
             return;
         }
 
-        // Désactiver le bouton pendant la connexion
-        loginButton.setDisable(true);
-        loginButton.setText("CONNEXION...");
-
-        // Tentative de connexion
-        if (authService.login(username, password)) {
-            // Gérer "Se souvenir de moi" après connexion réussie
-            if (rememberMe.isSelected()) {
-                // authService.saveSession(); // À implémenter si nécessaire
-            }
-
+        // Tentative de connexion AVEC l'état de "Se souvenir de moi"
+        if (authService.login(username, password, rememberMe.isSelected())) {
             showLoginMessage("Connexion réussie ! Bienvenue " + username + " !", true);
 
             // Animation de succès puis navigation
@@ -135,9 +188,6 @@ public class AuthController {
             // Animation de shake pour les champs
             shakeNode(loginUsername);
             shakeNode(loginPassword);
-
-            // Réactiver le bouton
-            resetLoginButton();
         }
     }
 
