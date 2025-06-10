@@ -23,6 +23,7 @@ public class GameLogic {
     private BombManager bombManager;
     private PowerUpManager powerUpManager;
     private GameStateManager gameStateManager;
+    private ScoreSystem scoreSystem;
 
     // Gestion du mouvement
     private long lastPlayer1MoveTime = 0;
@@ -36,6 +37,12 @@ public class GameLogic {
     private int lastPlayer2DirectionX = 0;
     private int lastPlayer2DirectionY = 1;
 
+    // 🆕 Variables pour détecter les morts
+    private boolean player1Dead = false;
+    private boolean player2Dead = false;
+    private boolean enemyDead = false;
+    private Player winner = null;
+
     // Délais de mouvement
     private static final long BASE_MOVE_DELAY = 200_000_000L; // 200ms de base
     private static final long ENEMY_MOVE_DELAY = 500_000_000L; // 500ms pour l'ennemi
@@ -45,12 +52,23 @@ public class GameLogic {
         this.bombManager = bombManager;
         this.powerUpManager = powerUpManager;
         this.gameStateManager = gameStateManager;
+        this.scoreSystem = gameStateManager.getScoreSystem();
+        // Enregistrer les joueurs dans le système de score
+        scoreSystem.registerPlayer(player1);
+        if (!isOnePlayer && player2 != null) {
+            scoreSystem.registerPlayer(player2);
+        }
     }
 
     /**
      * Gère le mouvement d'un joueur
      */
     public void handlePlayerMovement(Player player, int playerNumber, long currentTime, Set<KeyCode> pressedKeys, VisualRenderer visualRenderer) {
+        // 🆕 Ne pas bouger si le joueur est mort
+        if ((playerNumber == 1 && player1Dead) || (playerNumber == 2 && player2Dead)) {
+            return;
+        }
+
         // Mettre à jour les malus du joueur
         player.updateMalus();
 
@@ -263,30 +281,43 @@ public class GameLogic {
     /**
      * Gère la logique d'explosion et la génération de power-ups
      */
-    public void handleExplosion(int x, int y, VisualRenderer visualRenderer) {
+    public void handleExplosion(int x, int y, VisualRenderer visualRenderer, Player player) {
         visualRenderer.showExplosion(x, y);
-
-        // Délai pour l'animation d'explosion
         javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(2));
         delay.setOnFinished(event -> {
             Tile tile = map[y][x];
-
             if (tile.getType() == TileType.WALL_BREAKABLE) {
                 map[y][x] = new Tile(TileType.FLOOR);
-
-                // Ajouter des points pour la destruction de murs
-                gameStateManager.updateScore(10);
-
-                // Générer un power-up aléatoire
+                // Ajouter des points pour la destruction de murs au bon joueur
+                scoreSystem.addWallDestroyed(player);
                 PowerUp powerUp = powerUpManager.generateRandomPowerUp(x, y);
                 if (powerUp != null) {
                     visualRenderer.placePowerUpVisual(powerUp);
                 }
             }
-
             visualRenderer.redrawTile(x, y, powerUpManager.getActivePowerUps());
         });
         delay.play();
+    }
+
+    /**
+     * Gère l'explosion sur une case et tue le joueur si besoin
+     */
+    public void handleExplosionAt(int x, int y) {
+        // Vérifier si player1 est sur la case
+        if (player1 != null && player1.isAlive() && player1.getX() == x && player1.getY() == y) {
+            player1.setAlive(false);
+        }
+        // Vérifier si player2 est sur la case (si multi)
+        if (!isOnePlayer && player2 != null && player2.isAlive() && player2.getX() == x && player2.getY() == y) {
+            player2.setAlive(false);
+        }
+        // Vérifier si l'ennemi est sur la case (optionnel)
+//        if (enemy != null && enemy.getX() == x && enemy.getY() == y) {
+//            enemy.setDead(true); // à adapter selon ta logique Enemy
+//        }
+        // Vérifier la fin de partie
+        gameStateManager.checkGameConditions();
     }
 
     /**
@@ -393,6 +424,12 @@ public class GameLogic {
 
         return bestMove;
     }
+
+    // 🆕 Getters pour les états de mort
+    public boolean isPlayer1Dead() { return player1Dead; }
+    public boolean isPlayer2Dead() { return player2Dead; }
+    public boolean isEnemyDead() { return enemyDead; }
+    public Player getWinner() { return winner; }
 
     // Getters pour les directions
     public int getLastPlayer1DirectionX() { return lastPlayer1DirectionX; }

@@ -29,14 +29,14 @@ public class MapLoader {
                     case '1' -> {
                         map[row][col] = new Tile(TileType.FLOOR);
                         if (player1 == null) {
-                            player1 = new Player();
+                            player1 = new Player("Joueur 1");
                         }
                         player1.setPosition(col, row);
                     }
                     case '2' -> {
                         map[row][col] = new Tile(TileType.FLOOR);
                         if (player2 == null) {
-                            player2 = new Player();
+                            player2 = new Player("Joueur 2");
                         }
                         player2.setPosition(col, row);
                     }

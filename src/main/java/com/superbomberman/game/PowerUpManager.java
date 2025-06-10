@@ -17,6 +17,7 @@ import static com.superbomberman.model.MapLoader.player2;
  */
 public class PowerUpManager {
     private List<PowerUp> activePowerUps = new ArrayList<>();
+    private ScoreSystem scoreSystem;
 
     /**
      * Ajoute un power-up à la liste des power-ups actifs
@@ -53,6 +54,9 @@ public class PowerUpManager {
      * Vérifie les collisions entre les joueurs et les power-ups
      */
     public void checkPlayerCollisions(Player player1, Player player2, GameStateManager gameStateManager, VisualRenderer visualRenderer) {
+        if (gameStateManager != null && scoreSystem == null) {
+            scoreSystem = gameStateManager.getScoreSystem();
+        }
         checkPlayerOnPowerUp(player1, 1, gameStateManager, visualRenderer);
 
         if (player2 != null) {
@@ -90,7 +94,9 @@ public class PowerUpManager {
         powerUp.applyTo(player);
 
         // Ajouter des points pour les power-ups collectés
-        gameStateManager.updateScore(50);
+        if (scoreSystem != null) {
+            scoreSystem.addPowerUpCollected(player);
+        }
 
         // Afficher les informations selon le type de power-up
         switch (powerUp.getType()) {

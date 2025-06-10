@@ -78,9 +78,11 @@ public class Player {
     /** Range sauvegardée avant le malus de range */
     private int savedRange = 0;
 
-    // ✨ NOUVEAUX ATTRIBUTS POUR LE SYSTÈME DE VICTOIRE ✨
     /** Indique si le joueur est vivant */
-    private boolean isAlive = true;
+    private boolean alive = true;
+
+    /** Nom du joueur (pour l'affichage du podium) */
+    private String name;
 
     /**
      * Définit la position du joueur et met à jour la position précédente.
@@ -468,35 +470,13 @@ public class Player {
 
     // ✨ NOUVELLES MÉTHODES POUR LE SYSTÈME DE VICTOIRE ✨
 
-    /**
-     * Tue le joueur (le marque comme mort)
-     */
-    public void kill() {
-        this.isAlive = false;
-        System.out.println("💀 Joueur éliminé à la position (" + x + ", " + y + ")");
+    public boolean isAlive() { return alive; }
+    public void setAlive(boolean alive) { this.alive = alive; }
+    public Player(String name) {
+        this.name = name;
+        this.alive = true;
     }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    /**
-     * Ressuscite le joueur (pour les cas spéciaux ou reset)
-     */
-    public void revive() {
-        this.isAlive = true;
-        System.out.println("✨ Joueur ressuscité");
-    }
-
-    /**
-     * Vérifie si le joueur est vivant
-     * @return true si le joueur est vivant, false sinon
-     */
-    public boolean isAlive() {
-        return isAlive;
-    }
-
-    /**
-     * Vérifie si le joueur est mort
-     * @return true si le joueur est mort, false sinon
-     */
-    public boolean isDead() {
-        return !isAlive;
-    }
 }
