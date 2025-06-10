@@ -10,7 +10,10 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-
+/**
+ * @author Hugo Brest Lestrade
+ * @version 1.3
+ **/
 public class OptionsController {
 
     @FXML private Slider soundVolumeSlider;
@@ -221,7 +224,7 @@ public class OptionsController {
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 
             stage.setScene(menuScene);
-            stage.setTitle("Bomberman JavaFX");
+            stage.setTitle("Super Bomberman - Menu Principal");
 
         } catch (IOException e) {
             e.printStackTrace();

@@ -42,10 +42,12 @@ public class AuthService {
         }
     }
 
+
     /**
      * Authentifie un utilisateur avec son nom d'utilisateur et mot de passe
      */
-    public boolean login(String username, String password) {
+// Modifiez la méthode login pour accepter le paramètre rememberMe
+    public boolean login(String username, String password, boolean rememberMe) {
         if (username == null || username.trim().isEmpty() ||
                 password == null || password.trim().isEmpty()) {
             return false;
@@ -56,10 +58,20 @@ public class AuthService {
             user.setLastLoginAt(LocalDateTime.now());
             saveUser(user);
             this.currentUser = user;
-            saveCurrentUserSession();
+
+            // Sauvegarder la session seulement si "Se souvenir de moi" est coché
+            if (rememberMe) {
+                saveCurrentUserSession();
+            }
+
             return true;
         }
         return false;
+    }
+
+    // Gardez aussi l'ancienne méthode pour la compatibilité (inscription)
+    public boolean login(String username, String password) {
+        return login(username, password, false);
     }
 
     /**
@@ -80,6 +92,35 @@ public class AuthService {
 
         // Créer le nouvel utilisateur
         User newUser = new User(username, password, email);
+        saveUser(newUser);
+        userCache.put(username, newUser);
+
+        // Connexion automatique après inscription
+        this.currentUser = newUser;
+        saveCurrentUserSession();
+
+        return true;
+    }
+
+    public boolean register(String username, String password, String email, String favoriteCharacter) {
+        if (username == null || username.trim().isEmpty() ||
+                password == null || password.trim().isEmpty()) {
+            return false;
+        }
+
+        username = username.trim();
+
+        // Vérifier si l'utilisateur existe déjà
+        if (userExists(username)) {
+            return false;
+        }
+
+        // Créer le nouvel utilisateur avec personnage favori
+        User newUser = new User(username, password, email);
+        if (favoriteCharacter != null && !favoriteCharacter.isEmpty()) {
+            newUser.setFavoriteCharacter(favoriteCharacter);
+        }
+
         saveUser(newUser);
         userCache.put(username, newUser);
 
