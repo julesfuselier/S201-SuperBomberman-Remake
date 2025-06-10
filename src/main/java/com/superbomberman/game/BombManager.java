@@ -356,6 +356,7 @@ public class BombManager {
                 int ny = y + direction[1] * rangeStep;
                 if (!isInBounds(nx, ny)) break;
                 boolean continueExplosion = destroyTile(nx, ny, owner);
+                gameLogic.handleExplosionAt(nx, ny);
                 if (!continueExplosion) break;
             }
         }

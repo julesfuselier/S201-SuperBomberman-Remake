@@ -77,18 +77,18 @@ public class ScoreSystem {
         comboList.clear();
     }
 
-    /**
-     * 🏆 Calcule et ajoute le bonus de temps
-     */
-    public void calculateTimeBonus(Player player, int maxTimeSeconds, int usedTimeSeconds) {
-        int remainingTime = Math.max(0, maxTimeSeconds - usedTimeSeconds);
-        int timeBonus = remainingTime * TIME_BONUS_MULTIPLIER;
-
-        if (timeBonus > 0) {
-            System.out.println("⏱️ Bonus de temps pour " + player + " : " + remainingTime + "s × " + TIME_BONUS_MULTIPLIER + " = +" + timeBonus + " points");
-            addScore(player, timeBonus);
-        }
-    }
+//    /**
+//     * Calcule et ajoute le bonus de temps
+//     */
+//    public void calculateTimeBonus(Player player, int maxTimeSeconds, int usedTimeSeconds) {
+//        int remainingTime = Math.max(0, maxTimeSeconds - usedTimeSeconds);
+//        int timeBonus = remainingTime * TIME_BONUS_MULTIPLIER;
+//
+//        if (timeBonus > 0) {
+//            System.out.println("⏱️ Bonus de temps pour " + player + " : " + remainingTime + "s × " + TIME_BONUS_MULTIPLIER + " = +" + timeBonus + " points");
+//            addScore(player, timeBonus);
+//        }
+//    }
 
     /**
      * 🎁 Ajoute des points pour un power-up collecté
@@ -116,9 +116,9 @@ public class ScoreSystem {
         }
 
         // Calculer le bonus de temps
-        for (Player player : playerScores.keySet()) {
-            calculateTimeBonus(player, maxTimeSeconds, usedTimeSeconds);
-        }
+//        for (Player player : playerScores.keySet()) {
+//            calculateTimeBonus(player, maxTimeSeconds, usedTimeSeconds);
+//        }
 
         System.out.println("🎉 Niveau terminé !");
     }

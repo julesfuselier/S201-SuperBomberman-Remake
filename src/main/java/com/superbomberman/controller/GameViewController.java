@@ -125,8 +125,11 @@ public class GameViewController extends OptionsController {
         // 6. GameLogic - Logique principale (dépend de tous les autres)
         gameLogic = new GameLogic(map, bombManager, powerUpManager, gameStateManager);
 
-        // ✅ FIX: CONFIGURER LES RÉFÉRENCES CROISÉES
+        // ✅ CONFIGURER LES RÉFÉRENCES CROISÉES
         bombManager.setManagers(visualRenderer, powerUpManager, gameStateManager);
+
+        // 🆕 AJOUTER LA RÉFÉRENCE GAMELOGIC MANQUANTE
+        bombManager.setGameLogic(gameLogic);
 
         System.out.println("Tous les gestionnaires initialisés!");
     }

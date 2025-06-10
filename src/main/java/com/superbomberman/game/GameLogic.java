@@ -303,54 +303,111 @@ public class GameLogic {
     /**
      * Gère l'explosion sur une case et tue le joueur si besoin
      */
+    // Remplacer la méthode handleExplosionAt (lignes 306-321)
     public void handleExplosionAt(int x, int y) {
+        boolean gameEnded = false;
+
         // Vérifier si player1 est sur la case
         if (player1 != null && player1.isAlive() && player1.getX() == x && player1.getY() == y) {
             player1.setAlive(false);
+            player1Dead = true;
+            System.out.println("💀 Joueur 1 éliminé par explosion à (" + x + ", " + y + ")");
+            gameEnded = true;
         }
+
         // Vérifier si player2 est sur la case (si multi)
         if (!isOnePlayer && player2 != null && player2.isAlive() && player2.getX() == x && player2.getY() == y) {
             player2.setAlive(false);
+            player2Dead = true;
+            System.out.println("💀 Joueur 2 éliminé par explosion à (" + x + ", " + y + ")");
+            gameEnded = true;
         }
-        // Vérifier si l'ennemi est sur la case (optionnel)
-//        if (enemy != null && enemy.getX() == x && enemy.getY() == y) {
-//            enemy.setDead(true); // à adapter selon ta logique Enemy
-//        }
-        // Vérifier la fin de partie
-        gameStateManager.checkGameConditions();
+
+        // 🔧 CORRECTION : Utiliser kill() au lieu de setDead()
+        if (enemy != null && enemy.isAlive() && enemy.getX() == x && enemy.getY() == y) {
+            enemy.kill(); // ✅ Utiliser la méthode kill() qui existe
+            enemyDead = true;
+            System.out.println("💀 Ennemi éliminé par explosion à (" + x + ", " + y + ")");
+            // En mode solo, tuer l'ennemi = victoire
+            if (isOnePlayer) {
+                gameStateManager.setGameWon(true);
+                gameEnded = true;
+            }
+        }
+
+        // 🆕 DÉCLENCHER LA FIN DE JEU IMMÉDIATEMENT
+        if (gameEnded) {
+            checkAndEndGame();
+        }
+    }
+
+    // 🆕 NOUVELLE MÉTHODE pour gérer la fin de jeu
+    public void checkAndEndGame() {
+        if (isOnePlayer) {
+            // Mode solo : joueur mort = défaite
+            if (player1Dead) {
+                gameStateManager.setGameWon(false);
+                gameStateManager.endGame();
+                return;
+            }
+            // Ennemi mort = victoire
+            if (enemyDead || (enemy != null && enemy.isDead())) {
+                gameStateManager.setGameWon(true);
+                gameStateManager.endGame();
+            }
+        } else {
+            // Mode multijoueur
+            if (player1Dead && player2Dead) {
+                // Les deux morts = match nul (ou logique spécifique)
+                gameStateManager.setGameWon(false);
+                gameStateManager.endGame();
+            } else if (player1Dead) {
+                // Joueur 2 gagne
+                winner = player2;
+                gameStateManager.setGameWon(false); // Du point de vue du joueur 1
+                gameStateManager.endGame();
+            } else if (player2Dead) {
+                // Joueur 1 gagne
+                winner = player1;
+                gameStateManager.setGameWon(true);
+                gameStateManager.endGame();
+            }
+        }
     }
 
     /**
      * Vérifie les conditions de victoire/défaite
      */
     public void checkGameConditions() {
-        // Vérifier si l'ennemi est vaincu
-        if (enemy != null && isEnemyDefeated()) {
+        // Vérifier si l'ennemi est vaincu (mode solo)
+        if (isOnePlayer && enemy != null && enemy.isDead()) {
             gameStateManager.setGameWon(true);
+            gameStateManager.endGame();
+            return;
         }
 
         // Vérifier si le joueur est vaincu
         if (isPlayerDefeated()) {
             gameStateManager.setGameWon(false);
+            gameStateManager.endGame();
         }
     }
 
-    /**
-     * Vérifie si l'ennemi est vaincu
-     */
+    // Corriger isEnemyDefeated (lignes 341-345)
     private boolean isEnemyDefeated() {
-        // Vérifier si l'ennemi est sur une case d'explosion
-        // Cette logique sera à implémenter selon les besoins
-        return false; // Placeholder
+        return enemy != null && enemy.isDead(); // Utiliser isDead()
     }
 
-    /**
-     * Vérifie si le joueur est vaincu
-     */
+    // Corriger isPlayerDefeated (lignes 350-354)
     private boolean isPlayerDefeated() {
-        // Vérifier si le joueur est sur une case d'explosion
-        // Cette logique sera à implémenter selon les besoins
-        return false; // Placeholder
+        if (isOnePlayer) {
+            return player1 == null || !player1.isAlive();
+        } else {
+            // En multi, tous les joueurs morts = défaite
+            boolean player1Alive = player1 != null && player1.isAlive();
+            boolean player2Alive = player2 != null && player2.isAlive();
+            return !player1Alive && !player2Alive;
+        }
     }
 
     /**
@@ -423,6 +480,40 @@ public class GameLogic {
         }
 
         return bestMove;
+    }
+
+    /**
+     * 🆕 Détermine le gagnant selon le mode de jeu
+     */
+    private void determineWinner() {
+        if (isOnePlayer) {
+            // Mode solo : si le joueur meurt = Game Over
+            if (player1Dead) {
+                gameStateManager.setGameWon(false);
+                gameStateManager.endGame();
+                System.out.println("💀 GAME OVER - Le joueur est mort!");
+            }
+        } else {
+            // Mode multijoueur : déterminer le gagnant
+            if (player1Dead && !player2Dead) {
+                winner = player2;
+                gameStateManager.setGameWon(true);
+                gameStateManager.setWinner(player2); // NOUVEAU
+                gameStateManager.endGame();
+                System.out.println("🏆 JOUEUR 2 GAGNE!");
+            } else if (player2Dead && !player1Dead) {
+                winner = player1;
+                gameStateManager.setGameWon(true);
+                gameStateManager.setWinner(player1); // NOUVEAU
+                gameStateManager.endGame();
+                System.out.println("🏆 JOUEUR 1 GAGNE!");
+            } else if (player1Dead && player2Dead) {
+                // Match nul
+                gameStateManager.setGameWon(false);
+                gameStateManager.endGame();
+                System.out.println("💀 MATCH NUL - Tous les joueurs sont morts!");
+            }
+        }
     }
 
     // 🆕 Getters pour les états de mort
