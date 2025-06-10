@@ -31,8 +31,8 @@ import static com.superbomberman.controller.MenuController.isOnePlayer;
  * - GameLogic : Logique principale (mouvement, collisions, IA)
  *
  * @author Jules Fuselier
- * @version 3.1 - Fix bombes et explosion
- * @since 2025-06-08
+ * @version 4.0 - Système de fin de jeu implémenté
+ * @since 2025-06-10
  */
 public class GameViewController extends OptionsController {
 
@@ -89,6 +89,10 @@ public class GameViewController extends OptionsController {
      */
     private void initializeMap() throws IOException {
         System.out.println("Mode un joueur: " + isOnePlayer);
+
+        // Réinitialiser les entités AVANT de charger la carte
+        MapLoader.resetEntities();
+
         if (isOnePlayer) {
             System.out.println("Chargement de la carte niveau 1 (1 joueur)");
             map = MapLoader.loadMap("src/main/resources/maps/level1.txt");
@@ -108,6 +112,20 @@ public class GameViewController extends OptionsController {
         // 1. GameStateManager - Gère l'état du jeu
         gameStateManager = new GameStateManager(currentUser, null);
 
+        // ✅ NOUVELLE FONCTIONNALITÉ : Callback de fin de jeu
+        gameStateManager.setOnGameEndCallback(() -> {
+            // Arrêter la boucle de jeu
+            stopGameLoop();
+
+            // Afficher un message temporaire (on fera mieux à l'étape 2)
+            System.out.println("🎮 Jeu terminé ! Retour au menu dans 3 secondes...");
+
+            // Optionnel : retour automatique au menu après quelques secondes
+            javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(3));
+            delay.setOnFinished(event -> handleBackToMenu());
+            delay.play();
+        });
+
         // 2. VisualRenderer - Gère l'affichage
         visualRenderer = new VisualRenderer(gameGrid, map);
         visualRenderer.setupGridConstraints();
@@ -125,7 +143,7 @@ public class GameViewController extends OptionsController {
         // 6. GameLogic - Logique principale (dépend de tous les autres)
         gameLogic = new GameLogic(map, bombManager, powerUpManager, gameStateManager);
 
-        // ✅ FIX: CONFIGURER LES RÉFÉRENCES CROISÉES
+        // CONFIGURER LES RÉFÉRENCES CROISÉES
         bombManager.setManagers(visualRenderer, powerUpManager, gameStateManager);
 
         System.out.println("Tous les gestionnaires initialisés!");
@@ -178,6 +196,12 @@ public class GameViewController extends OptionsController {
             @Override
             public void handle(long now) {
                 try {
+                    // ✅ VÉRIFICATION : Si le jeu est terminé, arrêter la boucle
+                    if (gameStateManager.isGameEnded()) {
+                        stop();
+                        return;
+                    }
+
                     // === PHASE 1 : ACTIONS IMMÉDIATES ===
                     // Traiter les actions instantanées (bombes, pouvoirs)
                     inputHandler.processImmediateActions(player1, player2, bombManager, gameLogic);
@@ -333,14 +357,15 @@ public class GameViewController extends OptionsController {
     public void printDebugStats() {
         System.out.println("=== STATISTIQUES DE DEBUG ===");
         System.out.println("Score actuel: " + gameStateManager.getGameScore());
+        System.out.println("Jeu terminé: " + gameStateManager.isGameEnded());
         System.out.println("Bombes actives: " + bombManager.getActiveBombs().size());
         System.out.println("Power-ups actifs: " + powerUpManager.getActivePowerUpCount());
-        System.out.println("Joueur 1 - Position: (" + player1.getX() + ", " + player1.getY() + ")");
+        System.out.println("Joueur 1 - Position: (" + player1.getX() + ", " + player1.getY() + ") - Vivant: " + player1.isAlive());
         if (!isOnePlayer && player2 != null) {
-            System.out.println("Joueur 2 - Position: (" + player2.getX() + ", " + player2.getY() + ")");
+            System.out.println("Joueur 2 - Position: (" + player2.getX() + ", " + player2.getY() + ") - Vivant: " + player2.isAlive());
         }
         if (enemy != null) {
-            System.out.println("Ennemi - Position: (" + enemy.getX() + ", " + enemy.getY() + ")");
+            System.out.println("Ennemi - Position: (" + enemy.getX() + ", " + enemy.getY() + ") - Vivant: " + enemy.isAlive());
         }
 
         // Stats des bombes par joueur
@@ -442,6 +467,7 @@ public class GameViewController extends OptionsController {
 
         System.out.println("=== ÉTAT JOUEUR " + playerNumber + " ===");
         System.out.println("Position: (" + player.getX() + ", " + player.getY() + ")");
+        System.out.println("Vivant: " + player.isAlive());
         System.out.println("Vitesse: " + player.getSpeed());
         System.out.println("Bombes max: " + player.getMaxBombs());
         System.out.println("Portée explosion: " + player.getExplosionRange());
@@ -454,5 +480,23 @@ public class GameViewController extends OptionsController {
         System.out.println("Tient une bombe: " + player.isHoldingBomb());
         System.out.println("Malus actif: " + (player.hasActiveMalus() ? player.getCurrentMalus() : "Aucun"));
         System.out.println("========================");
+    }
+
+    /**
+     *  Affiche l'état du jeu pour debug
+     */
+    public void printGameState() {
+        if (gameStateManager != null) {
+            gameStateManager.printGameState();
+        }
+    }
+
+    /**
+     *  Force la fin du jeu pour test
+     */
+    public void forceGameEnd(boolean victory) {
+        if (gameStateManager != null) {
+            gameStateManager.setGameWon(victory);
+        }
     }
 }

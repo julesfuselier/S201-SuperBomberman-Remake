@@ -2,6 +2,7 @@ package com.superbomberman.game;
 
 import com.superbomberman.model.User;
 import com.superbomberman.service.AuthService;
+import javafx.application.Platform;
 
 import static com.superbomberman.model.MapLoader.enemy;
 import static com.superbomberman.model.MapLoader.player1;
@@ -12,38 +13,34 @@ import static com.superbomberman.controller.MenuController.isOnePlayer;
  * Gestionnaire de l'état du jeu et des statistiques
  *
  * @author Jules Fuselier
- * @version 2.0
- * @since 2025-06-10
+ * @version 2.0 - Système de fin de jeu implémenté
+ * @since 2025-06-08
  */
 public class GameStateManager {
     private User currentUser;
     private AuthService authService;
     private int gameScore = 0;
     private boolean gameWon = false;
-    private boolean gameEnded = false;
+    private boolean gameEnded = false; //  : Éviter les fins multiples
     private long gameStartTime;
 
-    // PROPRIÉTÉS POUR LA GESTION DE FIN DE PARTIE
-    private GameEndReason endReason = null;
-    private int winnerPlayer = 0; // 0 = aucun, 1 = joueur 1, 2 = joueur 2
-    private boolean isDraw = false;
+    private boolean player1Killed = false;
+    private boolean player2Killed = false;
+    private boolean enemyKilled = false;
 
-    // Optionnel : Timer de partie (pour mode chrono)
-    private long gameTimeLimit = 0; // 0 = pas de limite
-    private boolean hasTimeLimit = false;
-
-    public enum GameEndReason {
-        PLAYER_VICTORY,     // Un joueur a gagné
-        PLAYER_DEFEAT,      // Le joueur a perdu (solo)
-        MUTUAL_DESTRUCTION, // Tous les joueurs morts en même temps
-        TIME_UP,           // Temps écoulé
-        ENEMY_DEFEATED     // Ennemi vaincu (mode solo)
-    }
+    private Runnable onGameEndCallback;
 
     public GameStateManager(User currentUser, AuthService authService) {
         this.currentUser = currentUser;
         this.authService = authService;
         this.gameStartTime = System.currentTimeMillis();
+    }
+
+    /**
+     *  Définit le callback à exécuter quand le jeu se termine
+     */
+    public void setOnGameEndCallback(Runnable callback) {
+        this.onGameEndCallback = callback;
     }
 
     /**
@@ -55,252 +52,174 @@ public class GameStateManager {
     }
 
     /**
-     *  Vérifie toutes les conditions de fin de jeu
+     * Marque le jeu comme gagné ou perdu
      */
-    public void checkGameConditions() {
-        if (gameEnded) return; // Ne pas vérifier si le jeu est déjà terminé
+    public void setGameWon(boolean won) {
+        if (gameEnded) return; // Éviter les doublons
 
-        // 1. Vérifier le timer (si activé)
-        if (hasTimeLimit && isTimeUp()) {
-            endGameByTime();
-            return;
-        }
-
-        // 2. Vérifier les conditions selon le mode de jeu
-        if (isOnePlayer) {
-            checkSoloGameConditions();
-        } else {
-            checkMultiplayerGameConditions();
-        }
-    }
-
-    /**
-     *  Vérifie les conditions de fin pour le mode solo
-     */
-    private void checkSoloGameConditions() {
-        // Vérifier si le joueur 1 est mort
-        if (player1 != null && player1.isDead()) {
-            endGame(GameEndReason.PLAYER_DEFEAT, 0, false);
-            return;
-        }
-
-        // Vérifier si l'ennemi est vaincu
-        if (enemy != null && isEnemyDefeated()) {
-            endGame(GameEndReason.ENEMY_DEFEATED, 1, true);
-            return;
-        }
-    }
-
-    /**
-     * ✨ Vérifie les conditions de fin pour le mode 2 joueurs
-     */
-    private void checkMultiplayerGameConditions() {
-        boolean player1Alive = player1 != null && player1.isAlive();
-        boolean player2Alive = player2 != null && player2.isAlive();
-
-        // Cas 1: Les deux joueurs sont morts → Égalité
-        if (!player1Alive && !player2Alive) {
-            endGame(GameEndReason.MUTUAL_DESTRUCTION, 0, false);
-            return;
-        }
-
-        // Cas 2: Seul le joueur 1 survit → Joueur 1 gagne
-        if (player1Alive && !player2Alive) {
-            endGame(GameEndReason.PLAYER_VICTORY, 1, true);
-            return;
-        }
-
-        // Cas 3: Seul le joueur 2 survit → Joueur 2 gagne
-        if (!player1Alive && player2Alive) {
-            endGame(GameEndReason.PLAYER_VICTORY, 2, true);
-            return;
-        }
-
-        // Cas 4: Les deux sont vivants → Le jeu continue
-    }
-
-    /**
-     * ✨ Termine le jeu par écoulement du temps
-     */
-    private void endGameByTime() {
-        if (isOnePlayer) {
-            // En solo, si le temps est écoulé → défaite
-            endGame(GameEndReason.TIME_UP, 0, false);
-        } else {
-            // En multijoueur, déterminer le gagnant selon les critères
-            // Option 1: Égalité
-            endGame(GameEndReason.TIME_UP, 0, false);
-
-            // Option 2: Gagnant selon le score, les vies, etc.
-            // int winner = determineWinnerByScore();
-            // endGame(GameEndReason.TIME_UP, winner, winner > 0);
-        }
-    }
-
-    /**
-     * ✨ MÉTHODE CENTRALE - Termine le jeu avec une raison spécifique
-     */
-    private void endGame(GameEndReason reason, int winner, boolean victory) {
-        if (gameEnded) return; // Éviter les appels multiples
-
+        this.gameWon = won;
         this.gameEnded = true;
-        this.endReason = reason;
-        this.winnerPlayer = winner;
-        this.gameWon = victory;
-        this.isDraw = (winner == 0 && reason == GameEndReason.MUTUAL_DESTRUCTION);
 
-        // Afficher le résultat
-        displayGameResult();
-
-        // Mettre à jour les statistiques
-        updatePlayerStats();
-
-        // Déclencher les effets de fin de partie
-        triggerEndGameEffects();
-    }
-
-    /**
-     * ✨ Affiche le résultat de la partie
-     */
-    private void displayGameResult() {
-        System.out.println("========================================");
-        System.out.println("🎮 FIN DE PARTIE 🎮");
-        System.out.println("========================================");
-
-        switch (endReason) {
-            case PLAYER_VICTORY -> {
-                System.out.println("🏆 VICTOIRE ! Joueur " + winnerPlayer + " a gagné !");
-            }
-            case PLAYER_DEFEAT -> {
-                System.out.println("💀 DÉFAITE ! Vous avez été éliminé !");
-            }
-            case MUTUAL_DESTRUCTION -> {
-                System.out.println("☠️ ÉGALITÉ ! Tous les joueurs ont été éliminés !");
-            }
-            case TIME_UP -> {
-                if (winnerPlayer > 0) {
-                    System.out.println("⏰ TEMPS ÉCOULÉ ! Joueur " + winnerPlayer + " gagne !");
-                } else {
-                    System.out.println("⏰ TEMPS ÉCOULÉ ! Aucun gagnant !");
-                }
-            }
-            case ENEMY_DEFEATED -> {
-                System.out.println("🎉 VICTOIRE ! Ennemi vaincu !");
-            }
+        if (won) {
+            System.out.println("🎉 Victoire ! Score final: " + gameScore);
+        } else {
+            System.out.println("💀 Défaite ! Score final: " + gameScore);
         }
 
-        System.out.println("Score final: " + gameScore);
-        System.out.println("Durée de la partie: " + getGameDurationSeconds() + " secondes");
-        System.out.println("========================================");
+        endGame();
+
+        // Arrêter le jeu après un court délai
+        Platform.runLater(() -> {
+            if (onGameEndCallback != null) {
+                onGameEndCallback.run();
+            }
+        });
     }
 
     /**
-     * ✨ Met à jour les statistiques du joueur
+     *  Appelée quand un joueur est tué
      */
-    private void updatePlayerStats() {
+    public void onPlayerKilled(int playerNumber) {
+        if (gameEnded) return; // Éviter les doublons
+
+        if (playerNumber == 1) {
+            player1Killed = true;
+            System.out.println("🚨 Joueur 1 éliminé !");
+        } else if (playerNumber == 2) {
+            player2Killed = true;
+            System.out.println("🚨 Joueur 2 éliminé !");
+        }
+
+        // Vérifier immédiatement les conditions de fin
+        checkGameConditions();
+    }
+
+    /**
+     *  Appelée quand un ennemi est tué
+     */
+    public void onEnemyKilled() {
+        if (gameEnded) return; // Éviter les doublons
+
+        enemyKilled = true;
+        updateScore(100); // Bonus pour éliminer un ennemi
+        System.out.println("🎯 Ennemi éliminé ! Bonus +100 points");
+
+        // Vérifier immédiatement les conditions de fin
+        checkGameConditions();
+    }
+
+    /**
+     * Termine le jeu et met à jour les statistiques utilisateur
+     */
+    public void endGame() {
         if (currentUser != null && authService != null) {
             authService.updateUserStats(currentUser, gameWon, gameScore);
-            System.out.println("📊 Statistiques mises à jour pour " + currentUser.getUsername());
+            System.out.println("Statistiques mises à jour pour " + currentUser.getUsername());
+            System.out.println("Score final: " + gameScore + " | Victoire: " + (gameWon ? "Oui" : "Non"));
         }
     }
 
     /**
-     * ✨ Déclenche les effets visuels/sonores de fin de partie
+     *  Vérifie les conditions de fin de jeu selon le mode
      */
-    private void triggerEndGameEffects() {
-        // TODO: À implémenter dans l'étape suivante
-        // - Animation de victoire/défaite
-        // - Sons de fin de partie
-        // - Transition vers l'écran de résultats
-        System.out.println("🎬 Déclenchement des effets de fin de partie...");
-    }
+    public void checkGameConditions() {
+        if (gameEnded) return; // Éviter les vérifications multiples
 
-    // ✨ MÉTHODES UTILITAIRES
+        if (isOnePlayer) {
+            // === MODE 1 JOUEUR ===
+            if (isPlayerDefeated()) {
+                System.out.println("💀 Mode 1 joueur : Joueur éliminé !");
+                setGameWon(false);
+            } else if (isEnemyDefeated()) {
+                System.out.println("🎉 Mode 1 joueur : Tous les ennemis éliminés !");
+                setGameWon(true);
+            }
+        } else {
+            // === MODE 2 JOUEURS ===
+            boolean player1Dead = isPlayer1Defeated();
+            boolean player2Dead = isPlayer2Defeated();
+            boolean allEnemiesDead = isEnemyDefeated();
 
-    /**
-     * Active un timer pour la partie
-     */
-    public void setGameTimeLimit(long timeLimitInSeconds) {
-        this.gameTimeLimit = timeLimitInSeconds * 1000; // Convertir en millisecondes
-        this.hasTimeLimit = true;
-        System.out.println("⏱️ Timer activé: " + timeLimitInSeconds + " secondes");
-    }
-
-    /**
-     * Vérifie si le temps est écoulé
-     */
-    public boolean isTimeUp() {
-        if (!hasTimeLimit) return false;
-        return (System.currentTimeMillis() - gameStartTime) >= gameTimeLimit;
-    }
-
-    /**
-     * Retourne le temps restant en secondes
-     */
-    public long getRemainingTimeSeconds() {
-        if (!hasTimeLimit) return -1;
-        long remaining = gameTimeLimit - (System.currentTimeMillis() - gameStartTime);
-        return Math.max(0, remaining / 1000);
-    }
-
-    /**
-     * Retourne la durée de la partie en secondes
-     */
-    public long getGameDurationSeconds() {
-        return (System.currentTimeMillis() - gameStartTime) / 1000;
-    }
-
-    /**
-     * Force la fin de partie (pour debug ou cas spéciaux)
-     */
-    public void forceEndGame(GameEndReason reason, int winner) {
-        endGame(reason, winner, winner > 0);
-    }
-
-    // Méthodes existantes mises à jour
-    public void setGameWon(boolean won) {
-        // Cette méthode est conservée pour compatibilité
-        if (!gameEnded) {
-            endGame(won ? GameEndReason.PLAYER_VICTORY : GameEndReason.PLAYER_DEFEAT,
-                    won ? 1 : 0, won);
+            if (player1Dead && player2Dead) {
+                System.out.println("⚖️ Mode 2 joueurs : Égalité ! Les deux joueurs sont morts.");
+                setGameWon(false); // Considéré comme défaite mutuelle
+            } else if (player1Dead && !player2Dead) {
+                System.out.println("🎉 Mode 2 joueurs : Joueur 2 gagne !");
+                // Si tu es le joueur 1, c'est une défaite, sinon victoire
+                setGameWon(false); // À adapter selon ta logique
+            } else if (player2Dead && !player1Dead) {
+                System.out.println("🎉 Mode 2 joueurs : Joueur 1 gagne !");
+                setGameWon(true); // Joueur 1 = joueur principal
+            } else if (allEnemiesDead && !player1Dead && !player2Dead) {
+                System.out.println("🎉 Mode 2 joueurs : Les deux joueurs survivent ! Victoire partagée !");
+                setGameWon(true);
+            }
         }
     }
 
     /**
-     *  Vérifie si l'ennemi est vaincu
-     */
-    private boolean isEnemyDefeated() {
-        // Vérifier si l'ennemi existe et s'il est mort
-        if (enemy == null) {
-            return false; // Pas d'ennemi = pas de victoire par ennemi vaincu
-        }
-
-        return enemy.isDead(); // Utilise la méthode isDead() déjà présente dans Enemy.java
-    }
-
-    /**
-     *  Vérifie si le joueur est vaincu
+     *  Vérifie si le joueur principal est vaincu
      */
     private boolean isPlayerDefeated() {
-        if (isOnePlayer) {
-            // Mode solo : vérifier si le joueur 1 est mort
-            return player1 != null && player1.isDead();
-        } else {
-            // Mode 2 joueurs : vérifier si les deux joueurs sont morts
-            boolean player1Dead = player1 == null || player1.isDead();
-            boolean player2Dead = player2 == null || player2.isDead();
-            return player1Dead && player2Dead;
-        }
+        return player1 != null && !player1.isAlive();
     }
 
-    public int getGameScore() { return gameScore; }
-    public boolean isGameWon() { return gameWon; }
-    public User getCurrentUser() { return currentUser; }
-    public long getGameStartTime() { return gameStartTime; }
+    /**
+     *  Vérifie si le joueur 1 spécifiquement est vaincu
+     */
+    private boolean isPlayer1Defeated() {
+        return player1 != null && !player1.isAlive();
+    }
 
-    public boolean isGameEnded() { return gameEnded; }
-    public GameEndReason getEndReason() { return endReason; }
-    public int getWinnerPlayer() { return winnerPlayer; }
-    public boolean isDraw() { return isDraw; }
-    public boolean hasTimeLimit() { return hasTimeLimit; }
+    /**
+     * Vérifie si le joueur 2 spécifiquement est vaincu
+     */
+    private boolean isPlayer2Defeated() {
+        return player2 != null && !player2.isAlive();
+    }
+
+    /**
+     *   Vérifie si l'ennemi est vaincu
+     */
+    private boolean isEnemyDefeated() {
+        // Si pas d'ennemi au départ, considérer comme "vaincu"
+        if (enemy == null) return true;
+
+        // Vérifier si l'ennemi est mort
+        return !enemy.isAlive();
+    }
+
+    public int getGameScore() {
+        return gameScore;
+    }
+
+    public boolean isGameWon() {
+        return gameWon;
+    }
+
+    public boolean isGameEnded() {
+        return gameEnded;
+    }
+
+    public User getCurrentUser() {
+        return currentUser;
+    }
+
+    public long getGameStartTime() {
+        return gameStartTime;
+    }
+
+    // MÉTHODES DE DEBUG
+    public void printGameState() {
+        System.out.println("=== ÉTAT DU JEU ===");
+        System.out.println("Mode: " + (isOnePlayer ? "1 joueur" : "2 joueurs"));
+        System.out.println("Joueur 1 vivant: " + (player1 != null ? player1.isAlive() : "null"));
+        if (!isOnePlayer) {
+            System.out.println("Joueur 2 vivant: " + (player2 != null ? player2.isAlive() : "null"));
+        }
+        System.out.println("Ennemi vivant: " + (enemy != null ? enemy.isAlive() : "null"));
+        System.out.println("Jeu terminé: " + gameEnded);
+        System.out.println("Score: " + gameScore);
+        System.out.println("==================");
+    }
 }

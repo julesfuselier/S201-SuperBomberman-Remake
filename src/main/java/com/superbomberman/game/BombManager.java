@@ -349,7 +349,7 @@ public class BombManager {
     }
 
     /**
-     * Détruit une tuile lors d'une explosion
+     * Détruit une tuile lors d'une explosion ET vérifie les entités présentes
      */
     private boolean destroyTile(int x, int y) {
         Tile tile = map[y][x];
@@ -358,12 +358,14 @@ public class BombManager {
             return false; // Arrêter l'explosion
         }
 
+        // Vérifier les entités sur cette position
+        checkEntitiesAtExplosion(x, y);
+
         // AFFICHER L'EXPLOSION QUI SE SUPPRIME AUTO
         if (visualRenderer != null) {
             visualRenderer.showExplosion(x, y);
 
             if (tile.getType() == TileType.WALL_BREAKABLE) {
-
                 map[y][x] = new Tile(TileType.FLOOR);
 
                 if (gameStateManager != null) {
@@ -382,11 +384,47 @@ public class BombManager {
                     visualRenderer.redrawTile(x, y, powerUpManager != null ? powerUpManager.getActivePowerUps() : new ArrayList<>());
                 });
                 delay.play();
+
                 return false; // Arrêter l'explosion
             }
         }
 
         return true; // Continuer l'explosion
+    }
+
+    /**
+     * Vérifie et gère les entités touchées par l'explosion
+     */
+    private void checkEntitiesAtExplosion(int x, int y) {
+        // Vérifier le joueur 1
+        if (player1 != null && player1.getX() == x && player1.getY() == y && player1.isAlive()) {
+            System.out.println("💥 Joueur 1 touché par une explosion à (" + x + ", " + y + ")!");
+            player1.kill();
+
+            if (gameStateManager != null) {
+                gameStateManager.onPlayerKilled(1);
+            }
+        }
+
+        // Vérifier le joueur 2 (si mode 2 joueurs)
+        if (!isOnePlayer && player2 != null && player2.getX() == x && player2.getY() == y && player2.isAlive()) {
+            System.out.println("💥 Joueur 2 touché par une explosion à (" + x + ", " + y + ")!");
+            player2.kill();
+
+            if (gameStateManager != null) {
+                gameStateManager.onPlayerKilled(2);
+            }
+        }
+
+        // Vérifier l'ennemi (avec ta nouvelle classe Enemy améliorée)
+        if (enemy != null && enemy.getX() == x && enemy.getY() == y && enemy.isAlive()) {
+            System.out.println("💥 Ennemi éliminé par une explosion à (" + x + ", " + y + ")!");
+            enemy.kill(); // Utiliser ta nouvelle méthode kill()
+
+            if (gameStateManager != null) {
+                gameStateManager.onEnemyKilled();
+            }
+        }
     }
 
     /**
