@@ -10,9 +10,12 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author Hugo Brest Lestrade
- * @version 1.3
+ * @version 1.4
  **/
 public class OptionsController {
 
@@ -65,6 +68,36 @@ public class OptionsController {
     private static String pauseKey = "P";
 
     @FXML
+    private ComboBox<String> imageTheme; // Lien avec le FXML
+
+    private static String selectedImageTheme = "classique"; // Valeur globale accessible
+
+    // --- Observer/Listener pour le changement de thème
+    public interface ThemeChangeListener {
+        void onThemeChanged(String newTheme);
+    }
+    private static final List<ThemeChangeListener> themeChangeListeners = new ArrayList<>();
+    public static void addThemeChangeListener(ThemeChangeListener listener) {
+        themeChangeListeners.add(listener);
+    }
+    public static void removeThemeChangeListener(ThemeChangeListener listener) {
+        themeChangeListeners.remove(listener);
+    }
+    private static void notifyThemeChanged(String newTheme) {
+        for (ThemeChangeListener listener : themeChangeListeners) {
+            listener.onThemeChanged(newTheme);
+        }
+    }
+
+    public static String getImageTheme() {
+        return selectedImageTheme;
+    }
+    public static void setImageTheme(String theme) {
+        selectedImageTheme = theme;
+        notifyThemeChanged(theme); // Notifie tous les listeners
+    }
+
+    @FXML
     public void initialize() {
         // Initialiser les valeurs des contrôles avec les paramètres sauvegardés
         soundVolumeSlider.setValue(soundVolume);
@@ -77,11 +110,24 @@ public class OptionsController {
         // Mise à jour initiale du label
         soundVolumeLabel.setText(String.format("%.0f%%", soundVolume));
 
-        // Initialiser le texte des boutons avec les touches actuelles
         updateButtonTexts();
-
-        // Ajouter des listeners pour les boutons de contrôle
         setupControlButtons();
+
+        if (imageTheme != null) {
+            // Ajoute les thèmes si besoin (à faire UNE fois)
+            if (imageTheme.getItems().isEmpty()) {
+                imageTheme.getItems().addAll("Bomberman", "Theme1", "Theme2");
+            }
+            // Ne change la valeur QUE si c'est nécessaire
+            if (!selectedImageTheme.equals(imageTheme.getValue())) {
+                imageTheme.setValue(selectedImageTheme);
+            }
+            imageTheme.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null && !newVal.equals(selectedImageTheme)) {
+                    setImageTheme(newVal); // Appelle le setter qui notifie
+                }
+            });
+        }
     }
 
     private void updateButtonTexts() {
@@ -170,6 +216,7 @@ public class OptionsController {
         System.out.println("Touches Joueur 1 - Haut: " + upKey1 + ", Bas: " + downKey1 + ", Gauche: " + leftKey1 + ", Droite: " + rightKey1 + ", Bombe: " + bombKey1);
         System.out.println("Touches Joueur 2 - Haut: " + upKey2 + ", Bas: " + downKey2 + ", Gauche: " + leftKey2 + ", Droite: " + rightKey2 + ", Bombe: " + bombKey2);
         System.out.println("Pause: " + pauseKey);
+        System.out.println("Thème d'images: " + selectedImageTheme);
     }
 
     @FXML
@@ -186,21 +233,23 @@ public class OptionsController {
             difficultyComboBox.setValue("Normal");
             gameSpeedSlider.setValue(3.0);
 
-            // Remettre les touches par défaut
-            upKey1 = "Z";
-            downKey1 = "S";
-            leftKey1 = "Q";
-            rightKey1 = "D";
+            // Touches Joueur 1
+            upKey1 = "UP";
+            downKey1 = "DOWN";
+            leftKey1 = "LEFT";
+            rightKey1 = "RIGHT";
             bombKey1 = "SPACE";
-
-            upKey2 = "UP";
-            downKey2 = "DOWN";
-            leftKey2 = "LEFT";
-            rightKey2 = "RIGHT";
+            // Touches Joueur 2
+            upKey2 = "Z";
+            downKey2 = "S";
+            leftKey2 = "Q";
+            rightKey2 = "D";
             bombKey2 = "ENTER";
-
+            // Pause
             pauseKey = "P";
-
+            // Thème
+            setImageTheme("Bomberman");
+            if (imageTheme != null) imageTheme.setValue("Bomberman");
             // Mettre à jour les textes des boutons
             updateButtonTexts();
 
@@ -233,17 +282,9 @@ public class OptionsController {
     }
 
     // Méthodes statiques pour accéder aux paramètres depuis d'autres classes
-    public static double getSoundVolume() {
-        return soundVolume;
-    }
-
-    public static String getDifficulty() {
-        return difficulty;
-    }
-
-    public static double getGameSpeed() {
-        return gameSpeed;
-    }
+    public static double getSoundVolume() { return soundVolume; }
+    public static String getDifficulty() { return difficulty; }
+    public static double getGameSpeed() { return gameSpeed; }
 
     // Méthodes pour accéder aux touches du Joueur 1
     public static String getUpKey1() { return upKey1; }

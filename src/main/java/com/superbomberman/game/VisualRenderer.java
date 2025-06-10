@@ -1,5 +1,6 @@
 package com.superbomberman.game;
 
+import com.superbomberman.controller.OptionsController;
 import com.superbomberman.model.*;
 import com.superbomberman.model.powerup.PowerUp;
 import javafx.animation.PauseTransition;
@@ -43,6 +44,17 @@ public class VisualRenderer {
         this.gameGrid = gameGrid;
         this.map = map;
         loadPatterns();
+        // Abonnement au changement de thème
+        OptionsController.addThemeChangeListener(newTheme -> {
+            loadPatterns();
+            redrawAll(); // Fonction à créer qui redessine toute la grille avec les nouveaux patterns
+        });
+    }
+
+    public void redrawAll() {
+        setupGridConstraints();
+        drawMap();
+        // Redessiner les entités, bombes, etc., si besoin
     }
 
     /**
@@ -50,16 +62,19 @@ public class VisualRenderer {
      */
     private void loadPatterns() {
         try {
-            // Utiliser les chemins existants dans /images/
-            floorPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/grass.png")).toExternalForm()));
-            wallPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/wall.png")).toExternalForm()));
-            wallBreakablePattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/wall_breakable.png")).toExternalForm()));
-            playerPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/player.png")).toExternalForm()));
-            player2Pattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/player2.png")).toExternalForm()));
-            enemyPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/enemy.png")).toExternalForm()));
-            bombPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/bomb.png")).toExternalForm()));
-            explosionPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/explosion.png")).toExternalForm()));
-            powerUpPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/powerup.png")).toExternalForm()));
+
+            String theme = OptionsController.getImageTheme();
+            String basePath = "/images/" + theme + "/";
+            floorPattern = new ImagePattern(new Image(getClass().getResource(basePath + "grass.png").toExternalForm()));
+            wallPattern = new ImagePattern(new Image(getClass().getResource(basePath + "wall.png").toExternalForm()));
+            wallBreakablePattern = new ImagePattern(new Image(getClass().getResource(basePath + "wall_breakable.png").toExternalForm()));
+            playerPattern = new ImagePattern(new Image(getClass().getResource(basePath + "player.png").toExternalForm()));
+            player2Pattern = new ImagePattern(new Image(getClass().getResource(basePath + "player2.png").toExternalForm()));
+            enemyPattern = new ImagePattern(new Image(getClass().getResource(basePath + "enemy.png").toExternalForm()));
+            bombPattern = new ImagePattern(new Image(getClass().getResource(basePath + "bomb.png").toExternalForm()));
+            explosionPattern = new ImagePattern(new Image(getClass().getResource(basePath + "explosion.png").toExternalForm()));
+            powerUpPattern = new ImagePattern(new Image(getClass().getResource(basePath + "powerup.png").toExternalForm()));
+
 
             System.out.println("✅ Patterns chargés avec succès depuis /images/!");
         } catch (Exception e) {
