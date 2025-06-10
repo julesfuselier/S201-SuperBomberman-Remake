@@ -1,5 +1,7 @@
 package com.superbomberman.game;
 
+import com.superbomberman.controller.GameOverController;
+import com.superbomberman.controller.VictoryController;
 import com.superbomberman.model.User;
 import com.superbomberman.service.AuthService;
 import javafx.application.Platform;
@@ -33,6 +35,8 @@ public class GameStateManager {
     private boolean player1Killed = false;
     private boolean player2Killed = false;
     private boolean enemyKilled = false;
+
+    private long gameTime;
 
     private Runnable onGameEndCallback;
 
@@ -101,7 +105,7 @@ public class GameStateManager {
                 Scene scene = new Scene(loader.load());
 
                 // Passer les données au contrôleur si nécessaire
-                Object controller = loader.getController();
+                VictoryController controller = loader.getController();
                 if (controller != null) {
                     // Appeler des méthodes sur le contrôleur pour passer les données
                     // Par exemple: ((VictoryController) controller).setGameData(gameScore, currentUser, etc.);
@@ -128,10 +132,15 @@ public class GameStateManager {
                 Scene scene = new Scene(loader.load());
 
                 // Passer les données au contrôleur si nécessaire
-                Object controller = loader.getController();
+                GameOverController controller = loader.getController();
                 if (controller != null) {
-                    // Appeler des méthodes sur le contrôleur pour passer les données
-                    // Par exemple: ((GameOverController) controller).setGameData(gameScore, currentUser, etc.);
+                    controller.initializeGameOverScreen(
+                            currentUser,
+                            gameScore,
+                            gameTime,
+                            isOnePlayer,
+                            "Vous avez perdu !"
+                    );
                 }
 
                 if (gameStage != null) {
@@ -186,11 +195,15 @@ public class GameStateManager {
             System.out.println("Statistiques mises à jour pour " + currentUser.getUsername());
             System.out.println("Score final: " + gameScore + " | Victoire: " + (gameWon ? "Oui" : "Non"));
         }
+
+        gameTime = System.currentTimeMillis() - gameStartTime;
     }
 
     /**
      *  Vérifie les conditions de fin de jeu selon le mode
      */
+
+    // TODO : FAIRE LES DEFEATREASON POUR CHAQUE TYPE DE DEFAITE
     public void checkGameConditions() {
         if (gameEnded) return; // Éviter les vérifications multiples
 
@@ -276,6 +289,10 @@ public class GameStateManager {
 
     public long getGameStartTime() {
         return gameStartTime;
+    }
+
+    public long getGameTime() {
+        return gameTime;
     }
 
     // MÉTHODES DE DEBUG

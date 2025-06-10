@@ -20,9 +20,7 @@
 
         <!-- Image/Animation de défaite -->
         <ImageView fitHeight="120.0" fitWidth="120.0" pickOnBounds="true" preserveRatio="true">
-            <image>
-                <Image url="@../images/gameover_icon.png" />
-            </image>
+            <Image url="@../images/gameover_icon.png"/>
         </ImageView>
 
         <!-- Informations du jeu -->

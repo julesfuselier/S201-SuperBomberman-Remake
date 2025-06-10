@@ -293,15 +293,24 @@ public class GameViewController extends OptionsController {
 
         try {
             if (gameStateManager.isGameWon()) {
+
+//                gameStateManager.showVictoryScreen();
+
                 // Charger la vue du menu
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/victory.fxml"));
                 Parent victoryRoot = loader.load();
 
                 // Passer l'utilisateur au contrôleur du menu
                 VictoryController victoryController = loader.getController();
-//                if (gameStateManager.getCurrentUser() != null) {
-//                    menuController.setCurrentUser(gameStateManager.getCurrentUser());
-//                }
+                if (gameStateManager != null) {
+                    victoryController.initializeVictoryScreen(
+                            gameStateManager.getCurrentUser(),
+                            gameStateManager.getGameScore(),
+                            gameStateManager.getGameTime(),
+                            isOnePlayer,
+                            "Victoire !"
+                            );
+                }
 
                 // Changer de scène
                 Scene victoryScene = new Scene(victoryRoot);
@@ -314,15 +323,23 @@ public class GameViewController extends OptionsController {
 
             else {
 
+                gameStateManager.showGameOverScreen();
+
                 // Charger la vue du menu
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/gameOver.fxml"));
                 Parent gameOverRoot = loader.load();
 
                 // Passer l'utilisateur au contrôleur du menu
                 GameOverController gameOverController = loader.getController();
-//                if (gameStateManager.getCurrentUser() != null) {
-//                    menuController.setCurrentUser(gameStateManager.getCurrentUser());
-//                }
+                if (gameStateManager != null) {
+                    gameOverController.initializeGameOverScreen(
+                            gameStateManager.getCurrentUser(),
+                            gameStateManager.getGameScore(),
+                            gameStateManager.getGameTime(),
+                            isOnePlayer,
+                            "Victoire !"
+                    );
+                }
 
                 // Changer de scène
                 Scene gameOverScene = new Scene(gameOverRoot);
