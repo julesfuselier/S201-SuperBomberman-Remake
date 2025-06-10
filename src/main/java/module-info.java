@@ -5,6 +5,7 @@ module com.superbomberman {
 
     requires org.controlsfx.controls;
     requires org.kordamp.bootstrapfx.core;
+    requires javafx.media;
 
     opens com.superbomberman to javafx.fxml;
     exports com.superbomberman;

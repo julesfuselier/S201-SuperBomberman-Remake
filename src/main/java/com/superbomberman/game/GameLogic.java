@@ -128,6 +128,11 @@ public class GameLogic {
             } else {
                 lastPlayer2MoveTime = currentTime;
             }
+
+            // Vérifier la victoire solo (tous les ennemis morts + porte)
+            if (isOnePlayer) {
+                checkSoloVictory();
+            }
         }
     }
 
@@ -290,6 +295,26 @@ public class GameLogic {
     }
 
     /**
+     * Gère l'explosion sur une case et tue le joueur si besoin
+     */
+    public void handleExplosionAt(int x, int y) {
+        // Vérifier si player1 est sur la case
+        if (player1 != null && player1.isAlive() && player1.getX() == x && player1.getY() == y) {
+            player1.setAlive(false);
+        }
+        // Vérifier si player2 est sur la case (si multi)
+        if (!isOnePlayer && player2 != null && player2.isAlive() && player2.getX() == x && player2.getY() == y) {
+            player2.setAlive(false);
+        }
+        // Vérifier si l'ennemi est sur la case (optionnel)
+        if (enemy != null && enemy.getX() == x && enemy.getY() == y) {
+            enemy.setDead(true); // à adapter selon ta logique Enemy
+        }
+        // Vérifier la fin de partie
+        gameStateManager.checkGameConditions();
+    }
+
+    /**
      * Vérifie les conditions de victoire/défaite
      */
     public void checkGameConditions() {
@@ -392,6 +417,62 @@ public class GameLogic {
         }
 
         return bestMove;
+    }
+
+    /**
+     * Gère la mort d'un joueur et vérifie la condition de victoire/défaite (mode Battle)
+     */
+    public void handlePlayerDeath(Player player) {
+        player.setAlive(false);
+        System.out.println("💀 Joueur mort : " + player);
+        // Vérifier le nombre de joueurs vivants
+        int aliveCount = 0;
+        Player lastAlive = null;
+        if (player1 != null && player1.isAlive()) {
+            aliveCount++;
+            lastAlive = player1;
+        }
+        if (!isOnePlayer && player2 != null && player2.isAlive()) {
+            aliveCount++;
+            lastAlive = player2;
+        }
+        if (aliveCount == 1) {
+            System.out.println("🏆 Victoire du dernier survivant : " + lastAlive);
+            gameStateManager.setGameWon(true);
+        } else if (aliveCount == 0) {
+            System.out.println("❌ Tous les joueurs sont morts. Fin de partie.");
+            gameStateManager.setGameWon(false);
+        }
+    }
+
+    /**
+     * À appeler après l'initialisation pour connecter BombManager à GameLogic
+     */
+    public void connectManagers() {
+        bombManager.setGameLogic(this);
+    }
+
+    /**
+     * Vérifie la victoire solo : tous les ennemis morts + joueur sur la porte
+     */
+    public void checkSoloVictory() {
+        boolean allEnemiesDead = true;
+        // Si tu as plusieurs ennemis, adapte ce test !
+        if (enemy != null && !enemy.isDead()) {
+            allEnemiesDead = false;
+        }
+        if (allEnemiesDead && player1 != null && player1.isAlive() && isPlayerOnExit(player1)) {
+            System.out.println("🎉 Niveau terminé ! Joueur sur la porte après avoir tué tous les ennemis.");
+            gameStateManager.setGameWon(true);
+        }
+    }
+
+    /**
+     * Vérifie si le joueur est sur la porte de sortie
+     */
+    private boolean isPlayerOnExit(Player player) {
+        Tile tile = map[player.getY()][player.getX()];
+        return tile.getType() == TileType.EXIT;
     }
 
     // Getters pour les directions

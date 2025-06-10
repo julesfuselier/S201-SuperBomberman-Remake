@@ -171,6 +171,13 @@ public class ScoreSystem {
     }
 
     /**
+     * Récupère le score d'un joueur
+     */
+    public int getPlayerScore(Player player) {
+        return playerScores.getOrDefault(player, 0);
+    }
+
+    /**
      * 📋 Affiche un résumé du score
      */
     public void displayScoreSummary() {
