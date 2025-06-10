@@ -18,7 +18,7 @@ import static com.superbomberman.controller.MenuController.isOnePlayer;
  * Gestionnaire des bombes du jeu
  *
  * @author Jules Fuselier
- * @version 1.1 - Fix affichage et explosion
+ * @version 1.2 - Ajout détection mort joueurs/ennemi
  * @since 2025-06-08
  */
 public class BombManager {
@@ -32,6 +32,9 @@ public class BombManager {
     private PowerUpManager powerUpManager;
     private GameStateManager gameStateManager;
     private ScoreSystem scoreSystem;
+
+    // 🆕 Référence vers GameLogic pour notifier les morts
+    private GameLogic gameLogic;
 
     // Compteurs de bombes par joueur
     private int currentBombCountPlayer1 = 0;
@@ -51,6 +54,13 @@ public class BombManager {
         if (gameStateManager != null) {
             this.scoreSystem = gameStateManager.getScoreSystem();
         }
+    }
+
+    /**
+     * 🆕 Configure la référence vers GameLogic
+     */
+    public void setGameLogic(GameLogic gameLogic) {
+        this.gameLogic = gameLogic;
     }
 
     /**
@@ -323,7 +333,7 @@ public class BombManager {
     }
 
     /**
-     * Gère l'explosion d'une bombe
+     * 🆕 Gère l'explosion d'une bombe (VERSION AMÉLIORÉE)
      */
     private void handleExplosion(Bomb bomb) {
         int x = bomb.getX();
@@ -337,6 +347,9 @@ public class BombManager {
             visualRenderer.showExplosion(x, y);
         }
 
+        // 🆕 Vérifier si des entités sont au centre de l'explosion
+        checkExplosionCollisions(x, y, owner);
+
         // Explosion dans les 4 directions
         int[][] directions = {{1,0}, {-1,0}, {0,1}, {0,-1}};
         for (int[] direction : directions) {
@@ -348,18 +361,52 @@ public class BombManager {
                 if (!continueExplosion) break;
             }
         }
+    }
 
-        // Gérer la mort de l'ennemi si touché par l'explosion
-        if (enemy != null && enemy.getX() == x && enemy.getY() == y) {
-            if (scoreSystem != null && owner != null) {
-                scoreSystem.addEnemyKilled(owner);
-                scoreSystem.processExplosionCombo(owner);
+    /**
+     * 🆕 Vérifie les collisions avec les entités lors d'une explosion
+     */
+    private void checkExplosionCollisions(int x, int y, Player bombOwner) {
+        // Vérifier collision avec joueur 1
+        if (player1 != null && !gameLogic.isPlayer1Dead() &&
+                player1.getX() == x && player1.getY() == y) {
+            System.out.println("💥 Joueur 1 touché par une explosion en (" + x + ", " + y + ") !");
+            gameLogic.killPlayer(1);
+
+            // Ajouter des points au propriétaire si c'est l'autre joueur
+            if (!isOnePlayer && bombOwner != null && bombOwner != player1 && scoreSystem != null) {
+                scoreSystem.addPlayerKilled(bombOwner);
+            }
+        }
+
+        // Vérifier collision avec joueur 2 (si mode multijoueur)
+        if (!isOnePlayer && player2 != null && !gameLogic.isPlayer2Dead() &&
+                player2.getX() == x && player2.getY() == y) {
+            System.out.println("💥 Joueur 2 touché par une explosion en (" + x + ", " + y + ") !");
+            gameLogic.killPlayer(2);
+
+            // Ajouter des points au propriétaire si c'est l'autre joueur
+            if (bombOwner != null && bombOwner != player2 && scoreSystem != null) {
+                scoreSystem.addPlayerKilled(bombOwner);
+            }
+        }
+
+        // Vérifier collision avec l'ennemi
+        if (enemy != null && !gameLogic.isEnemyDead() &&
+                enemy.getX() == x && enemy.getY() == y) {
+            System.out.println("💥 Ennemi touché par une explosion en (" + x + ", " + y + ") !");
+            gameLogic.killEnemy();
+
+            // Ajouter des points au propriétaire
+            if (bombOwner != null && scoreSystem != null) {
+                scoreSystem.addEnemyKilled(bombOwner);
+                scoreSystem.processExplosionCombo(bombOwner);
             }
         }
     }
 
     /**
-     * Détruit une tuile lors d'une explosion
+     * 🆕 Détruit une tuile lors d'une explosion (VERSION AMÉLIORÉE)
      */
     private boolean destroyTile(int x, int y, Player owner) {
         Tile tile = map[y][x];
@@ -372,7 +419,6 @@ public class BombManager {
             visualRenderer.showExplosion(x, y);
 
             if (tile.getType() == TileType.WALL_BREAKABLE) {
-
                 map[y][x] = new Tile(TileType.FLOOR);
 
                 if (scoreSystem != null && owner != null) {
@@ -395,13 +441,8 @@ public class BombManager {
             }
         }
 
-        // Gérer la mort de l'ennemi si touché par l'explosion
-        if (enemy != null && enemy.getX() == x && enemy.getY() == y) {
-            if (scoreSystem != null && owner != null) {
-                scoreSystem.addEnemyKilled(owner);
-                scoreSystem.processExplosionCombo(owner);
-            }
-        }
+        // 🆕 Vérifier collision avec les entités sur cette case
+        checkExplosionCollisions(x, y, owner);
 
         return true; // Continuer l'explosion
     }
@@ -473,8 +514,6 @@ public class BombManager {
 
         kickingBombs.removeAll(bombsToStop);
     }
-
-    // [Reste des méthodes identiques...]
 
     /**
      * Vérifie si une bombe peut se déplacer vers une position
@@ -600,4 +639,3 @@ public class BombManager {
         System.out.println("Toutes les bombes ont été supprimées");
     }
 }
-

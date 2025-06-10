@@ -37,6 +37,12 @@ public class GameLogic {
     private int lastPlayer2DirectionX = 0;
     private int lastPlayer2DirectionY = 1;
 
+    // 🆕 Variables pour détecter les morts
+    private boolean player1Dead = false;
+    private boolean player2Dead = false;
+    private boolean enemyDead = false;
+    private Player winner = null;
+
     // Délais de mouvement
     private static final long BASE_MOVE_DELAY = 200_000_000L; // 200ms de base
     private static final long ENEMY_MOVE_DELAY = 500_000_000L; // 500ms pour l'ennemi
@@ -58,6 +64,11 @@ public class GameLogic {
      * Gère le mouvement d'un joueur
      */
     public void handlePlayerMovement(Player player, int playerNumber, long currentTime, Set<KeyCode> pressedKeys, VisualRenderer visualRenderer) {
+        // 🆕 Ne pas bouger si le joueur est mort
+        if ((playerNumber == 1 && player1Dead) || (playerNumber == 2 && player2Dead)) {
+            return;
+        }
+
         // Mettre à jour les malus du joueur
         player.updateMalus();
 
@@ -116,6 +127,9 @@ public class GameLogic {
         if (moved && canMoveTo(newX, newY, player)) {
             player.setPosition(newX, newY);
 
+            // 🆕 Vérifier collision avec l'ennemi après mouvement
+            checkPlayerEnemyCollision(player, playerNumber);
+
             // Mettre à jour la position visuelle
             updatePlayerVisualPosition(player, playerNumber, visualRenderer);
 
@@ -139,7 +153,8 @@ public class GameLogic {
             return;
         }
 
-        if (enemy != null) {
+        // 🆕 Ne pas bouger si l'ennemi est mort
+        if (enemy != null && !enemyDead) {
             moveEnemy(enemy, visualRenderer);
             lastEnemyMoveTime = currentTime;
         }
@@ -157,6 +172,10 @@ public class GameLogic {
 
         if (canMoveTo(newX, newY, enemy)) {
             enemy.setPosition(newX, newY);
+
+            // 🆕 Vérifier collision avec les joueurs après mouvement
+            checkEnemyPlayerCollisions();
+
             visualRenderer.updateEnemyPosition(enemy, bombManager.getActiveBombs());
         } else {
             // Changer de direction aléatoirement
@@ -179,7 +198,111 @@ public class GameLogic {
 
             if (canMoveTo(newX, newY, enemy)) {
                 enemy.setPosition(newX, newY);
+
+                // 🆕 Vérifier collision avec les joueurs après mouvement
+                checkEnemyPlayerCollisions();
+
                 visualRenderer.updateEnemyPosition(enemy, bombManager.getActiveBombs());
+            }
+        }
+    }
+
+    /**
+     * 🆕 Vérifie la collision entre un joueur et l'ennemi
+     */
+    private void checkPlayerEnemyCollision(Player player, int playerNumber) {
+        if (enemy != null && !enemyDead &&
+                player.getX() == enemy.getX() && player.getY() == enemy.getY()) {
+
+            System.out.println("💀 Joueur " + playerNumber + " touché par l'ennemi !");
+            killPlayer(playerNumber);
+        }
+    }
+
+    /**
+     * 🆕 Vérifie les collisions entre l'ennemi et tous les joueurs
+     */
+    private void checkEnemyPlayerCollisions() {
+        if (enemy == null || enemyDead) return;
+
+        // Vérifier collision avec joueur 1
+        if (!player1Dead && player1.getX() == enemy.getX() && player1.getY() == enemy.getY()) {
+            System.out.println("💀 Joueur 1 touché par l'ennemi !");
+            killPlayer(1);
+        }
+
+        // Vérifier collision avec joueur 2 (si mode multijoueur)
+        if (!isOnePlayer && player2 != null && !player2Dead &&
+                player2.getX() == enemy.getX() && player2.getY() == enemy.getY()) {
+            System.out.println("💀 Joueur 2 touché par l'ennemi !");
+            killPlayer(2);
+        }
+    }
+
+    /**
+     * 🆕 Tue un joueur
+     */
+    public void killPlayer(int playerNumber) {
+        if (playerNumber == 1) {
+            player1Dead = true;
+            System.out.println("💀 Joueur 1 est mort !");
+        } else if (playerNumber == 2) {
+            player2Dead = true;
+            System.out.println("💀 Joueur 2 est mort !");
+        }
+
+        // Déterminer le gagnant
+        determineWinner();
+    }
+
+    /**
+     * 🆕 Tue l'ennemi
+     */
+    public void killEnemy() {
+        if (enemy != null && !enemyDead) {
+            enemyDead = true;
+            enemy.kill(); // Utilise la méthode kill() de la classe Enemy
+            System.out.println("💀 Ennemi éliminé !");
+
+            // En mode solo, victoire si l'ennemi meurt
+            if (isOnePlayer && !player1Dead) {
+                winner = player1;
+                gameStateManager.setGameWon(true);
+                gameStateManager.endGame();
+            }
+        }
+    }
+
+    /**
+     * 🆕 Détermine le gagnant selon le mode de jeu
+     */
+    private void determineWinner() {
+        if (isOnePlayer) {
+            // Mode solo : si le joueur meurt = Game Over
+            if (player1Dead) {
+                gameStateManager.setGameWon(false);
+                gameStateManager.endGame();
+            }
+        } else {
+            // Mode multijoueur : déterminer le gagnant
+            if (player1Dead && player2Dead) {
+                // Match nul
+                winner = null;
+                System.out.println("🤝 Match nul ! Les deux joueurs sont morts.");
+                gameStateManager.setGameWon(false); // ou créer un état "draw"
+                gameStateManager.endGame();
+            } else if (player1Dead) {
+                // Joueur 2 gagne
+                winner = player2;
+                System.out.println("🏆 Joueur 2 gagne !");
+                gameStateManager.setGameWon(true);
+                gameStateManager.endGame();
+            } else if (player2Dead) {
+                // Joueur 1 gagne
+                winner = player1;
+                System.out.println("🏆 Joueur 1 gagne !");
+                gameStateManager.setGameWon(true);
+                gameStateManager.endGame();
             }
         }
     }
@@ -293,33 +416,26 @@ public class GameLogic {
      * Vérifie les conditions de victoire/défaite
      */
     public void checkGameConditions() {
-        // Vérifier si l'ennemi est vaincu
-        if (enemy != null && isEnemyDefeated()) {
-            gameStateManager.setGameWon(true);
-        }
-
-        // Vérifier si le joueur est vaincu
-        if (isPlayerDefeated()) {
-            gameStateManager.setGameWon(false);
-        }
+        // Les conditions sont maintenant gérées par les méthodes killPlayer() et killEnemy()
+        // Cette méthode peut être appelée pour des vérifications supplémentaires si nécessaire
     }
 
     /**
-     * Vérifie si l'ennemi est vaincu
+     * 🆕 Vérifie si l'ennemi est vaincu
      */
     private boolean isEnemyDefeated() {
-        // Vérifier si l'ennemi est sur une case d'explosion
-        // Cette logique sera à implémenter selon les besoins
-        return false; // Placeholder
+        return enemyDead;
     }
 
     /**
-     * Vérifie si le joueur est vaincu
+     * 🆕 Vérifie si un joueur est vaincu
      */
     private boolean isPlayerDefeated() {
-        // Vérifier si le joueur est sur une case d'explosion
-        // Cette logique sera à implémenter selon les besoins
-        return false; // Placeholder
+        if (isOnePlayer) {
+            return player1Dead;
+        } else {
+            return player1Dead || player2Dead;
+        }
     }
 
     /**
@@ -393,6 +509,12 @@ public class GameLogic {
 
         return bestMove;
     }
+
+    // 🆕 Getters pour les états de mort
+    public boolean isPlayer1Dead() { return player1Dead; }
+    public boolean isPlayer2Dead() { return player2Dead; }
+    public boolean isEnemyDead() { return enemyDead; }
+    public Player getWinner() { return winner; }
 
     // Getters pour les directions
     public int getLastPlayer1DirectionX() { return lastPlayer1DirectionX; }
