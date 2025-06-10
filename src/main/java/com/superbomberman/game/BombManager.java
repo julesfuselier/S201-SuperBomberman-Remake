@@ -40,8 +40,6 @@ public class BombManager {
     private int currentBombCountPlayer1 = 0;
     private int currentBombCountPlayer2 = 0;
 
-    // Ajout d'une référence à GameLogic pour gérer la mort des joueurs
-    private GameLogic gameLogic;
 
     public BombManager(Tile[][] map) {
         this.map = map;
