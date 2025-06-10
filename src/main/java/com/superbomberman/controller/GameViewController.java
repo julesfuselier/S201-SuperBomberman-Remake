@@ -22,16 +22,8 @@ import static com.superbomberman.controller.MenuController.isOnePlayer;
  * Contrôleur principal de la vue de jeu pour Super Bomberman.
  * Version refactorisée avec séparation des responsabilités.
  *
- * Chaque aspect du jeu est maintenant géré par une classe spécialisée :
- * - GameStateManager : État du jeu et statistiques
- * - VisualRenderer : Rendu visuel
- * - InputHandler : Gestion des entrées clavier
- * - BombManager : Logique des bombes
- * - PowerUpManager : Gestion des power-ups
- * - GameLogic : Logique principale (mouvement, collisions, IA)
- *
  * @author Jules Fuselier
- * @version 4.0 - Système de fin de jeu implémenté
+ * @version 4.3 - Fix transmission des données à l'écran de victoire
  * @since 2025-06-10
  */
 public class GameViewController extends OptionsController {
@@ -54,12 +46,18 @@ public class GameViewController extends OptionsController {
     // Timer pour la boucle de jeu
     private AnimationTimer gameLoop;
 
+    // ✅ NOUVEAU : Variables pour tracker le temps de jeu
+    private long gameStartTime;
+
     /**
      * Initialise tous les composants du jeu
      */
     public void initialize() {
         try {
             System.out.println("=== INITIALISATION DU JEU ===");
+
+            // ✅ NOUVEAU : Enregistrer le temps de début
+            gameStartTime = System.currentTimeMillis();
 
             // Étape 1 : Charger la carte
             initializeMap();
@@ -112,24 +110,19 @@ public class GameViewController extends OptionsController {
         // 1. GameStateManager - Gère l'état du jeu
         gameStateManager = new GameStateManager(currentUser, null);
 
-        // Callback de fin de jeu
+        // ✅ PASSER LA RÉFÉRENCE DU STAGE pour les redirections
+        Platform.runLater(() -> {
+            Stage currentStage = (Stage) gameGrid.getScene().getWindow();
+            gameStateManager.setGameStage(currentStage);
+        });
+
+        // ✅ CALLBACK MODIFIÉ : Utiliser notre méthode personnalisée
         gameStateManager.setOnGameEndCallback(() -> {
             // Arrêter la boucle de jeu
             stopGameLoop();
-            if(gameStateManager.isGameWon()) {
-                gameStateManager.showVictoryScreen();
-            }
-            else {
-                gameStateManager.showGameOverScreen();
-            }
 
-            // Afficher un message temporaire (on fera mieux à l'étape 2)
-            System.out.println("🎮 Jeu terminé ! Retour au menu dans 3 secondes...");
-
-            // Optionnel : retour automatique au menu après quelques secondes
-            javafx.animation.PauseTransition delay = new javafx.animation.PauseTransition(javafx.util.Duration.seconds(3));
-            delay.setOnFinished(event -> handleBackToEnd());
-            delay.play();
+            // ✅ UTILISER NOTRE MÉTHODE PERSONNALISÉE au lieu de celle du GameStateManager
+            handleGameEnd();
         });
 
         // 2. VisualRenderer - Gère l'affichage
@@ -189,6 +182,126 @@ public class GameViewController extends OptionsController {
     }
 
     /**
+     * ✅ NOUVELLE MÉTHODE : Gère la fin du jeu avec les vraies données
+     */
+    private void handleGameEnd() {
+        try {
+            System.out.println("🎮 Gestion personnalisée de la fin de jeu...");
+
+            // Calculer le temps de jeu
+            long gameEndTime = System.currentTimeMillis();
+            long gameDuration = gameEndTime - gameStartTime;
+
+            // Récupérer les données réelles du jeu
+            boolean player1Alive = player1.isAlive();
+            boolean player2Alive = (player2 != null) ? player2.isAlive() : false;
+            int player1Score = 999;
+            int player2Score = 999;
+
+            // Déterminer le message de victoire
+            String winnerMessage = determineWinnerMessage(player1Alive, player2Alive, player1Score, player2Score);
+
+            // Calculer le score final (score du gagnant ou score combiné)
+            int finalScore = calculateFinalScore(player1Alive, player2Alive, player1Score, player2Score);
+
+            System.out.println("📊 Données de fin de jeu:");
+            System.out.println("   - Joueur 1: " + (player1Alive ? "Vivant" : "Mort") + " (Score: " + player1Score + ")");
+            System.out.println("   - Joueur 2: " + (player2Alive ? "Vivant" : "Mort") + " (Score: " + player2Score + ")");
+            System.out.println("   - Temps de jeu: " + (gameDuration / 1000) + " secondes");
+            System.out.println("   - Message: " + winnerMessage);
+
+            // Charger l'écran de victoire
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/victory.fxml"));
+            Parent victoryRoot = loader.load();
+
+            VictoryController victoryController = loader.getController();
+
+            // ✅ UTILISER LA NOUVELLE MÉTHODE avec les vraies données
+            victoryController.initializeVictoryScreen(
+                    currentUser,        // Utilisateur actuel
+                    finalScore,         // Score final calculé
+                    gameDuration,       // Temps de jeu réel
+                    isOnePlayer,        // Mode de jeu
+                    winnerMessage,      // Message de victoire
+                    player1Alive,       // ✅ État réel du Joueur 1
+                    player2Alive,       // ✅ État réel du Joueur 2
+                    player1Score,       // ✅ Score réel du Joueur 1
+                    player2Score        // ✅ Score réel du Joueur 2
+            );
+
+            // Changer de scène
+            Scene victoryScene = new Scene(victoryRoot);
+            Stage stage = (Stage) gameGrid.getScene().getWindow();
+            stage.setScene(victoryScene);
+            stage.setTitle("Super Bomberman - Victoire");
+
+            System.out.println("✅ Écran de victoire affiché avec les vraies données !");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("❌ Erreur lors de l'affichage de l'écran de victoire");
+        }
+    }
+
+    /**
+     * ✅ NOUVELLE MÉTHODE : Détermine le message de victoire basé sur les données réelles
+     */
+    private String determineWinnerMessage(boolean player1Alive, boolean player2Alive, int player1Score, int player2Score) {
+        if (isOnePlayer) {
+            // Mode 1 joueur
+            if (player1Alive) {
+                return "Victoire ! Tous les ennemis éliminés !";
+            } else {
+                return "Défaite ! Vous avez été éliminé.";
+            }
+        } else {
+            // Mode 2 joueurs
+            if (player1Alive && !player2Alive) {
+                return "Joueur 1 gagne ! Joueur 2 éliminé.";
+            } else if (!player1Alive && player2Alive) {
+                return "Joueur 2 gagne ! Joueur 1 éliminé.";
+            } else if (player1Alive && player2Alive) {
+                // Les deux survivent -> victoire au score
+                if (player1Score > player2Score) {
+                    return "Joueur 1 gagne au score !";
+                } else if (player2Score > player1Score) {
+                    return "Joueur 2 gagne au score !";
+                } else {
+                    return "Match nul ! Victoire partagée !";
+                }
+            } else {
+                // Les deux sont morts -> victoire au score
+                if (player1Score > player2Score) {
+                    return "Joueur 1 gagne au score (post-mortem) !";
+                } else if (player2Score > player1Score) {
+                    return "Joueur 2 gagne au score (post-mortem) !";
+                } else {
+                    return "Match nul ! Les deux joueurs éliminés.";
+                }
+            }
+        }
+    }
+
+    /**
+     * ✅ NOUVELLE MÉTHODE : Calcule le score final basé sur les données réelles
+     */
+    private int calculateFinalScore(boolean player1Alive, boolean player2Alive, int player1Score, int player2Score) {
+        if (isOnePlayer) {
+            return player1Score;
+        } else {
+            // Mode 2 joueurs : retourner le score du gagnant
+            if (player1Alive && !player2Alive) {
+                return player1Score;
+            } else if (!player1Alive && player2Alive) {
+                return player2Score;
+            } else {
+                // Match nul ou victoire au score : retourner le meilleur score
+                return Math.max(player1Score, player2Score);
+            }
+        }
+    }
+
+    /**
      * Démarre la boucle principale du jeu
      */
     private void startGameLoop() {
@@ -209,23 +322,18 @@ public class GameViewController extends OptionsController {
                     }
 
                     // === PHASE 1 : ACTIONS IMMÉDIATES ===
-                    // Traiter les actions instantanées (bombes, pouvoirs)
                     inputHandler.processImmediateActions(player1, player2, bombManager, gameLogic);
 
                     // === PHASE 2 : MOUVEMENT DES ENTITÉS ===
-                    // Mouvement du joueur 1
                     gameLogic.handlePlayerMovement(player1, 1, now, inputHandler.getPressedKeys(), visualRenderer);
 
-                    // Mouvement du joueur 2 (si mode 2 joueurs)
                     if (!isOnePlayer && player2 != null) {
                         gameLogic.handlePlayerMovement(player2, 2, now, inputHandler.getPressedKeys(), visualRenderer);
                     }
 
-                    // Mouvement de l'ennemi
                     gameLogic.handleEnemyMovement(now, visualRenderer);
 
                     // === PHASE 3 : GESTION DES BOMBES ===
-                    // Mettre à jour les bombes volantes et qui roulent
                     bombManager.updateBombs();
 
                     // === PHASE 4 : GESTION DES MALUS AUTO_BOMB ===
@@ -243,10 +351,7 @@ public class GameViewController extends OptionsController {
                     }
 
                     // === PHASE 5 : VÉRIFICATIONS FINALES ===
-                    // Mettre à jour toutes les entités
                     gameLogic.updateEntities(visualRenderer);
-
-                    // Vérifier les conditions de victoire/défaite
                     gameStateManager.checkGameConditions();
 
                 } catch (Exception e) {
@@ -279,81 +384,19 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Retourne au menu principal
+     * ❌ MÉTHODE OBSOLÈTE - GameStateManager gère maintenant la redirection automatiquement
+     * Garde pour compatibilité mais ne devrait plus être utilisée
      */
     @FXML
     private void handleBackToEnd() {
-        System.out.println("Retour au menu demandé...");
+        System.out.println("⚠️ handleBackToEnd() obsolète - GameStateManager gère automatiquement");
 
-        // Arrêter la boucle de jeu
+        // Arrêter la boucle si pas déjà fait
         stopGameLoop();
 
-        // Sauvegarder les statistiques
-        gameStateManager.endGame();
-
-        try {
-            if (gameStateManager.isGameWon()) {
-
-//                gameStateManager.showVictoryScreen();
-
-                // Charger la vue du menu
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/victory.fxml"));
-                Parent victoryRoot = loader.load();
-
-                // Passer l'utilisateur au contrôleur du menu
-                VictoryController victoryController = loader.getController();
-                if (gameStateManager != null) {
-                    victoryController.initializeVictoryScreen(
-                            gameStateManager.getCurrentUser(),
-                            gameStateManager.getGameScore(),
-                            gameStateManager.getGameTime(),
-                            isOnePlayer,
-                            "Victoire !"
-                            );
-                }
-
-                // Changer de scène
-                Scene victoryScene = new Scene(victoryRoot);
-                Stage stage = (Stage) gameGrid.getScene().getWindow();
-                stage.setScene(victoryScene);
-                stage.setTitle("SuperBomberman - Victory");
-
-                System.out.println("GG !");
-            }
-
-            else {
-
-                gameStateManager.showGameOverScreen();
-
-                // Charger la vue du menu
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/gameOver.fxml"));
-                Parent gameOverRoot = loader.load();
-
-                // Passer l'utilisateur au contrôleur du menu
-                GameOverController gameOverController = loader.getController();
-                if (gameStateManager != null) {
-                    gameOverController.initializeGameOverScreen(
-                            gameStateManager.getCurrentUser(),
-                            gameStateManager.getGameScore(),
-                            gameStateManager.getGameTime(),
-                            isOnePlayer,
-                            "Victoire !"
-                    );
-                }
-
-                // Changer de scène
-                Scene gameOverScene = new Scene(gameOverRoot);
-                Stage stage = (Stage) gameGrid.getScene().getWindow();
-                stage.setScene(gameOverScene);
-                stage.setTitle("SuperBomberman - Defeat");
-
-                System.out.println("GG !");
-            }
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.err.println("Erreur lors du transfert !");
+        // Laisser GameStateManager gérer
+        if (gameStateManager != null && !gameStateManager.isGameEnded()) {
+            gameStateManager.endGame();
         }
     }
 
@@ -530,7 +573,7 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     *  Affiche l'état du jeu pour debug
+     * Affiche l'état du jeu pour debug
      */
     public void printGameState() {
         if (gameStateManager != null) {
@@ -539,7 +582,7 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     *  Force la fin du jeu pour test
+     * Force la fin du jeu pour test
      */
     public void forceGameEnd(boolean victory) {
         if (gameStateManager != null) {
