@@ -1,5 +1,6 @@
 package com.superbomberman.game;
 
+import com.superbomberman.controller.OptionsController;
 import com.superbomberman.model.*;
 import com.superbomberman.model.powerup.PowerUp;
 import javafx.animation.PauseTransition;
@@ -38,13 +39,22 @@ public class VisualRenderer {
     private ImagePattern bombPattern;
     private ImagePattern explosionPattern;
     private ImagePattern powerUpPattern;
-    private ImagePattern rangePowerUpPattern;
-    private ImagePattern bombPassPattern;
-    private ImagePattern skullPattern;
+
     public VisualRenderer(GridPane gameGrid, Tile[][] map) {
         this.gameGrid = gameGrid;
         this.map = map;
         loadPatterns();
+        // Abonnement au changement de thème
+        OptionsController.addThemeChangeListener(newTheme -> {
+            loadPatterns();
+            redrawAll(); // Fonction à créer qui redessine toute la grille avec les nouveaux patterns
+        });
+    }
+
+    public void redrawAll() {
+        setupGridConstraints();
+        drawMap();
+        // Redessiner les entités, bombes, etc., si besoin
     }
 
     /**
@@ -52,19 +62,19 @@ public class VisualRenderer {
      */
     private void loadPatterns() {
         try {
-            // Utiliser les chemins existants dans /images/
-            floorPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/grass.png")).toExternalForm()));
-            wallPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/wall.png")).toExternalForm()));
-            wallBreakablePattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/wall_breakable.png")).toExternalForm()));
-            playerPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/player.png")).toExternalForm()));
-            player2Pattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/player2.png")).toExternalForm()));
-            enemyPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/enemy.png")).toExternalForm()));
-            bombPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/bomb.png")).toExternalForm()));
-            explosionPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/explosion.png")).toExternalForm()));
-            powerUpPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/powerup.png")).toExternalForm()));
-            rangePowerUpPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/LineBomb.png")).toExternalForm()));
-            bombPassPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/BombPass.png")).toExternalForm()));
-            skullPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/Skull.png")).toExternalForm()));
+
+            String theme = OptionsController.getImageTheme();
+            String basePath = "/images/" + theme + "/";
+            floorPattern = new ImagePattern(new Image(getClass().getResource(basePath + "grass.png").toExternalForm()));
+            wallPattern = new ImagePattern(new Image(getClass().getResource(basePath + "wall.png").toExternalForm()));
+            wallBreakablePattern = new ImagePattern(new Image(getClass().getResource(basePath + "wall_breakable.png").toExternalForm()));
+            playerPattern = new ImagePattern(new Image(getClass().getResource(basePath + "player.png").toExternalForm()));
+            player2Pattern = new ImagePattern(new Image(getClass().getResource(basePath + "player2.png").toExternalForm()));
+            enemyPattern = new ImagePattern(new Image(getClass().getResource(basePath + "enemy.png").toExternalForm()));
+            bombPattern = new ImagePattern(new Image(getClass().getResource(basePath + "bomb.png").toExternalForm()));
+            explosionPattern = new ImagePattern(new Image(getClass().getResource(basePath + "explosion.png").toExternalForm()));
+            powerUpPattern = new ImagePattern(new Image(getClass().getResource(basePath + "powerup.png").toExternalForm()));
+
 
             System.out.println("✅ Patterns chargés avec succès depuis /images/!");
         } catch (Exception e) {
@@ -306,13 +316,7 @@ public class VisualRenderer {
         StackPane cell = (StackPane) getNodeFromGridPane(powerUp.getX(), powerUp.getY());
         if (cell != null) {
             Rectangle powerUpRect = new Rectangle(50, 50);
-            ImagePattern pattern = switch (powerUp.getType()){
-                case RANGE_UP -> rangePowerUpPattern;
-                case BOMB_UP, SPEED_UP, KICK, GLOVE, REMOTE, WALL_PASS, LINE_BOMB -> powerUpPattern;
-                case BOMB_PASS -> bombPassPattern;
-                case SKULL -> skullPattern;
-            };
-            powerUpRect.setFill(pattern);
+            powerUpRect.setFill(powerUpPattern);
             cell.getChildren().add(powerUpRect);
         }
     }
@@ -323,9 +327,11 @@ public class VisualRenderer {
     public void removePowerUpVisual(PowerUp powerUp) {
         StackPane cell = (StackPane) getNodeFromGridPane(powerUp.getX(), powerUp.getY());
         if (cell != null) {
+            // ✅ SUPPRIMER SEULEMENT LE POWER-UP (pas tout!)
             cell.getChildren().removeIf(node -> {
                 if (node instanceof Rectangle) {
                     Rectangle rect = (Rectangle) node;
+                    // Supprimer seulement si c'est le power-up
                     return rect.getFill() == powerUpPattern;
                 }
                 return false;
@@ -371,12 +377,7 @@ public class VisualRenderer {
         return null;
     }
 
-
-
     // Getters pour les patterns
-    public ImagePattern getSkullPattern() { return skullPattern; }
-    public ImagePattern getBombPassPattern() { return bombPassPattern; }
-    public ImagePattern getRangePowerUpPattern() { return rangePowerUpPattern; }
     public ImagePattern getFloorPattern() { return floorPattern; }
     public ImagePattern getWallPattern() { return wallPattern; }
     public ImagePattern getWallBreakablePattern() { return wallBreakablePattern; }
