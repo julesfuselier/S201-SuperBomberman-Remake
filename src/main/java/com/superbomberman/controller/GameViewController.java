@@ -2,6 +2,7 @@ package com.superbomberman.controller;
 
 import com.superbomberman.model.*;
 import com.superbomberman.game.*;
+import com.superbomberman.service.AuthService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -231,11 +232,22 @@ public class GameViewController extends OptionsController {
     private void initializeManagers() {
         System.out.println("Initialisation des gestionnaires...");
 
+        // 🆕 VÉRIFICATION DE SÉCURITÉ
+        System.out.println("👤 Utilisateur actuel: " + (currentUser != null ? currentUser.getUsername() : "NULL"));
+        if (currentUser == null) {
+            System.err.println("⚠️ ATTENTION: Aucun utilisateur connecté. Les statistiques ne seront pas sauvegardées.");
+        }
+
         // 1. Configurer la grille de jeu AVANT tout le reste
         configureGameGrid();
 
-        // 2. GameStateManager - Gère l'état du jeu
-        gameStateManager = new GameStateManager(currentUser, null);
+        // 2. ✅ CORRECTION : GameStateManager avec AuthService
+        AuthService authService = new AuthService();
+        gameStateManager = new GameStateManager(currentUser, authService);
+
+        // 🆕 VÉRIFICATION POST-CRÉATION
+        System.out.println("✅ GameStateManager créé avec:");
+        System.out.println("   - User: " + (gameStateManager.getCurrentUser() != null ? gameStateManager.getCurrentUser().getUsername() : "NULL"));
 
         // 3. VisualRenderer - Gère l'affichage
         visualRenderer = new VisualRenderer(gameGrid, map);
@@ -260,10 +272,7 @@ public class GameViewController extends OptionsController {
         gameLogic = new GameLogic(map, bombManager, powerUpManager, gameStateManager);
 
         // 9. Configurer les références croisées
-
         bombManager.setManagers(visualRenderer, powerUpManager, gameStateManager);
-
-        // 🆕 AJOUTER LA RÉFÉRENCE GAMELOGIC MANQUANTE
         bombManager.setGameLogic(gameLogic);
 
         System.out.println("Tous les gestionnaires initialisés!");
@@ -464,7 +473,11 @@ public class GameViewController extends OptionsController {
      */
     public void setCurrentUser(User user) {
         this.currentUser = user;
-        System.out.println("Utilisateur défini: " + (user != null ? user.getUsername() : "Invité"));
+        System.out.println("👤 Utilisateur défini: " + (user != null ? user.getUsername() : "NULL"));
+
+        if (user == null) {
+            System.err.println("⚠️ ATTENTION: currentUser est NULL!");
+        }
     }
 
     /**
