@@ -13,10 +13,7 @@ import javafx.scene.Node;
 import javafx.event.ActionEvent;
 
 import java.io.IOException;
-/**
- * @author Hugo Brest Lestrade
- * @version 1.3
- **/
+
 public class MenuController {
 
     public static boolean isOnePlayer = false;
@@ -37,7 +34,6 @@ public class MenuController {
     private Button logoutButton;  // Nouveau bouton
     @FXML
     private Label welcomeLabel;   // Nouveau label
-
 
     @FXML
     public void initialize() {
@@ -70,7 +66,6 @@ public class MenuController {
         updateUI();
     }
 
-
     @FXML
     private void handleOnePlayer(ActionEvent event) {
         isOnePlayer = true;
@@ -94,12 +89,21 @@ public class MenuController {
                 gameController.setCurrentUser(currentUser);
             }
 
-            Scene gameScene = new Scene(gameRoot);
+            // MODIFICATION : Créer une scène avec une taille fixe plus grande que le jeu
+            Scene gameScene = new Scene(gameRoot, 1700, 1000); // Taille fixe de la fenêtre
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 
             stage.setScene(gameScene);
             stage.setTitle("Super Bomberman - " + (isOnePlayer ? "1 Joueur" : "2 Joueurs"));
-            stage.sizeToScene();
+
+            // MODIFICATION : Configurer la fenêtre
+            stage.setResizable(false); // Empêcher le redimensionnement
+            stage.setWidth(1700);      // Largeur fixe
+            stage.setHeight(1000);      // Hauteur fixe
+            stage.centerOnScreen();    // Centrer la fenêtre
+
+            // Ne plus utiliser sizeToScene() car on veut une taille fixe
+            // stage.sizeToScene(); // À SUPPRIMER
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -117,7 +121,7 @@ public class MenuController {
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 
             stage.setScene(optionsScene);
-            stage.setTitle("Super Bomberman - Options");
+            stage.setTitle("Bomberman JavaFX - Options");
             stage.sizeToScene();
 
         } catch (IOException e) {
@@ -138,27 +142,52 @@ public class MenuController {
         stage.close();
     }
 
+
+    @FXML
+    private void handleEditor(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/LevelEditor.fxml"));
+            Parent editorRoot = loader.load();
+
+            Scene editorScene = new Scene(editorRoot);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+            stage.setScene(editorScene);
+            stage.setTitle("Super Bomberman - Éditeur de niveaux");
+            stage.sizeToScene();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Erreur lors du chargement de l'éditeur");
+        }
+    }
+
     @FXML
     private void handleBackToMenu(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/welcome.fxml"));
             Parent welcomeRoot = loader.load();
 
+
             // Pas besoin de cast vers MenuController, c'est un WelcomeController
             // WelcomeController welcomeController = loader.getController();
             // Vous pouvez ajouter des informations si nécessaire dans WelcomeController
 
+
             Scene welcomeScene = new Scene(welcomeRoot);
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 
+
             stage.setScene(welcomeScene);
             stage.setTitle("Super Bomberman - Accueil");
+
 
         } catch (IOException e) {
             e.printStackTrace();
             System.err.println("Erreur lors du retour à l'accueil");
         }
     }
+
 
     /**
      * Navigation vers l'écran d'authentification

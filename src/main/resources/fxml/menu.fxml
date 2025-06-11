@@ -20,7 +20,7 @@
     </ImageView>
 
     <!-- Contenu principal -->
-    <VBox alignment="CENTER_LEFT" spacing="30">
+    <VBox alignment="CENTER_LEFT" spacing="25">
         <padding>
             <Insets bottom="50" left="50" right="50" top="50" />
         </padding>
@@ -28,61 +28,87 @@
         <!-- Titre du jeu -->
         <Label text="SUPER BOMBERMAN" textAlignment="CENTER" textFill="#f39c12">
             <font>
-                <Font name="System Bold" size="32.0" />
+                <Font name="System Bold" size="28.0" />
             </font>
         </Label>
 
         <!-- Message de bienvenue -->
         <Label fx:id="welcomeLabel" text="Mode Invité" textAlignment="CENTER" textFill="#ecf0f1">
             <font>
-                <Font size="18.0" />
+                <Font name="System Bold" size="16.0" />
             </font>
         </Label>
 
-        <!-- Boutons du menu -->
-        <VBox alignment="CENTER_LEFT" spacing="25">
+        <!-- Boutons du menu principal -->
+        <VBox alignment="CENTER_LEFT" spacing="15">
             <Button fx:id="onePlayerBtn" onAction="#handleOnePlayer"
-                    prefWidth="280" prefHeight="60" text="PARTIE 1 JOUEUR"
+                    prefWidth="320" prefHeight="50" text="PARTIE 1 JOUEUR"
                     style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
                 <font>
-                    <Font size="18.0" />
+                    <Font size="14.0" />
                 </font>
             </Button>
 
             <Button fx:id="twoPlayerBtn" onAction="#handleTwoPlayer"
-                    prefWidth="280" prefHeight="60" text="PARTIE 2 JOUEURS"
+                    prefWidth="320" prefHeight="50" text="PARTIE 2 JOUEURS"
                     style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
                 <font>
-                    <Font size="18.0" />
+                    <Font size="14.0" />
+                </font>
+            </Button>
+
+            <Button fx:id="editorButton" text="ÉDITEUR DE NIVEAUX" onAction="#handleEditor"
+                    prefWidth="320" prefHeight="50"
+                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
+                <font>
+                    <Font size="14.0" />
                 </font>
             </Button>
 
             <Button fx:id="optionsButton" onAction="#handleOptions"
-                    prefWidth="280" prefHeight="60" text="OPTIONS"
+                    prefWidth="320" prefHeight="50" text="OPTIONS"
                     style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
                 <font>
-                    <Font size="18.0" />
+                    <Font size="14.0" />
+                </font>
+            </Button>
+        </VBox>
+
+        <!-- Boutons de navigation -->
+        <HBox alignment="CENTER_LEFT" spacing="15">
+            <!--
+            <Button fx:id="backToMenuButton" onAction="#handleBackToWelcome" text="RETOUR A L'ACCUEIL"
+                    prefWidth="160" prefHeight="36"
+                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 18px; -fx-border-radius: 18px; -fx-cursor: hand;">
+                <font>
+                    <Font size="13.0" />
+                </font>
+            </Button>
+            -->
+            <Button fx:id="logoutButton" onAction="#handleLogout" text="DÉCONNEXION"
+                    prefWidth="320" prefHeight="50" visible="false"
+                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
+                <font>
+                    <Font size="14.0" />
                 </font>
             </Button>
 
-            <!-- Boutons de navigation -->
-            <HBox alignment="CENTER_LEFT" spacing="20">
-                <Button fx:id="logoutButton" onAction="#handleLogout" text="DÉCONNEXION"
-                        prefWidth="150" prefHeight="45" visible="false"
-                        style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
-                    <font>
-                        <Font size="14.0" />
-                    </font>
-                </Button>
+            <Button fx:id="backToMenuButton" onAction="#handleBackToMenu" text="RETOUR À L'ACCUEIL"
+                    prefWidth="320" prefHeight="50"
+                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
+                <font>
+                    <Font size="14.0" />
+                </font>
+            </Button>
 
-                <Button fx:id="backToMenuButton" onAction="#handleBackToMenu" text="RETOUR À L'ACCUEIL"
-                        prefWidth="200" prefHeight="45"
-                        style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
-                    <font>
-                        <Font size="14.0" />
-                    </font>
-                </Button>
-            </HBox>
-        </VBox>
+
+            <Button fx:id="exitButton" onAction="#handleExit" text="QUITTER"
+                    prefWidth="120" prefHeight="40"
+                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
+                <font>
+                    <Font size="12.0" />
+                </font>
+            </Button>
+        </HBox>
     </VBox>
 </StackPane>

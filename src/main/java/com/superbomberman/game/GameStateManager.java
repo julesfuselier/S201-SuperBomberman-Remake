@@ -82,6 +82,7 @@ public class GameStateManager {
             scoreSystem.displayScoreSummary();
         }
 
+
         //  AFFICHER L'ÉCRAN DE FIN ADAPTATIF
         javafx.application.Platform.runLater(() -> showEndGameScreen());
     }

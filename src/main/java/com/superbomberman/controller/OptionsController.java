@@ -10,16 +10,16 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author Hugo Brest Lestrade
- * @version 1.3
+ * @version 1.4
  **/
 public class OptionsController {
 
-    @FXML private Slider soundVolumeSlider;
-    @FXML private Label soundVolumeLabel;
     @FXML private ComboBox<String> difficultyComboBox;
-    @FXML private Slider gameSpeedSlider;
 
     // Boutons de contrôle Joueur 1
     @FXML private Button upKeyButton1;
@@ -44,7 +44,6 @@ public class OptionsController {
     @FXML private Button backButton;
 
     // Variables pour stocker les paramètres actuels
-    private static double soundVolume = 80.0;
     private static String difficulty = "Normal";
     private static double gameSpeed = 3.0;
 
@@ -61,27 +60,57 @@ public class OptionsController {
     private static String leftKey2 = "Q";
     private static String rightKey2 = "D";
     private static String bombKey2 = "ENTER";
-    // Touche pause
-    private static String pauseKey = "P";
+
+    @FXML
+    private ComboBox<String> imageTheme; // Lien avec le FXML
+
+    private static String selectedImageTheme = "classique"; // Valeur globale accessible
+
+    // --- Observer/Listener pour le changement de thème
+    public interface ThemeChangeListener {
+        void onThemeChanged(String newTheme);
+    }
+    private static final List<ThemeChangeListener> themeChangeListeners = new ArrayList<>();
+    public static void addThemeChangeListener(ThemeChangeListener listener) {
+        themeChangeListeners.add(listener);
+    }
+    public static void removeThemeChangeListener(ThemeChangeListener listener) {
+        themeChangeListeners.remove(listener);
+    }
+    private static void notifyThemeChanged(String newTheme) {
+        for (ThemeChangeListener listener : themeChangeListeners) {
+            listener.onThemeChanged(newTheme);
+        }
+    }
+
+    public static String getImageTheme() {
+        return selectedImageTheme;
+    }
+    public static void setImageTheme(String theme) {
+        selectedImageTheme = theme;
+        notifyThemeChanged(theme); // Notifie tous les listeners
+    }
 
     @FXML
     public void initialize() {
-        // Initialiser les valeurs des contrôles avec les paramètres sauvegardés
-        soundVolumeSlider.setValue(soundVolume);
-
-        // Lier le label au slider pour afficher la valeur en temps réel
-        soundVolumeSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
-            soundVolumeLabel.setText(String.format("%.0f%%", newValue.doubleValue()));
-        });
-
-        // Mise à jour initiale du label
-        soundVolumeLabel.setText(String.format("%.0f%%", soundVolume));
-
-        // Initialiser le texte des boutons avec les touches actuelles
         updateButtonTexts();
-
-        // Ajouter des listeners pour les boutons de contrôle
         setupControlButtons();
+
+        if (imageTheme != null) {
+            // Ajoute les thèmes si besoin (à faire UNE fois)
+            if (imageTheme.getItems().isEmpty()) {
+                imageTheme.getItems().addAll("Bomberman", "Theme1", "Theme2");
+            }
+            // Ne change la valeur QUE si c'est nécessaire
+            if (!selectedImageTheme.equals(imageTheme.getValue())) {
+                imageTheme.setValue(selectedImageTheme);
+            }
+            imageTheme.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null && !newVal.equals(selectedImageTheme)) {
+                    setImageTheme(newVal); // Appelle le setter qui notifie
+                }
+            });
+        }
     }
 
     private void updateButtonTexts() {
@@ -100,7 +129,6 @@ public class OptionsController {
         bombKeyButton2.setText(bombKey2);
 
         // Pause
-        pauseKeyButton.setText(pauseKey);
     }
 
     private void setupControlButtons() {
@@ -118,8 +146,6 @@ public class OptionsController {
         rightKeyButton2.setOnAction(e -> showKeyBindingDialog("Joueur 2 - Touche Droite", rightKeyButton2, "rightKey2"));
         bombKeyButton2.setOnAction(e -> showKeyBindingDialog("Joueur 2 - Touche Bombe", bombKeyButton2, "bombKey2"));
 
-        // Pause
-        pauseKeyButton.setOnAction(e -> showKeyBindingDialog("Touche Pause", pauseKeyButton, "pauseKey"));
     }
 
     private void showKeyBindingDialog(String keyName, Button button, String keyVariable) {
@@ -145,7 +171,6 @@ public class OptionsController {
                     case "leftKey2": leftKey2 = upperKey; break;
                     case "rightKey2": rightKey2 = upperKey; break;
                     case "bombKey2": bombKey2 = upperKey; break;
-                    case "pauseKey": pauseKey = upperKey; break;
                 }
             }
         });
@@ -153,9 +178,6 @@ public class OptionsController {
 
     @FXML
     private void handleApply(ActionEvent event) {
-        // Sauvegarder les paramètres actuels
-        soundVolume = soundVolumeSlider.getValue();
-
         // Afficher une confirmation
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Paramètres appliqués");
@@ -164,12 +186,11 @@ public class OptionsController {
         alert.showAndWait();
 
         System.out.println("Paramètres appliqués:");
-        System.out.println("Volume effets: " + soundVolume + "%");
         System.out.println("Difficulté: " + difficulty);
         System.out.println("Vitesse de jeu: " + gameSpeed);
         System.out.println("Touches Joueur 1 - Haut: " + upKey1 + ", Bas: " + downKey1 + ", Gauche: " + leftKey1 + ", Droite: " + rightKey1 + ", Bombe: " + bombKey1);
         System.out.println("Touches Joueur 2 - Haut: " + upKey2 + ", Bas: " + downKey2 + ", Gauche: " + leftKey2 + ", Droite: " + rightKey2 + ", Bombe: " + bombKey2);
-        System.out.println("Pause: " + pauseKey);
+        System.out.println("Thème d'images: " + selectedImageTheme);
     }
 
     @FXML
@@ -182,25 +203,23 @@ public class OptionsController {
 
         if (confirmAlert.showAndWait().get() == ButtonType.OK) {
             // Remettre les valeurs par défaut
-            soundVolumeSlider.setValue(80.0);
-            difficultyComboBox.setValue("Normal");
-            gameSpeedSlider.setValue(3.0);
+            if (difficultyComboBox != null) difficultyComboBox.setValue("Normal");
 
-            // Remettre les touches par défaut
-            upKey1 = "Z";
-            downKey1 = "S";
-            leftKey1 = "Q";
-            rightKey1 = "D";
+            // Touches Joueur 1
+            upKey1 = "UP";
+            downKey1 = "DOWN";
+            leftKey1 = "LEFT";
+            rightKey1 = "RIGHT";
             bombKey1 = "SPACE";
-
-            upKey2 = "UP";
-            downKey2 = "DOWN";
-            leftKey2 = "LEFT";
-            rightKey2 = "RIGHT";
+            // Touches Joueur 2
+            upKey2 = "Z";
+            downKey2 = "S";
+            leftKey2 = "Q";
+            rightKey2 = "D";
             bombKey2 = "ENTER";
-
-            pauseKey = "P";
-
+            // Thème
+            setImageTheme("Bomberman");
+            if (imageTheme != null) imageTheme.setValue("Bomberman");
             // Mettre à jour les textes des boutons
             updateButtonTexts();
 
@@ -233,17 +252,8 @@ public class OptionsController {
     }
 
     // Méthodes statiques pour accéder aux paramètres depuis d'autres classes
-    public static double getSoundVolume() {
-        return soundVolume;
-    }
-
-    public static String getDifficulty() {
-        return difficulty;
-    }
-
-    public static double getGameSpeed() {
-        return gameSpeed;
-    }
+    public static String getDifficulty() { return difficulty; }
+    public static double getGameSpeed() { return gameSpeed; }
 
     // Méthodes pour accéder aux touches du Joueur 1
     public static String getUpKey1() { return upKey1; }
@@ -259,6 +269,4 @@ public class OptionsController {
     public static String getRightKey2() { return rightKey2; }
     public static String getBombKey2() { return bombKey2; }
 
-    // Méthode pour accéder à la touche pause
-    public static String getPauseKey() { return pauseKey; }
 }

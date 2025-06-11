@@ -40,7 +40,7 @@ public class RegisterController {
 
     // Boutons de navigation
     @FXML private Button backToLoginButton;
-    @FXML private Button guestButton;
+    @FXML private Button backToMenuButton;
     @FXML private Button exitButton;
 
     private AuthService authService;
@@ -76,6 +76,7 @@ public class RegisterController {
         setupButtonAnimation(registerButton);
         setupButtonAnimation(backToLoginButton);
         setupButtonAnimation(exitButton);
+        setupButtonAnimation(backToMenuButton);
     }
 
     /**
