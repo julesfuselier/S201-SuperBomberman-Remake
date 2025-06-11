@@ -39,6 +39,9 @@ public class VisualRenderer {
     private ImagePattern bombPattern;
     private ImagePattern explosionPattern;
     private ImagePattern powerUpPattern;
+    private ImagePattern rangePowerUpPattern;
+    private ImagePattern bombPassPattern;
+    private ImagePattern skullPattern;
 
     public VisualRenderer(GridPane gameGrid, Tile[][] map) {
         this.gameGrid = gameGrid;
@@ -74,7 +77,9 @@ public class VisualRenderer {
             bombPattern = new ImagePattern(new Image(getClass().getResource(basePath + "bomb.png").toExternalForm()));
             explosionPattern = new ImagePattern(new Image(getClass().getResource(basePath + "explosion.png").toExternalForm()));
             powerUpPattern = new ImagePattern(new Image(getClass().getResource(basePath + "powerup.png").toExternalForm()));
-
+            rangePowerUpPattern = new ImagePattern(new Image(getClass().getResource(basePath + "Range.png").toExternalForm()));
+            bombPassPattern = new ImagePattern(new Image(getClass().getResource(basePath + "BombPass.png").toExternalForm()));
+            skullPattern = new ImagePattern(new Image(getClass().getResource(basePath + "Skull.png").toExternalForm()));
 
             System.out.println("✅ Patterns chargés avec succès depuis /images/!");
         } catch (Exception e) {
@@ -316,7 +321,14 @@ public class VisualRenderer {
         StackPane cell = (StackPane) getNodeFromGridPane(powerUp.getX(), powerUp.getY());
         if (cell != null) {
             Rectangle powerUpRect = new Rectangle(50, 50);
-            powerUpRect.setFill(powerUpPattern);
+            // Sélectionner le pattern en fonction du type de power-up
+            ImagePattern pattern = switch (powerUp.getType()) {
+                case  SKULL-> skullPattern;
+                case  BOMB_PASS-> bombPassPattern;
+                case RANGE_UP -> rangePowerUpPattern;
+                case BOMB_UP, SPEED_UP, KICK, GLOVE, REMOTE, WALL_PASS, LINE_BOMB -> powerUpPattern;
+            };
+            powerUpRect.setFill(pattern);
             cell.getChildren().add(powerUpRect);
         }
     }
@@ -387,4 +399,7 @@ public class VisualRenderer {
     public ImagePattern getBombPattern() { return bombPattern; }
     public ImagePattern getExplosionPattern() { return explosionPattern; }
     public ImagePattern getPowerUpPattern() { return powerUpPattern; }
+    public ImagePattern getRangePowerUpPattern() { return rangePowerUpPattern; }
+    public ImagePattern getBombPassPattern() { return bombPassPattern; }
+    public ImagePattern getSkullPattern() { return skullPattern; }
 }
