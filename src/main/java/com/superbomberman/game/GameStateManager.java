@@ -75,7 +75,7 @@ public class GameStateManager {
             scoreSystem.displayScoreSummary();
         }
 
-        // 🆕 AFFICHER L'ÉCRAN DE FIN ADAPTATIF
+        //  AFFICHER L'ÉCRAN DE FIN ADAPTATIF
         javafx.application.Platform.runLater(() -> showEndGameScreen());
     }
 
@@ -117,7 +117,7 @@ public class GameStateManager {
     }
 
     /**
-     * 🆕 Obtient la fenêtre actuelle de façon sécurisée
+     * Obtient la fenêtre actuelle de façon sécurisée
      */
     private javafx.stage.Stage getCurrentStage() {
         try {
@@ -134,7 +134,7 @@ public class GameStateManager {
     }
 
     /**
-     * 🆕 Crée le résultat de jeu selon le mode
+     *  Crée le résultat de jeu selon le mode
      */
     private GameResult createGameResult() {
         long gameDuration = System.currentTimeMillis() - gameStartTime;
@@ -142,6 +142,7 @@ public class GameStateManager {
         if (isOnePlayer) {
             // Mode solo
             GameEndType endType = gameWon ? GameEndType.SOLO_VICTORY : GameEndType.SOLO_DEFEAT;
+            System.out.println("Fin de jeu en mode solo : " + (gameWon ? "Victoire" : "Défaite"));
             return new GameResult(endType, gameScore, gameDuration);
         } else {
             // Mode multijoueur
@@ -168,10 +169,15 @@ public class GameStateManager {
      * Vérifie les conditions de fin de jeu
      */
     public void checkGameConditions() {
-        // Exemple de conditions de victoire - à adapter selon votre logique
-        if (enemy != null && isEnemyDefeated()) {
-            setGameWon(true);
-            endGame();
+        if (isOnePlayer) {
+            if (enemy != null && isEnemyDefeated()) {
+                setGameWon(true);
+                endGame();
+            }
+            else if (isPlayerDefeated()) {
+                setGameWon(false);
+                endGame();
+            }
         }
 
         // Vérifier si le joueur est toujours en vie
