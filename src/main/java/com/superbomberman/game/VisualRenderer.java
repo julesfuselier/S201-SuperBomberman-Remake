@@ -40,7 +40,7 @@ public class VisualRenderer {
     private ImagePattern powerUpPattern;
     private ImagePattern rangePowerUpPattern;
     private ImagePattern bombPassPattern;
-
+    private ImagePattern skullPattern;
     public VisualRenderer(GridPane gameGrid, Tile[][] map) {
         this.gameGrid = gameGrid;
         this.map = map;
@@ -64,6 +64,7 @@ public class VisualRenderer {
             powerUpPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/powerup.png")).toExternalForm()));
             rangePowerUpPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/LineBomb.png")).toExternalForm()));
             bombPassPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/BombPass.png")).toExternalForm()));
+            skullPattern = new ImagePattern(new Image(Objects.requireNonNull(getClass().getResource("/images/Skull.png")).toExternalForm()));
 
             System.out.println("✅ Patterns chargés avec succès depuis /images/!");
         } catch (Exception e) {
@@ -307,10 +308,11 @@ public class VisualRenderer {
             Rectangle powerUpRect = new Rectangle(50, 50);
             ImagePattern pattern = switch (powerUp.getType()){
                 case RANGE_UP -> rangePowerUpPattern;
-                case BOMB_UP, SPEED_UP, KICK, GLOVE, REMOTE, WALL_PASS, LINE_BOMB, SKULL -> powerUpPattern;
+                case BOMB_UP, SPEED_UP, KICK, GLOVE, REMOTE, WALL_PASS, LINE_BOMB -> powerUpPattern;
                 case BOMB_PASS -> bombPassPattern;
+                case SKULL -> skullPattern;
             };
-            powerUpRect.setFill(powerUpPattern);
+            powerUpRect.setFill(pattern);
             cell.getChildren().add(powerUpRect);
         }
     }
@@ -324,7 +326,7 @@ public class VisualRenderer {
             cell.getChildren().removeIf(node -> {
                 if (node instanceof Rectangle) {
                     Rectangle rect = (Rectangle) node;
-                    return rect.getFill() == rangePowerUpPattern;
+                    return rect.getFill() == powerUpPattern;
                 }
                 return false;
             });
@@ -372,6 +374,8 @@ public class VisualRenderer {
 
 
     // Getters pour les patterns
+    public ImagePattern getSkullPattern() { return skullPattern; }
+    public ImagePattern getBombPassPattern() { return bombPassPattern; }
     public ImagePattern getRangePowerUpPattern() { return rangePowerUpPattern; }
     public ImagePattern getFloorPattern() { return floorPattern; }
     public ImagePattern getWallPattern() { return wallPattern; }
