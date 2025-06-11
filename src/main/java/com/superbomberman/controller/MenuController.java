@@ -31,9 +31,11 @@ public class MenuController {
     @FXML
     private Button exitButton;
     @FXML
-    private Button logoutButton;  // Nouveau bouton
+    private Button logoutButton;
     @FXML
-    private Label welcomeLabel;   // Nouveau label
+    private Button statsButton; // 🎯 NOUVEAU : Bouton statistiques
+    @FXML
+    private Label welcomeLabel;
 
     @FXML
     public void initialize() {
@@ -48,13 +50,23 @@ public class MenuController {
         if (currentUser != null) {
             welcomeLabel.setText("Bienvenue, " + currentUser.getUsername() + " !");
             logoutButton.setVisible(true);
+            // 🎯 NOUVEAU : Afficher le bouton stats seulement si connecté
+            if (statsButton != null) {
+                statsButton.setVisible(true);
+            }
         } else if (authService.isLoggedIn()) {
             currentUser = authService.getCurrentUser();
             welcomeLabel.setText("Bienvenue, " + currentUser.getUsername() + " !");
             logoutButton.setVisible(true);
+            if (statsButton != null) {
+                statsButton.setVisible(true);
+            }
         } else {
             welcomeLabel.setText("Mode Invité");
             logoutButton.setVisible(false);
+            if (statsButton != null) {
+                statsButton.setVisible(false);
+            }
         }
     }
 
@@ -111,6 +123,32 @@ public class MenuController {
         }
     }
 
+    // 🎯 NOUVEAU : Gestionnaire pour les statistiques
+    @FXML
+    private void handleStats(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/stats.fxml"));
+            Parent statsRoot = loader.load();
+
+            // Passer l'utilisateur actuel au contrôleur des stats
+            StatsController statsController = loader.getController();
+            if (currentUser != null) {
+                statsController.initializeWithUser(currentUser.getUsername());
+            }
+
+            Scene statsScene = new Scene(statsRoot);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+            stage.setScene(statsScene);
+            stage.setTitle("Super Bomberman - Statistiques");
+            stage.sizeToScene();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Erreur lors du chargement des statistiques");
+        }
+    }
+
     @FXML
     private void handleOptions(ActionEvent event) {
         try {
@@ -142,7 +180,6 @@ public class MenuController {
         stage.close();
     }
 
-
     @FXML
     private void handleEditor(ActionEvent event) {
         try {
@@ -168,26 +205,17 @@ public class MenuController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/welcome.fxml"));
             Parent welcomeRoot = loader.load();
 
-
-            // Pas besoin de cast vers MenuController, c'est un WelcomeController
-            // WelcomeController welcomeController = loader.getController();
-            // Vous pouvez ajouter des informations si nécessaire dans WelcomeController
-
-
             Scene welcomeScene = new Scene(welcomeRoot);
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 
-
             stage.setScene(welcomeScene);
             stage.setTitle("Super Bomberman - Accueil");
-
 
         } catch (IOException e) {
             e.printStackTrace();
             System.err.println("Erreur lors du retour à l'accueil");
         }
     }
-
 
     /**
      * Navigation vers l'écran d'authentification

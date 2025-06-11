@@ -30,7 +30,7 @@ public class ScoreSystem {
     // État du système
     // Remplace le score global par un score par joueur
     private Map<Player, Integer> playerScores = new HashMap<>();
-    private Map<Player, List<Integer>> playerCombos = new HashMap<>();
+    protected Map<Player, List<Integer>> playerCombos = new HashMap<>();
     private Map<Player, Integer> playerLivesEarned = new HashMap<>();
     private GameStateManager gameStateManager;
 

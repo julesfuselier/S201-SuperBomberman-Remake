@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.superbomberman.controller.StatsController">
+    <children>
+        <!-- Header -->
+        <HBox alignment="CENTER" style="-fx-background-color: #2c3e50; -fx-padding: 20;">
+            <children>
+                <Label style="-fx-text-fill: white; -fx-font-size: 24px; -fx-font-weight: bold;" text="📊 Statistiques de " />
+                <Label fx:id="usernameLabel" style="-fx-text-fill: #3498db; -fx-font-size: 24px; -fx-font-weight: bold;" text="Joueur" />
+            </children>
+        </HBox>
+
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+            <content>
+                <VBox spacing="20" style="-fx-padding: 20;">
+
+                    <!-- Statistiques générales -->
+                    <VBox spacing="15">
+                        <Label style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" text="🎮 Statistiques générales" />
+
+                        <GridPane hgap="30" vgap="15">
+                            <columnConstraints>
+                                <ColumnConstraints />
+                                <ColumnConstraints />
+                                <ColumnConstraints />
+                                <ColumnConstraints />
+                            </columnConstraints>
+
+                            <VBox alignment="CENTER" spacing="5" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                                <Label fx:id="totalGamesLabel" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #e74c3c;" text="0" />
+                                <Label text="Parties jouées" />
+                            </VBox>
+
+                            <VBox alignment="CENTER" spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                                <Label fx:id="winRateLabel" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #27ae60;" text="0%" />
+                                <Label text="Taux de victoire" />
+                            </VBox>
+
+                            <VBox alignment="CENTER" spacing="5" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                                <Label fx:id="bestScoreLabel" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #f39c12;" text="0" />
+                                <Label text="Meilleur score" />
+                            </VBox>
+
+                            <VBox alignment="CENTER" spacing="5" GridPane.columnIndex="3" GridPane.rowIndex="0">
+                                <Label fx:id="averageScoreLabel" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #9b59b6;" text="0" />
+                                <Label text="Score moyen" />
+                            </VBox>
+
+                            <VBox alignment="CENTER" spacing="5" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                                <Label fx:id="totalPlayTimeLabel" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #34495e;" text="00:00" />
+                                <Label text="Temps de jeu total" />
+                            </VBox>
+
+                            <VBox alignment="CENTER" spacing="5" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                                <Label fx:id="enemiesKilledLabel" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #e74c3c;" text="0" />
+                                <Label text="Ennemis tués" />
+                            </VBox>
+
+                            <VBox alignment="CENTER" spacing="5" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                                <Label fx:id="wallsDestroyedLabel" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #f39c12;" text="0" />
+                                <Label text="Murs détruits" />
+                            </VBox>
+
+                            <VBox alignment="CENTER" spacing="5" GridPane.columnIndex="3" GridPane.rowIndex="1">
+                                <Label fx:id="powerUpsCollectedLabel" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #27ae60;" text="0" />
+                                <Label text="Power-ups collectés" />
+                            </VBox>
+                        </GridPane>
+                    </VBox>
+
+                    <!-- Parties récentes -->
+                    <VBox spacing="15">
+                        <Label style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" text="📅 Parties récentes" />
+
+                        <TableView fx:id="recentGamesTable" prefHeight="200">
+                            <columns>
+                                <TableColumn fx:id="dateColumn" prefWidth="120" text="Date" />
+                                <TableColumn fx:id="modeColumn" prefWidth="80" text="Mode" />
+                                <TableColumn fx:id="resultColumn" prefWidth="80" text="Résultat" />
+                                <TableColumn fx:id="scoreColumn" prefWidth="80" text="Score" />
+                                <TableColumn fx:id="durationColumn" prefWidth="80" text="Durée" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+
+                    <!-- Classement global -->
+                    <VBox spacing="15">
+                        <Label style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" text="🏆 Classement global" />
+
+                        <TableView fx:id="leaderboardTable" prefHeight="200">
+                            <columns>
+                                <TableColumn fx:id="rankUsernameColumn" prefWidth="120" text="Joueur" />
+                                <TableColumn fx:id="rankScoreColumn" prefWidth="100" text="Meilleur score" />
+                                <TableColumn fx:id="rankGamesColumn" prefWidth="80" text="Parties" />
+                                <TableColumn fx:id="rankWinRateColumn" prefWidth="100" text="Taux victoire" />
+                            </columns>
+                        </TableView>
+                    </VBox>
+
+                </VBox>
+            </content>
+        </ScrollPane>
+
+        <!-- Boutons -->
+        <HBox alignment="CENTER" spacing="20" style="-fx-padding: 20; -fx-background-color: #ecf0f1;">
+            <Button onAction="#handleReturnToMenu" prefWidth="150" style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-size: 14px;" text="🏠 Retour au menu" />
+        </HBox>
+    </children>
+</VBox>

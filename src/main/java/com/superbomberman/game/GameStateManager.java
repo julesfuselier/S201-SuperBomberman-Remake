@@ -3,9 +3,11 @@ package com.superbomberman.game;
 import com.superbomberman.controller.EndGameController;
 import com.superbomberman.model.GameEndType;
 import com.superbomberman.model.GameResult;
+import com.superbomberman.model.GameStats;
 import com.superbomberman.model.Player;
 import com.superbomberman.model.User;
 import com.superbomberman.service.AuthService;
+import com.superbomberman.service.StatsService;
 
 import static com.superbomberman.model.MapLoader.enemy;
 import static com.superbomberman.model.MapLoader.player1;
@@ -16,8 +18,8 @@ import static com.superbomberman.controller.MenuController.isOnePlayer;
  * Gestionnaire de l'état du jeu et des statistiques
  *
  * @author Jules Fuselier
- * @version 2.0 - Intégration ScoreSystem
- * @since 2025-06-08
+ * @version 3.0 - Intégration système de statistiques détaillées
+ * @since 2025-06-11
  */
 public class GameStateManager {
     private User currentUser;
@@ -27,8 +29,9 @@ public class GameStateManager {
     private long gameStartTime;
     private boolean gameEnded = false;
 
-    // 🆕 NOUVEAU : Système de score avancé
-    private ScoreSystem scoreSystem;
+    // Système de score et statistiques avancées
+    private EnhancedScoreSystem enhancedScoreSystem;
+    private StatsService statsService;
     private Player winner;
 
     public GameStateManager(User currentUser, AuthService authService) {
@@ -36,8 +39,11 @@ public class GameStateManager {
         this.authService = authService;
         this.gameStartTime = System.currentTimeMillis();
 
-        // 🆕 Initialiser le système de score
-        this.scoreSystem = new ScoreSystem(this);
+        // 🆕 Initialiser le système de score avancé et les statistiques
+        this.enhancedScoreSystem = new EnhancedScoreSystem(this);
+        this.statsService = new StatsService();
+
+        System.out.println("🎮 GameStateManager initialisé avec système de stats avancées");
     }
 
     /**
@@ -59,9 +65,18 @@ public class GameStateManager {
             int usedTimeSeconds = (int) ((gameEndTime - gameStartTime) / 1000);
             int maxTimeSeconds = 120; // 2 minutes par défaut
 
-            scoreSystem.finishLevel(maxTimeSeconds, usedTimeSeconds);
+            enhancedScoreSystem.finishLevel(maxTimeSeconds, usedTimeSeconds);
 
             System.out.println("🎉 Victoire ! Score final: " + gameScore);
+        }
+    }
+
+    /**
+     * 🆕 Enregistre qu'une bombe a été placée
+     */
+    public void recordBombPlaced(Player player) {
+        if (enhancedScoreSystem != null) {
+            enhancedScoreSystem.addBombPlaced(player);
         }
     }
 
@@ -75,16 +90,69 @@ public class GameStateManager {
         }
         gameEnded = true;
 
+        // 🆕 Créer et enregistrer les statistiques détaillées
+        recordDetailedStats();
+
+        // Mettre à jour les statistiques utilisateur classiques
         if (currentUser != null && authService != null) {
             authService.updateUserStats(currentUser, gameWon, gameScore);
             System.out.println("Statistiques mises à jour pour " + currentUser.getUsername());
             System.out.println("Score final: " + gameScore + " | Victoire: " + (gameWon ? "Oui" : "Non"));
-            scoreSystem.displayScoreSummary();
+            enhancedScoreSystem.displayScoreSummary();
         }
-
 
         //  AFFICHER L'ÉCRAN DE FIN ADAPTATIF
         javafx.application.Platform.runLater(() -> showEndGameScreen());
+    }
+
+    /**
+     * 🆕 Enregistre les statistiques détaillées de la partie
+     */
+    private void recordDetailedStats() {
+        if (currentUser == null || statsService == null) {
+            System.out.println("⚠️ Pas d'utilisateur ou de service stats - statistiques non enregistrées");
+            return;
+        }
+
+        long gameDurationSeconds = (System.currentTimeMillis() - gameStartTime) / 1000;
+        String gameMode = isOnePlayer ? "SOLO" : "MULTI";
+
+        if (isOnePlayer) {
+            // Mode solo
+            GameStats stats = enhancedScoreSystem.createGameStats(
+                    currentUser.getUsername(),
+                    gameWon,
+                    gameDurationSeconds,
+                    gameMode,
+                    player1
+            );
+
+            stats.setMapName("default"); // Tu peux améliorer ça plus tard
+            statsService.recordGameStats(stats);
+
+            System.out.println("📊 Statistiques solo enregistrées pour " + currentUser.getUsername());
+
+        } else {
+            // Mode multijoueur - Enregistrer pour le joueur principal
+            GameStats stats = enhancedScoreSystem.createGameStats(
+                    currentUser.getUsername(),
+                    gameWon,
+                    gameDurationSeconds,
+                    gameMode,
+                    player1
+            );
+
+            // Ajouter les infos de l'adversaire
+            if (player2 != null) {
+                stats.setOpponentName("Joueur 2"); // Tu peux améliorer ça si tu as le nom du J2
+                stats.setOpponentScore(enhancedScoreSystem.getPlayerScore(player2));
+            }
+
+            stats.setMapName("default");
+            statsService.recordGameStats(stats);
+
+            System.out.println("📊 Statistiques multi enregistrées pour " + currentUser.getUsername());
+        }
     }
 
     /**
@@ -153,7 +221,7 @@ public class GameStateManager {
             GameEndType endType = gameWon ? GameEndType.SOLO_VICTORY : GameEndType.SOLO_DEFEAT;
 
             // 🔥 FIX : Récupérer le VRAI score
-            int finalScore = scoreSystem.getPlayerScore(player1) + gameScore;
+            int finalScore = enhancedScoreSystem.getPlayerScore(player1) + gameScore;
 
             System.out.println("🎯 Score final transmis: " + finalScore);
             return new GameResult(endType, finalScore, gameDuration);
@@ -161,8 +229,8 @@ public class GameStateManager {
             // Mode multijoueur
             String player1Name = player1 != null ? player1.getName() : "Joueur 1";
             String player2Name = player2 != null ? player2.getName() : "Joueur 2";
-            int player1Score = scoreSystem.getPlayerScore(player1);
-            int player2Score = player2 != null ? scoreSystem.getPlayerScore(player2) : 0;
+            int player1Score = enhancedScoreSystem.getPlayerScore(player1);
+            int player2Score = player2 != null ? enhancedScoreSystem.getPlayerScore(player2) : 0;
 
             GameEndType endType;
             if (player1 != null && player2 != null) {
@@ -282,8 +350,8 @@ public class GameStateManager {
         this.winner = null;
 
         // Réinitialiser le système de score
-        if (scoreSystem != null) {
-            scoreSystem.reset();
+        if (enhancedScoreSystem != null) {
+            enhancedScoreSystem.reset();
         }
 
         System.out.println("✅ État du jeu réinitialisé");
@@ -365,5 +433,10 @@ public class GameStateManager {
     public boolean isGameWon() { return gameWon; }
     public User getCurrentUser() { return currentUser; }
     public long getGameStartTime() { return gameStartTime; }
-    public ScoreSystem getScoreSystem() { return scoreSystem; }
+
+    // 🆕 NOUVEAU : Getter pour le système de score avancé
+    public EnhancedScoreSystem getEnhancedScoreSystem() { return enhancedScoreSystem; }
+
+    // 🆕 LEGACY : Compatibilité avec l'ancien système
+    public ScoreSystem getScoreSystem() { return enhancedScoreSystem; }
 }
