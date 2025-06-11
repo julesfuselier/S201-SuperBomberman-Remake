@@ -198,6 +198,8 @@ public class EndGameController {
     private void handleReplay() {
         // 🆕 UTILISER la méthode restartGame() du GameStateManager
         if (gameStateManager != null) {
+            gameStateManager.resetGameState(); // Réinitialise le gestionnaire d'état du jeu
+            gameStateManager.resetGameEntities(); // Réinitialise l'état du jeu
             gameStateManager.restartGame();
         } else {
             // Fallback si pas de GameStateManager (ne devrait pas arriver)

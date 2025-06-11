@@ -236,7 +236,7 @@ public class GameStateManager {
     /**
      * Réinitialise l'état de toutes les entités du jeu
      */
-    private void resetGameEntities() {
+    public void resetGameEntities() {
         System.out.println("🔄 Réinitialisation des entités du jeu...");
 
         // Réinitialiser les joueurs
@@ -262,7 +262,7 @@ public class GameStateManager {
     /**
      * Réinitialise complètement l'état du jeu pour une nouvelle partie
      */
-    private void resetGameState() {
+    public void resetGameState() {
         System.out.println("🔄 Réinitialisation de l'état du jeu...");
 
         // Réinitialiser les variables d'état
