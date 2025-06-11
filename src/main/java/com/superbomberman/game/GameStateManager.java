@@ -25,6 +25,7 @@ public class GameStateManager {
     private int gameScore = 0;
     private boolean gameWon = false;
     private long gameStartTime;
+    private boolean gameEnded = false;
 
     // 🆕 NOUVEAU : Système de score avancé
     private ScoreSystem scoreSystem;
@@ -68,6 +69,12 @@ public class GameStateManager {
      * Termine le jeu et met à jour les statistiques utilisateur
      */
     public void endGame() {
+        // Marquer le jeu comme terminé pour éviter les appels multiples
+        if (gameEnded) {
+            return;
+        }
+        gameEnded = true;
+
         if (currentUser != null && authService != null) {
             authService.updateUserStats(currentUser, gameWon, gameScore);
             System.out.println("Statistiques mises à jour pour " + currentUser.getUsername());
@@ -169,21 +176,38 @@ public class GameStateManager {
      * Vérifie les conditions de fin de jeu
      */
     public void checkGameConditions() {
+        // Éviter les appels multiples
+        if (gameEnded) {
+            return;
+        }
+
         if (isOnePlayer) {
+            // Mode solo
             if (enemy != null && isEnemyDefeated()) {
                 setGameWon(true);
                 endGame();
-            }
-            else if (isPlayerDefeated()) {
+            } else if (isPlayerDefeated()) {
                 setGameWon(false);
                 endGame();
             }
-        }
+        } else {
+            // Mode multijoueur
+            boolean player1Alive = player1 != null && player1.isAlive();
+            boolean player2Alive = player2 != null && player2.isAlive();
 
-        // Vérifier si le joueur est toujours en vie
-        if (isPlayerDefeated()) {
-            setGameWon(false);
-            endGame();
+            if (!player1Alive && !player2Alive) {
+                // Match nul
+                setGameWon(false);
+                endGame();
+            } else if (player1Alive && !player2Alive) {
+                // Joueur 1 gagne
+                setGameWon(true);
+                endGame();
+            } else if (!player1Alive && player2Alive) {
+                // Joueur 2 gagne
+                setGameWon(false);
+                endGame();
+            }
         }
     }
 
@@ -208,11 +232,39 @@ public class GameStateManager {
         }
     }
 
+    /**
+     * Réinitialise l'état de toutes les entités du jeu
+     */
+    private void resetGameEntities() {
+        System.out.println("🔄 Réinitialisation des entités du jeu...");
+
+        // Réinitialiser les joueurs
+        if (player1 != null) {
+            player1.setAlive(true);
+            System.out.println("✅ Joueur 1 réinitialisé");
+        }
+
+        if (player2 != null) {
+            player2.setAlive(true);
+            System.out.println("✅ Joueur 2 réinitialisé");
+        }
+
+        // Réinitialiser l'ennemi
+        if (enemy != null) {
+            enemy.setAlive(true);
+            System.out.println("✅ Ennemi réinitialisé");
+        }
+
+        System.out.println("🎮 Toutes les entités ont été réinitialisées");
+    }
+
     // === MÉTHODES POUR LES BOUTONS (appelées depuis EndGameController) ===
 
     public void restartGame() {
         javafx.application.Platform.runLater(() -> {
             try {
+                resetGameEntities();
+
                 javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
                         getClass().getResource("/fxml/game-view.fxml")
                 );

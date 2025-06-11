@@ -108,4 +108,18 @@ public class Enemy {
     public boolean isDead() {
         return !isAlive;
     }
+
+    /**
+     * Tue l'ennemi (pour compatibilité)
+     */
+    public void setDead(boolean dead) {
+        this.isAlive = !dead;
+    }
+
+    /**
+     * Définit si l'ennemi est vivant ou mort
+     */
+    public void setAlive(boolean b) {
+        this.isAlive = b;
+    }
 }
