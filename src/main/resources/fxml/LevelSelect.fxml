@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox fx:id="mainContainer" spacing="10" alignment="CENTER"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.superbomberman.controller.LevelSelectController">
+
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Sélection du niveau" style="-fx-font-size: 24px;"/>
+
+    <ListView fx:id="levelListView" VBox.vgrow="ALWAYS"
+              prefWidth="400" prefHeight="300"/>
+
+    <Button fx:id="backButton" text="Retour au menu"
+            onAction="#handleBackToMenu"/>
+
+</VBox>

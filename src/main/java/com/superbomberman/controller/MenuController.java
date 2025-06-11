@@ -58,6 +58,25 @@ public class MenuController {
         }
     }
 
+    @FXML
+    private void handleCustomLevels(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/LevelSelect.fxml"));
+            Parent levelSelectRoot = loader.load();
+
+            Scene levelSelectScene = new Scene(levelSelectRoot);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+            stage.setScene(levelSelectScene);
+            stage.setTitle("Super Bomberman - Sélection du niveau");
+            stage.sizeToScene();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Erreur lors du chargement du sélecteur de niveaux");
+        }
+    }
+
     /**
      * Définit l'utilisateur actuel (appelé depuis AuthController)
      */

@@ -11,6 +11,7 @@ import javafx.scene.layout.GridPane;
 import javafx.animation.AnimationTimer;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.io.IOException;
 
 import static com.superbomberman.model.MapLoader.enemy;
@@ -57,6 +58,31 @@ public class GameViewController extends OptionsController {
     /**
      * Initialise tous les composants du jeu
      */
+
+    private File customLevelFile;
+
+    public void setCustomLevel(File levelFile) {
+        this.customLevelFile = levelFile;
+        System.out.println("Niveau personnalisé défini: " + levelFile.getName());
+    }
+
+    private void initializeMap() throws IOException {
+        if (customLevelFile != null) {
+            System.out.println("Chargement du niveau personnalisé: " + customLevelFile.getName());
+            map = MapLoader.loadMap(customLevelFile.getAbsolutePath());
+        } else {
+            System.out.println("Mode un joueur: " + isOnePlayer);
+            if (isOnePlayer) {
+                System.out.println("Chargement de la carte niveau 1 (1 joueur)");
+                map = MapLoader.loadMap("src/main/resources/maps/level1.txt");
+            } else {
+                System.out.println("Chargement de la carte niveau 2 (2 joueurs)");
+                map = MapLoader.loadMap("src/main/resources/maps/level2.txt");
+            }
+        }
+        System.out.println("Carte chargée: " + map.length + "x" + map[0].length);
+    }
+
     public void initialize() {
         try {
             System.out.println("=== INITIALISATION DU JEU ===");
@@ -82,21 +108,6 @@ public class GameViewController extends OptionsController {
             e.printStackTrace();
             System.err.println("ERREUR CRITIQUE : Impossible d'initialiser le jeu");
         }
-    }
-
-    /**
-     * Charge la carte selon le mode de jeu
-     */
-    private void initializeMap() throws IOException {
-        System.out.println("Mode un joueur: " + isOnePlayer);
-        if (isOnePlayer) {
-            System.out.println("Chargement de la carte niveau 1 (1 joueur)");
-            map = MapLoader.loadMap("src/main/resources/maps/level1.txt");
-        } else {
-            System.out.println("Chargement de la carte niveau 2 (2 joueurs)");
-            map = MapLoader.loadMap("src/main/resources/maps/level2.txt");
-        }
-        System.out.println("Carte chargée: " + map.length + "x" + map[0].length);
     }
 
     /**

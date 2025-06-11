@@ -56,6 +56,15 @@
             </font>
         </Button>
 
+        <!-- Dans la VBox des boutons du menu, après le bouton "Éditeur de niveaux" -->
+        <Button fx:id="levelSelectorButton" text="Niveaux personnalisés" onAction="#handleCustomLevels"
+                prefWidth="280" prefHeight="60"
+                style="-fx-background-color: #2c3e50; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
+            <font>
+                <Font size="18.0" />
+            </font>
+        </Button>
+
         <Button fx:id="optionsButton" onAction="#handleOptions"
                 prefWidth="280" prefHeight="60" text="OPTIONS"
                 style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
