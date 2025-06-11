@@ -48,6 +48,14 @@
             </font>
         </Button>
 
+        <Button fx:id="editorButton" text="Éditeur de niveaux" onAction="#handleEditor"
+                prefWidth="280" prefHeight="60"
+                style="-fx-background-color: #8e44ad; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
+            <font>
+                <Font size="18.0" />
+            </font>
+        </Button>
+
         <Button fx:id="optionsButton" onAction="#handleOptions"
                 prefWidth="280" prefHeight="60" text="OPTIONS"
                 style="-fx-background-color: #3498db; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">

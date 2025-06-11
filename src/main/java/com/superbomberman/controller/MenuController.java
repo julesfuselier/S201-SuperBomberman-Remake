@@ -134,6 +134,24 @@ public class MenuController {
     }
 
 
+    @FXML
+    private void handleEditor(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/LevelEditor.fxml"));
+            Parent editorRoot = loader.load();
+
+            Scene editorScene = new Scene(editorRoot);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+            stage.setScene(editorScene);
+            stage.setTitle("Super Bomberman - Éditeur de niveaux");
+            stage.sizeToScene();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Erreur lors du chargement de l'éditeur");
+        }
+    }
 
     /**
      * Navigation vers l'écran d'authentification
