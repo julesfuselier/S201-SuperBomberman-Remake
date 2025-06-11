@@ -114,10 +114,7 @@
                             <FXCollections fx:factory="observableArrayList">
                                 <String fx:value="classique" />
                                 <String fx:value="hiver" />
-                                <String fx:value="été" />
-                                <String fx:value="automne" />
-                                <String fx:value="printemps" />
-                                <String fx:value="DUNE " />
+                                <String fx:value="purple" />
                             </FXCollections>
                         </items>
                     </ComboBox>
