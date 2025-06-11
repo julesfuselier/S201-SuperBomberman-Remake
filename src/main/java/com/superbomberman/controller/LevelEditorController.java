@@ -221,6 +221,7 @@ public class LevelEditorController {
         fileChooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("Fichiers texte", "*.txt")
         );
+        fileChooser.setInitialDirectory(new File("src/main/resources/maps"));
 
         File file = fileChooser.showSaveDialog(null);
         if (file != null) {
@@ -244,6 +245,7 @@ public class LevelEditorController {
         fileChooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("Fichiers texte", "*.txt")
         );
+        fileChooser.setInitialDirectory(new File("src/main/resources/maps"));
 
         File file = fileChooser.showOpenDialog(null);
         if (file != null) {
