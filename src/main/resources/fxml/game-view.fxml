@@ -1,7 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 
-<GridPane fx:id="gameGrid" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
-          fx:controller="com.superbomberman.controller.GameViewController">
-</GridPane>
+<!-- Conteneur principal en StackPane -->
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<StackPane xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.superbomberman.controller.GameViewController"
+           style="-fx-background-color: #2c3e50; -fx-alignment: center;">
+
+    <ImageView preserveRatio="true">
+        <Image url="@../images/menu_background.jpg" />
+    </ImageView>
+
+    <!-- La grille de jeu centrée -->
+    <GridPane fx:id="gameGrid"
+              style="-fx-background-color: #34495e; -fx-border-color: #ecf0f1; -fx-border-width: 2px;">
+        <StackPane.margin>
+            <Insets top="20" bottom="20" left="20" right="20"/>
+        </StackPane.margin>
+    </GridPane>
+
+</StackPane>

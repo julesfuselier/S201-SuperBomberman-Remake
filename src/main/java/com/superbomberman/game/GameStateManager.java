@@ -130,11 +130,22 @@ public class GameStateManager {
                 if (currentUser != null) {
                     gameController.setCurrentUser(currentUser);
                 }
-                javafx.scene.Scene gameScene = new javafx.scene.Scene(gameRoot);
+
+                // MODIFICATION : Appliquer la même configuration
+                javafx.scene.Scene gameScene = new javafx.scene.Scene(gameRoot, 1200, 900);
                 javafx.stage.Stage stage = (javafx.stage.Stage) javafx.stage.Window.getWindows().filtered(javafx.stage.Window::isShowing).get(0);
                 stage.setScene(gameScene);
                 stage.setTitle("Super Bomberman - " + (isOnePlayer ? "1 Joueur" : "2 Joueurs"));
-                stage.sizeToScene();
+
+                // Configurer la fenêtre
+                stage.setResizable(false);
+                stage.setWidth(1200);
+                stage.setHeight(700);
+                stage.centerOnScreen();
+
+                // Ne plus utiliser sizeToScene()
+                // stage.sizeToScene(); // À SUPPRIMER
+
             } catch (Exception e) {
                 e.printStackTrace();
             }

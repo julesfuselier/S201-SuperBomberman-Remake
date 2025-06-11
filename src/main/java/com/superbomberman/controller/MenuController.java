@@ -94,12 +94,21 @@ public class MenuController {
                 gameController.setCurrentUser(currentUser);
             }
 
-            Scene gameScene = new Scene(gameRoot);
+            // MODIFICATION : Créer une scène avec une taille fixe plus grande que le jeu
+            Scene gameScene = new Scene(gameRoot, 1700, 1000); // Taille fixe de la fenêtre
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 
             stage.setScene(gameScene);
             stage.setTitle("Super Bomberman - " + (isOnePlayer ? "1 Joueur" : "2 Joueurs"));
-            stage.sizeToScene();
+
+            // MODIFICATION : Configurer la fenêtre
+            stage.setResizable(false); // Empêcher le redimensionnement
+            stage.setWidth(1700);      // Largeur fixe
+            stage.setHeight(1000);      // Hauteur fixe
+            stage.centerOnScreen();    // Centrer la fenêtre
+
+            // Ne plus utiliser sizeToScene() car on veut une taille fixe
+            // stage.sizeToScene(); // À SUPPRIMER
 
         } catch (IOException e) {
             e.printStackTrace();

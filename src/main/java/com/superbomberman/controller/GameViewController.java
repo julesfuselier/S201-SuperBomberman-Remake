@@ -31,8 +31,8 @@ import static com.superbomberman.controller.MenuController.isOnePlayer;
  * - GameLogic : Logique principale (mouvement, collisions, IA)
  *
  * @author Jules Fuselier
- * @version 3.1 - Fix bombes et explosion
- * @since 2025-06-08
+ * @version 3.2 - Fix affichage noir et taille fenêtre
+ * @since 2025-06-11
  */
 public class GameViewController extends OptionsController {
 
@@ -76,7 +76,11 @@ public class GameViewController extends OptionsController {
             // Étape 5 : Afficher les contrôles
             inputHandler.displayControls();
 
-            System.out.println("=== JEU INITIALISÉ AVEC SUCCÈS ===");
+            // Étape 6 : Forcer le focus et l'affichage
+            Platform.runLater(() -> {
+                forceFocus();
+                System.out.println("=== JEU INITIALISÉ AVEC SUCCÈS ===");
+            });
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -105,30 +109,77 @@ public class GameViewController extends OptionsController {
     private void initializeManagers() {
         System.out.println("Initialisation des gestionnaires...");
 
-        // 1. GameStateManager - Gère l'état du jeu
+        // 1. Configurer la grille de jeu AVANT tout le reste
+        configureGameGrid();
+
+        // 2. GameStateManager - Gère l'état du jeu
         gameStateManager = new GameStateManager(currentUser, null);
 
-        // 2. VisualRenderer - Gère l'affichage
+        // 3. VisualRenderer - Gère l'affichage
         visualRenderer = new VisualRenderer(gameGrid, map);
-        visualRenderer.setupGridConstraints();
-        visualRenderer.drawMap();
 
-        // 3. InputHandler - Gère les entrées
+        // 4. Initialiser l'affichage visuel
+        Platform.runLater(() -> {
+            visualRenderer.setupGridConstraints();
+            visualRenderer.drawMap();
+            System.out.println("Rendu visuel initialisé");
+        });
+
+        // 5. InputHandler - Gère les entrées
         inputHandler = new InputHandler();
 
-        // 4. BombManager - Gère les bombes
+        // 6. BombManager - Gère les bombes
         bombManager = new BombManager(map);
 
-        // 5. PowerUpManager - Gère les power-ups
+        // 7. PowerUpManager - Gère les power-ups
         powerUpManager = new PowerUpManager();
 
-        // 6. GameLogic - Logique principale (dépend de tous les autres)
+        // 8. GameLogic - Logique principale (dépend de tous les autres)
         gameLogic = new GameLogic(map, bombManager, powerUpManager, gameStateManager);
 
-        // ✅ FIX: CONFIGURER LES RÉFÉRENCES CROISÉES
+        // 9. Configurer les références croisées
         bombManager.setManagers(visualRenderer, powerUpManager, gameStateManager);
 
         System.out.println("Tous les gestionnaires initialisés!");
+    }
+
+    /**
+     * Configure la grille de jeu avec des tailles appropriées
+     */
+    private void configureGameGrid() {
+        if (gameGrid != null) {
+            System.out.println("Configuration de la grille de jeu...");
+
+            // Calculer les dimensions basées sur la carte
+            int mapWidth = map[0].length;
+            int mapHeight = map.length;
+
+            // Taille de cellule optimale pour la lisibilité
+            double cellSize = 40.0;
+
+            // Dimensions de la grille
+            double gridWidth = mapWidth * cellSize;
+            double gridHeight = mapHeight * cellSize;
+
+            // Configurer la grille
+            gameGrid.setPrefSize(gridWidth, gridHeight);
+            gameGrid.setMaxSize(gridWidth, gridHeight);
+            gameGrid.setMinSize(gridWidth, gridHeight);
+
+            // Styles pour éviter les problèmes d'affichage
+            gameGrid.setStyle(
+                    "-fx-background-color: #34495e;" +
+                            "-fx-border-color: #ecf0f1;" +
+                            "-fx-border-width: 2px;" +
+                            "-fx-grid-lines-visible: false;"
+            );
+
+            // S'assurer que la grille peut recevoir le focus
+            gameGrid.setFocusTraversable(true);
+
+            System.out.println("Grille configurée : " + gridWidth + "x" + gridHeight +
+                    " (" + mapWidth + "x" + mapHeight + " cellules de " + cellSize + "px)");
+        }
     }
 
     /**
@@ -137,31 +188,40 @@ public class GameViewController extends OptionsController {
     private void initializeEntities() {
         System.out.println("Placement des entités...");
 
-        // Initialiser le joueur 1
-        if (map[player1.getY()][player1.getX()].getType() == TileType.FLOOR) {
-            map[player1.getY()][player1.getX()] = new Tile(TileType.PLAYER1);
-            visualRenderer.addEntityToGrid(player1.getX(), player1.getY(), visualRenderer.getPlayerPattern());
-            System.out.println("Joueur 1 placé à (" + player1.getX() + ", " + player1.getY() + ")");
-        }
+        // Attendre que l'interface soit prête
+        Platform.runLater(() -> {
+            try {
+                // Initialiser le joueur 1
+                if (map[player1.getY()][player1.getX()].getType() == TileType.FLOOR) {
+                    map[player1.getY()][player1.getX()] = new Tile(TileType.PLAYER1);
+                    visualRenderer.addEntityToGrid(player1.getX(), player1.getY(), visualRenderer.getPlayerPattern());
+                    System.out.println("Joueur 1 placé à (" + player1.getX() + ", " + player1.getY() + ")");
+                }
 
-        // Initialiser le joueur 2 (mode 2 joueurs uniquement)
-        if (!isOnePlayer && player2 != null && map[player2.getY()][player2.getX()].getType() == TileType.FLOOR) {
-            map[player2.getY()][player2.getX()] = new Tile(TileType.PLAYER2);
-            visualRenderer.addEntityToGrid(player2.getX(), player2.getY(), visualRenderer.getPlayer2Pattern());
-            System.out.println("Joueur 2 placé à (" + player2.getX() + ", " + player2.getY() + ")");
-        }
+                // Initialiser le joueur 2 (mode 2 joueurs uniquement)
+                if (!isOnePlayer && player2 != null && map[player2.getY()][player2.getX()].getType() == TileType.FLOOR) {
+                    map[player2.getY()][player2.getX()] = new Tile(TileType.PLAYER2);
+                    visualRenderer.addEntityToGrid(player2.getX(), player2.getY(), visualRenderer.getPlayer2Pattern());
+                    System.out.println("Joueur 2 placé à (" + player2.getX() + ", " + player2.getY() + ")");
+                }
 
-        // Initialiser l'ennemi
-        if (enemy != null && map[enemy.getY()][enemy.getX()].getType() == TileType.FLOOR) {
-            map[enemy.getY()][enemy.getX()] = new Tile(TileType.ENEMY);
-            visualRenderer.addEntityToGrid(enemy.getX(), enemy.getY(), visualRenderer.getEnemyPattern());
-            System.out.println("Ennemi placé à (" + enemy.getX() + ", " + enemy.getY() + ")");
-        }
+                // Initialiser l'ennemi
+                if (enemy != null && map[enemy.getY()][enemy.getX()].getType() == TileType.FLOOR) {
+                    map[enemy.getY()][enemy.getX()] = new Tile(TileType.ENEMY);
+                    visualRenderer.addEntityToGrid(enemy.getX(), enemy.getY(), visualRenderer.getEnemyPattern());
+                    System.out.println("Ennemi placé à (" + enemy.getX() + ", " + enemy.getY() + ")");
+                }
 
-        // Configurer les entrées clavier
-        inputHandler.setupKeyboardHandling(gameGrid);
+                // Configurer les entrées clavier
+                inputHandler.setupKeyboardHandling(gameGrid);
 
-        System.out.println("Entités placées avec succès!");
+                System.out.println("Entités placées avec succès!");
+
+            } catch (Exception e) {
+                System.err.println("Erreur lors du placement des entités: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
     }
 
     /**
