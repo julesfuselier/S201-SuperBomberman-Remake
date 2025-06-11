@@ -163,7 +163,7 @@ public class AuthService {
     /**
      * Charge un utilisateur depuis le fichier
      */
-    private User loadUser(String username) {
+    public User loadUser(String username) {
         if (userCache.containsKey(username)) {
             return userCache.get(username);
         }
@@ -185,6 +185,17 @@ public class AuthService {
             user.setGamesWon(Integer.parseInt(props.getProperty("gamesWon", "0")));
             user.setHighScore(Integer.parseInt(props.getProperty("highScore", "0")));
             user.setFavoriteCharacter(props.getProperty("favoriteCharacter", "Bomberman"));
+
+            // 🆕 CHARGER LES NOUVELLES PROPRIÉTÉS
+            user.setTotalPlayTime(Long.parseLong(props.getProperty("totalPlayTime", "0")));
+            user.setAverageScore(Integer.parseInt(props.getProperty("averageScore", "0")));
+            user.setBestCombo(Integer.parseInt(props.getProperty("bestCombo", "0")));
+            user.setPowerUpsCollected(Integer.parseInt(props.getProperty("powerUpsCollected", "0")));
+            user.setEnemiesKilled(Integer.parseInt(props.getProperty("enemiesKilled", "0")));
+            user.setWallsDestroyed(Integer.parseInt(props.getProperty("wallsDestroyed", "0")));
+            user.setCurrentGameInProgress(Boolean.parseBoolean(props.getProperty("currentGameInProgress", "false")));
+            user.setCurrentGameStartTime(Long.parseLong(props.getProperty("currentGameStartTime", "0")));
+            user.setCurrentGameScore(Integer.parseInt(props.getProperty("currentGameScore", "0")));
 
             if (props.getProperty("createdAt") != null) {
                 user.setCreatedAt(LocalDateTime.parse(props.getProperty("createdAt")));
@@ -210,6 +221,8 @@ public class AuthService {
 
         try (OutputStream output = Files.newOutputStream(userFile)) {
             Properties props = new Properties();
+
+            // Propriétés existantes
             props.setProperty("username", user.getUsername());
             props.setProperty("password", user.getPassword());
             props.setProperty("email", user.getEmail() != null ? user.getEmail() : "");
@@ -222,6 +235,17 @@ public class AuthService {
             if (user.getLastLoginAt() != null) {
                 props.setProperty("lastLoginAt", user.getLastLoginAt().toString());
             }
+
+            // 🆕 NOUVELLES PROPRIÉTÉS
+            props.setProperty("totalPlayTime", String.valueOf(user.getTotalPlayTime()));
+            props.setProperty("averageScore", String.valueOf(user.getAverageScore()));
+            props.setProperty("bestCombo", String.valueOf(user.getBestCombo()));
+            props.setProperty("powerUpsCollected", String.valueOf(user.getPowerUpsCollected()));
+            props.setProperty("enemiesKilled", String.valueOf(user.getEnemiesKilled()));
+            props.setProperty("wallsDestroyed", String.valueOf(user.getWallsDestroyed()));
+            props.setProperty("currentGameInProgress", String.valueOf(user.isCurrentGameInProgress()));
+            props.setProperty("currentGameStartTime", String.valueOf(user.getCurrentGameStartTime()));
+            props.setProperty("currentGameScore", String.valueOf(user.getCurrentGameScore()));
 
             props.store(output, "User data for " + user.getUsername());
             userCache.put(user.getUsername(), user);
@@ -321,4 +345,81 @@ public class AuthService {
         }
         saveUser(user);
     }
+
+    /**
+     * Sauvegarde les progrès de la partie en cours
+     */
+    public void saveCurrentGameProgress(User user, int currentScore, long gameStartTime) {
+        if (user == null) return;
+
+        user.setCurrentGameInProgress(true);
+        user.setCurrentGameStartTime(gameStartTime);
+        user.setCurrentGameScore(currentScore);
+
+        saveUser(user);
+        System.out.println("💾 Progrès sauvegardé - Score: " + currentScore);
+    }
+
+    public void updateDetailedStats(User user, int enemiesKilled, int powerUpsCollected, int wallsDestroyed, int bestCombo) {
+        if (user == null) return;
+
+        user.setEnemiesKilled(user.getEnemiesKilled() + enemiesKilled);
+        user.setPowerUpsCollected(user.getPowerUpsCollected() + powerUpsCollected);
+        user.setWallsDestroyed(user.getWallsDestroyed() + wallsDestroyed);
+
+        if (bestCombo > user.getBestCombo()) {
+            user.setBestCombo(bestCombo);
+        }
+
+        saveUser(user);
+    }
+
+    /**
+     * Finalise une partie (remplace updateUserStats)
+     */
+    public void finalizeGame(User user, boolean won, int finalScore, long gameDuration) {
+        if (user == null) return;
+
+        // Mettre à jour les stats traditionnelles
+        user.setGamesPlayed(user.getGamesPlayed() + 1);
+        if (won) {
+            user.setGamesWon(user.getGamesWon() + 1);
+        }
+        if (finalScore > user.getHighScore()) {
+            user.setHighScore(finalScore);
+        }
+
+        // Mettre à jour les nouvelles stats
+        user.setTotalPlayTime(user.getTotalPlayTime() + (gameDuration / 1000));
+        user.setCurrentGameInProgress(false);
+        user.setCurrentGameScore(0);
+
+        // Recalculer score moyen
+        if (user.getGamesPlayed() > 0) {
+            int newAverage = ((user.getAverageScore() * (user.getGamesPlayed() - 1)) + finalScore) / user.getGamesPlayed();
+            user.setAverageScore(newAverage);
+        }
+
+        saveUser(user);
+        System.out.println("🎯 Partie finalisée - Stats complètes sauvegardées");
+    }
+
+    /**
+     * Vérifie et gère une partie interrompue
+     */
+    public boolean handleInterruptedGame(User user) {
+        if (user == null || !user.isCurrentGameInProgress()) {
+            return false;
+        }
+
+        System.out.println("⚠️ Partie interrompue détectée pour " + user.getUsername());
+
+        // Compter comme défaite et finaliser
+        finalizeGame(user, false, user.getCurrentGameScore(),
+                System.currentTimeMillis() - user.getCurrentGameStartTime());
+
+        return true;
+    }
+
+
 }

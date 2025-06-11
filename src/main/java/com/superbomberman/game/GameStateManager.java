@@ -9,16 +9,19 @@ import com.superbomberman.model.User;
 import com.superbomberman.service.AuthService;
 import com.superbomberman.service.StatsService;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import static com.superbomberman.model.MapLoader.enemy;
 import static com.superbomberman.model.MapLoader.player1;
 import static com.superbomberman.model.MapLoader.player2;
 import static com.superbomberman.controller.MenuController.isOnePlayer;
 
 /**
- * Gestionnaire de l'état du jeu et des statistiques
+ * Gestionnaire de l'état du jeu et des statistiques avec sauvegarde en temps réel
  *
  * @author Jules Fuselier
- * @version 3.0 - Intégration système de statistiques détaillées
+ * @version 4.0 - Sauvegarde temps réel intégrée
  * @since 2025-06-11
  */
 public class GameStateManager {
@@ -34,24 +37,169 @@ public class GameStateManager {
     private StatsService statsService;
     private Player winner;
 
+    // 🆕 SAUVEGARDE EN TEMPS RÉEL
+    private Timer saveTimer;
+    private int lastSavedEnemiesKilled = 0;
+    private int lastSavedPowerUpsCollected = 0;
+    private int lastSavedWallsDestroyed = 0;
+    private int lastSavedBestCombo = 0;
+
     public GameStateManager(User currentUser, AuthService authService) {
         this.currentUser = currentUser;
         this.authService = authService;
         this.gameStartTime = System.currentTimeMillis();
 
-        // 🆕 Initialiser le système de score avancé et les statistiques
+        // Initialiser le système de score avancé et les statistiques
         this.enhancedScoreSystem = new EnhancedScoreSystem(this);
         this.statsService = new StatsService();
 
-        System.out.println("🎮 GameStateManager initialisé avec système de stats avancées");
+        // 🆕 GESTION DES PARTIES INTERROMPUES
+        handlePreviousGameState();
+
+        // 🆕 DÉMARRER LA SAUVEGARDE PÉRIODIQUE
+        startPeriodicSave();
+
+        // 🆕 AJOUTER SHUTDOWN HOOK
+        addShutdownHook();
+
+        System.out.println("🎮 GameStateManager initialisé avec sauvegarde temps réel");
     }
 
     /**
-     * Met à jour le score du jeu
+     * 🆕 Gère les parties précédemment interrompues
+     */
+    private void handlePreviousGameState() {
+        if (currentUser != null && authService != null) {
+            boolean hadInterruptedGame = authService.handleInterruptedGame(currentUser);
+            if (hadInterruptedGame) {
+                System.out.println("⚠️ Partie précédente restaurée et finalisée");
+            }
+        }
+    }
+
+    /**
+     * 🆕 Démarre la sauvegarde périodique toutes les 30 secondes
+     */
+    private void startPeriodicSave() {
+        if (currentUser == null || authService == null) return;
+
+        saveTimer = new Timer(true); // daemon thread
+        saveTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                saveCurrentProgress();
+            }
+        }, 30000, 30000); // 30 secondes
+
+        System.out.println("⏰ Sauvegarde périodique activée (30s)");
+    }
+
+    /**
+     * 🆕 Sauvegarde les progrès actuels
+     */
+    private void saveCurrentProgress() {
+        if (currentUser == null || authService == null || gameEnded) return;
+
+        try {
+            // Sauvegarder le progrès de base
+            authService.saveCurrentGameProgress(currentUser, gameScore, gameStartTime);
+
+            // Calculer les stats depuis la dernière sauvegarde
+            int newEnemiesKilled = calculateNewEnemiesKilled();
+            int newPowerUpsCollected = calculateNewPowerUpsCollected();
+            int newWallsDestroyed = calculateNewWallsDestroyed();
+            int currentBestCombo = getCurrentBestCombo();
+
+            // Sauvegarder seulement les nouvelles stats
+            if (newEnemiesKilled > 0 || newPowerUpsCollected > 0 ||
+                    newWallsDestroyed > 0 || currentBestCombo > lastSavedBestCombo) {
+
+                authService.updateDetailedStats(currentUser,
+                        newEnemiesKilled, newPowerUpsCollected,
+                        newWallsDestroyed, currentBestCombo);
+
+                // Mettre à jour les compteurs
+                lastSavedEnemiesKilled += newEnemiesKilled;
+                lastSavedPowerUpsCollected += newPowerUpsCollected;
+                lastSavedWallsDestroyed += newWallsDestroyed;
+                lastSavedBestCombo = Math.max(lastSavedBestCombo, currentBestCombo);
+            }
+
+        } catch (Exception e) {
+            System.err.println("❌ Erreur sauvegarde périodique: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 🆕 Calcule le nombre d'ennemis tués depuis la dernière sauvegarde
+     */
+    private int calculateNewEnemiesKilled() {
+        if (enhancedScoreSystem != null && player1 != null) {
+            int currentTotal = enhancedScoreSystem.getEnemiesKilledByPlayer(player1);
+            return Math.max(0, currentTotal - lastSavedEnemiesKilled);
+        }
+        return 0;
+    }
+
+    /**
+     * 🆕 Calcule le nombre de power-ups collectés depuis la dernière sauvegarde
+     */
+    private int calculateNewPowerUpsCollected() {
+        if (enhancedScoreSystem != null && player1 != null) {
+            int currentTotal = enhancedScoreSystem.getPowerUpsCollectedByPlayer(player1);
+            return Math.max(0, currentTotal - lastSavedPowerUpsCollected);
+        }
+        return 0;
+    }
+
+    /**
+     * 🆕 Calcule le nombre de murs détruits depuis la dernière sauvegarde
+     */
+    private int calculateNewWallsDestroyed() {
+        if (enhancedScoreSystem != null && player1 != null) {
+            int currentTotal = enhancedScoreSystem.getWallsDestroyedByPlayer(player1);
+            return Math.max(0, currentTotal - lastSavedWallsDestroyed);
+        }
+        return 0;
+    }
+
+    /**
+     * 🆕 Obtient le meilleur combo actuel
+     */
+    private int getCurrentBestCombo() {
+        if (enhancedScoreSystem != null && player1 != null) {
+            return enhancedScoreSystem.getBestComboByPlayer(player1);
+        }
+        return 0;
+    }
+
+    /**
+     * 🆕 Ajoute un shutdown hook pour sauvegarde d'urgence
+     */
+    private void addShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("🔄 Sauvegarde d'urgence avant fermeture...");
+            if (currentUser != null && authService != null && !gameEnded) {
+                authService.saveCurrentGameProgress(currentUser, gameScore, gameStartTime);
+            }
+            if (saveTimer != null) {
+                saveTimer.cancel();
+            }
+        }));
+    }
+
+    /**
+     * Met à jour le score du jeu avec sauvegarde conditionnelle
      */
     public void updateScore(int points) {
         gameScore += points;
         System.out.println("Score actuel: " + gameScore);
+
+        // 🆕 Sauvegarde immédiate pour gros gains de points
+        if (points >= 100 && currentUser != null && authService != null) {
+            authService.saveCurrentGameProgress(currentUser, gameScore, gameStartTime);
+            System.out.println("💾 Sauvegarde immédiate - Gros gain: " + points + " points");
+        }
     }
 
     /**
@@ -60,7 +208,7 @@ public class GameStateManager {
     public void setGameWon(boolean won) {
         this.gameWon = won;
         if (won) {
-            // 🆕 Calculer le bonus de temps quand le niveau est terminé
+            // Calculer le bonus de temps quand le niveau est terminé
             long gameEndTime = System.currentTimeMillis();
             int usedTimeSeconds = (int) ((gameEndTime - gameStartTime) / 1000);
             int maxTimeSeconds = 120; // 2 minutes par défaut
@@ -81,6 +229,33 @@ public class GameStateManager {
     }
 
     /**
+     * 🆕 Enregistre qu'un ennemi a été tué (appelé depuis le gameplay)
+     */
+    public void recordEnemyKilled(Player killer) {
+        if (enhancedScoreSystem != null) {
+            enhancedScoreSystem.addEnemyKilled(killer);
+        }
+    }
+
+    /**
+     * 🆕 Enregistre qu'un power-up a été collecté (appelé depuis le gameplay)
+     */
+    public void recordPowerUpCollected(Player collector) {
+        if (enhancedScoreSystem != null) {
+            enhancedScoreSystem.addPowerUpCollected(collector);
+        }
+    }
+
+    /**
+     * 🆕 Enregistre qu'un mur a été détruit (appelé depuis le gameplay)
+     */
+    public void recordWallDestroyed(Player destroyer) {
+        if (enhancedScoreSystem != null) {
+            enhancedScoreSystem.addWallDestroyed(destroyer);
+        }
+    }
+
+    /**
      * Termine le jeu et met à jour les statistiques utilisateur
      */
     public void endGame() {
@@ -90,23 +265,34 @@ public class GameStateManager {
         }
         gameEnded = true;
 
-        // 🆕 Créer et enregistrer les statistiques détaillées
+        // 🆕 Arrêter la sauvegarde périodique
+        if (saveTimer != null) {
+            saveTimer.cancel();
+            System.out.println("⏰ Sauvegarde périodique arrêtée");
+        }
+
+        // 🆕 Sauvegarde finale des progrès
+        saveCurrentProgress();
+
+        // Créer et enregistrer les statistiques détaillées
         recordDetailedStats();
 
-        // Mettre à jour les statistiques utilisateur classiques
+        // 🆕 UTILISER LA NOUVELLE MÉTHODE finalizeGame au lieu d'updateUserStats
         if (currentUser != null && authService != null) {
-            authService.updateUserStats(currentUser, gameWon, gameScore);
-            System.out.println("Statistiques mises à jour pour " + currentUser.getUsername());
+            long gameDuration = System.currentTimeMillis() - gameStartTime;
+            authService.finalizeGame(currentUser, gameWon, gameScore, gameDuration);
+
+            System.out.println("✅ Statistiques finales pour " + currentUser.getUsername());
             System.out.println("Score final: " + gameScore + " | Victoire: " + (gameWon ? "Oui" : "Non"));
             enhancedScoreSystem.displayScoreSummary();
         }
 
-        //  AFFICHER L'ÉCRAN DE FIN ADAPTATIF
+        // AFFICHER L'ÉCRAN DE FIN ADAPTATIF
         javafx.application.Platform.runLater(() -> showEndGameScreen());
     }
 
     /**
-     * 🆕 Enregistre les statistiques détaillées de la partie
+     * Enregistre les statistiques détaillées de la partie
      */
     private void recordDetailedStats() {
         if (currentUser == null || statsService == null) {
@@ -156,7 +342,7 @@ public class GameStateManager {
     }
 
     /**
-     * 🆕 Affiche l'écran de fin adaptatif
+     * Affiche l'écran de fin adaptatif
      */
     private void showEndGameScreen() {
         try {
@@ -173,7 +359,7 @@ public class GameStateManager {
             EndGameController controller = loader.getController();
             controller.initializeEndScreen(result);
 
-            // 🆕 PASSER la référence du GameStateManager au contrôleur
+            // PASSER la référence du GameStateManager au contrôleur
             controller.setGameStateManager(this);
 
             // Obtenir la fenêtre actuelle de façon sécurisée
@@ -211,7 +397,7 @@ public class GameStateManager {
     }
 
     /**
-     *  Crée le résultat de jeu selon le mode
+     * Crée le résultat de jeu selon le mode
      */
     private GameResult createGameResult() {
         long gameDuration = System.currentTimeMillis() - gameStartTime;
@@ -220,7 +406,7 @@ public class GameStateManager {
             // Mode solo - Utiliser le score total du système
             GameEndType endType = gameWon ? GameEndType.SOLO_VICTORY : GameEndType.SOLO_DEFEAT;
 
-            // 🔥 FIX : Récupérer le VRAI score
+            // FIX : Récupérer le VRAI score
             int finalScore = enhancedScoreSystem.getPlayerScore(player1) + gameScore;
 
             System.out.println("🎯 Score final transmis: " + finalScore);
@@ -342,6 +528,11 @@ public class GameStateManager {
     public void resetGameState() {
         System.out.println("🔄 Réinitialisation de l'état du jeu...");
 
+        // 🆕 Arrêter l'ancien timer
+        if (saveTimer != null) {
+            saveTimer.cancel();
+        }
+
         // Réinitialiser les variables d'état
         this.gameEnded = false;
         this.gameWon = false;
@@ -349,12 +540,21 @@ public class GameStateManager {
         this.gameStartTime = System.currentTimeMillis();
         this.winner = null;
 
+        // 🆕 Réinitialiser les compteurs de sauvegarde
+        this.lastSavedEnemiesKilled = 0;
+        this.lastSavedPowerUpsCollected = 0;
+        this.lastSavedWallsDestroyed = 0;
+        this.lastSavedBestCombo = 0;
+
         // Réinitialiser le système de score
         if (enhancedScoreSystem != null) {
             enhancedScoreSystem.reset();
         }
 
-        System.out.println("✅ État du jeu réinitialisé");
+        // 🆕 Redémarrer la sauvegarde périodique
+        startPeriodicSave();
+
+        System.out.println("✅ État du jeu réinitialisé avec sauvegarde temps réel");
     }
 
     // === MÉTHODES POUR LES BOUTONS (appelées depuis EndGameController) ===
@@ -380,14 +580,14 @@ public class GameStateManager {
                     gameController.setCurrentUser(currentUser);
                 }
 
-                // 4️⃣ ✅ FIX : Nettoyer et rafraîchir l'affichage
+                // 4️⃣ Nettoyer et rafraîchir l'affichage
                 javafx.stage.Stage stage = getCurrentStage();
                 if (stage != null) {
                     javafx.scene.Scene newScene = new javafx.scene.Scene(gameRoot);
                     stage.setScene(newScene);
                     stage.setTitle("Super Bomberman - " + (isOnePlayer ? "1 Joueur" : "2 Joueurs"));
 
-                    // 🔥 FORCER le rafraîchissement complet
+                    // FORCER le rafraîchissement complet
                     stage.sizeToScene();
                     stage.centerOnScreen();
 
@@ -401,6 +601,11 @@ public class GameStateManager {
     }
 
     public void returnToMenu() {
+        // 🆕 Arrêter la sauvegarde avant de quitter
+        if (saveTimer != null) {
+            saveTimer.cancel();
+        }
+
         javafx.application.Platform.runLater(() -> {
             try {
                 javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
@@ -422,6 +627,7 @@ public class GameStateManager {
 
     public void quitGame() {
         System.out.println("Quitter le jeu");
+        // 🆕 Le shutdown hook se chargera de la sauvegarde
         javafx.application.Platform.exit();
     }
 
@@ -434,9 +640,9 @@ public class GameStateManager {
     public User getCurrentUser() { return currentUser; }
     public long getGameStartTime() { return gameStartTime; }
 
-    // 🆕 NOUVEAU : Getter pour le système de score avancé
+    // NOUVEAU : Getter pour le système de score avancé
     public EnhancedScoreSystem getEnhancedScoreSystem() { return enhancedScoreSystem; }
 
-    // 🆕 LEGACY : Compatibilité avec l'ancien système
+    // LEGACY : Compatibilité avec l'ancien système
     public ScoreSystem getScoreSystem() { return enhancedScoreSystem; }
 }

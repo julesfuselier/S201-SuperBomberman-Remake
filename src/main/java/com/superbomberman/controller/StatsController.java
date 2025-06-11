@@ -1,6 +1,8 @@
 package com.superbomberman.controller;
 
 import com.superbomberman.model.GameStats;
+import com.superbomberman.model.User;
+import com.superbomberman.service.AuthService;
 import com.superbomberman.service.StatsService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -48,11 +50,13 @@ public class StatsController implements Initializable {
     @FXML private TableColumn<StatsService.LeaderboardEntry, Double> rankWinRateColumn;
 
     private StatsService statsService;
+    private AuthService authService; // 🆕 Ajouter AuthService
     private String currentUsername;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         statsService = new StatsService();
+        authService = new AuthService(); // 🆕 Initialiser AuthService
         setupTables();
     }
 
@@ -121,22 +125,40 @@ public class StatsController implements Initializable {
     }
 
     private void loadUserStats() {
-        // ✅ FIX : Correction du nom de la classe
-        StatsService.UserStatsSummary summary = statsService.getUserStatsSummary(currentUsername);
+        // 🆕 UTILISER LES STATS DU FICHIER PROPERTIES + GAMESTATS
 
-        usernameLabel.setText(currentUsername);
-        // ✅ FIX : Accès correct aux champs publics
-        totalGamesLabel.setText(String.valueOf(summary.totalGames));
-        winRateLabel.setText(String.format("%.1f%%", summary.winRate));
-        bestScoreLabel.setText(String.valueOf(summary.bestScore));
-        averageScoreLabel.setText(String.format("%.0f", summary.averageScore));
-        totalPlayTimeLabel.setText(formatDuration(summary.totalPlayTime));
-        enemiesKilledLabel.setText(String.valueOf(summary.totalEnemiesKilled));
-        wallsDestroyedLabel.setText(String.valueOf(summary.totalWallsDestroyed));
-        powerUpsCollectedLabel.setText(String.valueOf(summary.totalPowerUpsCollected));
-        //bestComboLabel.setText(String.valueOf(summary.bestCombo));
+        // 1. Charger les stats du User (fichier properties)
+        User currentUser = authService.loadUser(currentUsername);
+        if (currentUser != null) {
+            usernameLabel.setText(currentUsername);
+            totalGamesLabel.setText(String.valueOf(currentUser.getGamesPlayed()));
+            winRateLabel.setText(String.format("%.1f%%", currentUser.getWinRate()));
+            bestScoreLabel.setText(String.valueOf(currentUser.getHighScore()));
+            averageScoreLabel.setText(String.valueOf(currentUser.getAverageScore()));
+            totalPlayTimeLabel.setText(formatDuration(currentUser.getTotalPlayTime()));
+            enemiesKilledLabel.setText(String.valueOf(currentUser.getEnemiesKilled()));
+            wallsDestroyedLabel.setText(String.valueOf(currentUser.getWallsDestroyed()));
+            powerUpsCollectedLabel.setText(String.valueOf(currentUser.getPowerUpsCollected()));
 
-        // Charger les parties récentes
+            // 🆕 Afficher si une partie est en cours
+            if (currentUser.isCurrentGameInProgress()) {
+                usernameLabel.setText(currentUsername + " ⚠️ (Partie en cours)");
+            }
+        } else {
+            // Fallback vers StatsService si pas de données User
+            StatsService.UserStatsSummary summary = statsService.getUserStatsSummary(currentUsername);
+            usernameLabel.setText(currentUsername);
+            totalGamesLabel.setText(String.valueOf(summary.totalGames));
+            winRateLabel.setText(String.format("%.1f%%", summary.winRate));
+            bestScoreLabel.setText(String.valueOf(summary.bestScore));
+            averageScoreLabel.setText(String.format("%.0f", summary.averageScore));
+            totalPlayTimeLabel.setText(formatDuration(summary.totalPlayTime));
+            enemiesKilledLabel.setText(String.valueOf(summary.totalEnemiesKilled));
+            wallsDestroyedLabel.setText(String.valueOf(summary.totalWallsDestroyed));
+            powerUpsCollectedLabel.setText(String.valueOf(summary.totalPowerUpsCollected));
+        }
+
+        // 2. Charger les parties récentes (GameStats)
         List<GameStats> recentGames = statsService.getRecentUserStats(currentUsername, 10);
         ObservableList<GameStats> recentGamesData = FXCollections.observableArrayList(recentGames);
         recentGamesTable.setItems(recentGamesData);
