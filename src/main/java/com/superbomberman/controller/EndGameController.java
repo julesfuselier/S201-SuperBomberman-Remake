@@ -86,7 +86,7 @@ public class EndGameController {
         }
 
         // Affichage du score et du temps
-        soloScoreLabel.setText("Score final: " + result.getFinalScore());
+        soloScoreLabel.setText("Score final: " + result.getFinalScore()/2); // Divisé par 2 pour correspondre à la logique du jeu
         soloTimeLabel.setText("Temps de jeu: " + formatDuration(result.getGameDuration()));
     }
 
