@@ -26,7 +26,7 @@
                 <Label text="👤 JOUEUR 1" style="-fx-text-fill: #e74c3c; -fx-font-size: 14px; -fx-font-weight: bold;" />
                 <Label fx:id="scorePlayer1" text="Score: 0" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" />
                 <Label fx:id="bombsPlayer1" text="💣 Bombes: 0/1" style="-fx-text-fill: #bdc3c7; -fx-font-size: 12px;" />
-                <Label fx:id="livesPlayer1" text="❤️ Vies: 3" style="-fx-text-fill: #e74c3c; -fx-font-size: 12px;" />
+                <!-- <Label fx:id="livesPlayer1" text="❤️ Vies: 3" style="-fx-text-fill: #e74c3c; -fx-font-size: 12px;" /> -->
             </VBox>
 
             <!-- Score Joueur 2 (visible uniquement en mode 2 joueurs) -->
@@ -34,12 +34,12 @@
                 <Label text="👤 JOUEUR 2" style="-fx-text-fill: #3498db; -fx-font-size: 14px; -fx-font-weight: bold;" />
                 <Label fx:id="scorePlayer2" text="Score: 0" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" />
                 <Label fx:id="bombsPlayer2" text="💣 Bombes: 0/1" style="-fx-text-fill: #bdc3c7; -fx-font-size: 12px;" />
-                <Label fx:id="livesPlayer2" text="❤️ Vies: 3" style="-fx-text-fill: #3498db; -fx-font-size: 12px;" />
-            </VBox>
+                <!-- <Label fx:id="livesPlayer2" text="❤️ Vies: 3" style="-fx-text-fill: #3498db; -fx-font-size: 12px;" /> -->
+           </VBox>
 
-            <Separator style="-fx-background-color: #34495e;" />
+           <Separator style="-fx-background-color: #34495e;" />
 
-            <!-- Informations de jeu -->
+           <!-- Informations de jeu -->
             <VBox spacing="8" style="-fx-background-color: rgba(52, 73, 94, 0.3); -fx-padding: 10; -fx-border-radius: 5; -fx-background-radius: 5;">
                 <Label text="📊 INFOS JEU" style="-fx-text-fill: #ecf0f1; -fx-font-size: 14px; -fx-font-weight: bold;" />
                 <Label fx:id="timeLabel" text="⏱️ Temps: 00:00" style="-fx-text-fill: #f39c12; -fx-font-size: 12px;" />
@@ -65,10 +65,6 @@
     <!-- Zone de jeu au centre avec fond -->
     <center>
         <StackPane style="-fx-alignment: center;">
-            <!-- Image de fond (optionnelle) -->
-            <ImageView preserveRatio="true" fitWidth="800" fitHeight="600" opacity="0.1">
-                <Image url="@../images/menu_background.jpg" />
-            </ImageView>
 
             <!-- La grille de jeu centrée -->
             <GridPane fx:id="gameGrid"

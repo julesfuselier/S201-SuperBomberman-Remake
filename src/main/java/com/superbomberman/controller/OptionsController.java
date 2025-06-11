@@ -19,10 +19,7 @@ import java.util.List;
  **/
 public class OptionsController {
 
-    @FXML private Slider soundVolumeSlider;
-    @FXML private Label soundVolumeLabel;
     @FXML private ComboBox<String> difficultyComboBox;
-    @FXML private Slider gameSpeedSlider;
 
     // Boutons de contrôle Joueur 1
     @FXML private Button upKeyButton1;
@@ -47,7 +44,6 @@ public class OptionsController {
     @FXML private Button backButton;
 
     // Variables pour stocker les paramètres actuels
-    private static double soundVolume = 80.0;
     private static String difficulty = "Normal";
     private static double gameSpeed = 3.0;
 
@@ -97,17 +93,6 @@ public class OptionsController {
 
     @FXML
     public void initialize() {
-        // Initialiser les valeurs des contrôles avec les paramètres sauvegardés
-        soundVolumeSlider.setValue(soundVolume);
-
-        // Lier le label au slider pour afficher la valeur en temps réel
-        soundVolumeSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
-            soundVolumeLabel.setText(String.format("%.0f%%", newValue.doubleValue()));
-        });
-
-        // Mise à jour initiale du label
-        soundVolumeLabel.setText(String.format("%.0f%%", soundVolume));
-
         updateButtonTexts();
         setupControlButtons();
 
@@ -193,9 +178,6 @@ public class OptionsController {
 
     @FXML
     private void handleApply(ActionEvent event) {
-        // Sauvegarder les paramètres actuels
-        soundVolume = soundVolumeSlider.getValue();
-
         // Afficher une confirmation
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Paramètres appliqués");
@@ -204,7 +186,6 @@ public class OptionsController {
         alert.showAndWait();
 
         System.out.println("Paramètres appliqués:");
-        System.out.println("Volume effets: " + soundVolume + "%");
         System.out.println("Difficulté: " + difficulty);
         System.out.println("Vitesse de jeu: " + gameSpeed);
         System.out.println("Touches Joueur 1 - Haut: " + upKey1 + ", Bas: " + downKey1 + ", Gauche: " + leftKey1 + ", Droite: " + rightKey1 + ", Bombe: " + bombKey1);
@@ -222,9 +203,7 @@ public class OptionsController {
 
         if (confirmAlert.showAndWait().get() == ButtonType.OK) {
             // Remettre les valeurs par défaut
-            soundVolumeSlider.setValue(80.0);
-            difficultyComboBox.setValue("Normal");
-            gameSpeedSlider.setValue(3.0);
+            if (difficultyComboBox != null) difficultyComboBox.setValue("Normal");
 
             // Touches Joueur 1
             upKey1 = "UP";
@@ -273,7 +252,6 @@ public class OptionsController {
     }
 
     // Méthodes statiques pour accéder aux paramètres depuis d'autres classes
-    public static double getSoundVolume() { return soundVolume; }
     public static String getDifficulty() { return difficulty; }
     public static double getGameSpeed() { return gameSpeed; }
 
