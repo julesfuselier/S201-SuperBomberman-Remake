@@ -102,6 +102,9 @@
                         </items>
                     </ComboBox>
                 </GridPane>
+                <Button fx:id="mapButton" onAction="#handleMap" text="MAP"
+                        prefWidth="120" prefHeight="40"
+                        style="-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-background-radius: 5;" />
             </HBox>
         </VBox>
 

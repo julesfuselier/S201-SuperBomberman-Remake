@@ -215,14 +215,36 @@ public class GameViewController extends OptionsController {
      */
     private void initializeMap() throws IOException {
         System.out.println("Mode un joueur: " + isOnePlayer);
-        if (isOnePlayer) {
-            System.out.println("Chargement de la carte niveau 1 (1 joueur)");
-            map = MapLoader.loadMap("src/main/resources/maps/level1.txt");
-        } else {
-            System.out.println("Chargement de la carte niveau 2 (2 joueurs)");
-            map = MapLoader.loadMap("src/main/resources/maps/level2.txt");
-        }
+        String mapName = OptionsController.getSelectedMap();
+        if (mapName == null || mapName.isEmpty())
+            mapName = isOnePlayer ? "level1.txt" : "level2.txt";
+        String mapPath = "src/main/resources/maps/" + mapName;
+        map = MapLoader.loadMap(mapPath);
+
+        // Toujours appliquer le filtrage, même si ce n'est pas passé par le bouton map
+        filterMapForGameMode();
+
+        if (isOnePlayer) player2 = null;
+        if (!isOnePlayer) enemy = null;
+
         System.out.println("Carte chargée: " + map.length + "x" + map[0].length);
+    }
+
+    /**
+     * Retire dynamiquement les 'E' (ennemi) ou '2' (joueur 2) de la map selon le mode.
+     * On remplace simplement par du sol (FLOOR) pour la logique.
+     */
+    private void filterMapForGameMode() {
+        for (int y = 0; y < map.length; y++) {
+            for (int x = 0; x < map[y].length; x++) {
+                TileType type = map[y][x].getType();
+                if (isOnePlayer && type == TileType.ENEMY) {
+                    map[y][x] = new Tile(TileType.FLOOR); // enlève le bot en 1 joueur
+                } else if (!isOnePlayer && type == TileType.PLAYER2) {
+                    map[y][x] = new Tile(TileType.FLOOR); // enlève le joueur 2 en solo bot
+                }
+            }
+        }
     }
 
     /**

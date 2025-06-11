@@ -9,6 +9,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +61,10 @@ public class OptionsController {
     private static String leftKey2 = "Q";
     private static String rightKey2 = "D";
     private static String bombKey2 = "ENTER";
+
+    private static String selectedMap = "level1.txt";
+    public static String getSelectedMap() { return selectedMap; }
+    public static void setSelectedMap(String map) { selectedMap = map; }
 
     @FXML
     private ComboBox<String> imageTheme; // Lien avec le FXML
@@ -129,6 +134,39 @@ public class OptionsController {
         bombKeyButton2.setText(bombKey2);
 
         // Pause
+    }
+
+    @FXML
+    private void handleMap(ActionEvent event) {
+        // 1. Lister dynamiquement les maps du dossier
+        File mapsDir = new File("src/main/resources/maps");
+        List<String> mapsList = new ArrayList<>();
+        if (mapsDir.exists() && mapsDir.isDirectory()) {
+            File[] files = mapsDir.listFiles((dir, name) -> name.endsWith(".txt"));
+            if (files != null) {
+                for (File f : files) {
+                    mapsList.add(f.getName());
+                }
+            }
+        }
+        if (mapsList.isEmpty()) {
+            Alert alert = new Alert(Alert.AlertType.WARNING, "Aucune map trouvée dans le dossier maps !");
+            alert.showAndWait();
+            return;
+        }
+
+        // 2. Demander la map à l'utilisateur
+        ChoiceDialog<String> mapDialog = new ChoiceDialog<>(mapsList.get(0), mapsList);
+        mapDialog.setTitle("Choix de la map");
+        mapDialog.setHeaderText("Sélectionnez une map :");
+        mapDialog.setContentText("Map :");
+
+        mapDialog.showAndWait().ifPresent(selectedMap -> {
+            setSelectedMap(selectedMap);
+            String selectedTheme = imageTheme.getValue();
+            setImageTheme(selectedTheme);
+            System.out.println("Map choisie : " + selectedMap );
+            });
     }
 
     private void setupControlButtons() {
