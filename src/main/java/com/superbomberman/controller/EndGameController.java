@@ -35,9 +35,7 @@ public class EndGameController {
     @FXML private Label loserScoreLabel;
     @FXML private VBox podiumContainer;
 
-    // Common buttons
-    @FXML private Button replayButton;
-    @FXML private Button menuButton;
+    // Common button
     @FXML private Button quitButton;
 
     private GameResult gameResult;
@@ -148,8 +146,6 @@ public class EndGameController {
      * Configure les actions des boutons
      */
     private void setupButtons() {
-        replayButton.setOnAction(e -> handleReplay());
-        menuButton.setOnAction(e -> handleReturnToMenu());
         quitButton.setOnAction(e -> handleQuit());
     }
 
@@ -190,46 +186,6 @@ public class EndGameController {
         long minutes = seconds / 60;
         seconds = seconds % 60;
         return String.format("%d:%02d", minutes, seconds);
-    }
-
-    // === GESTION DES ÉVÉNEMENTS ===
-
-    @FXML
-    private void handleReplay() {
-        // 🆕 UTILISER la méthode restartGame() du GameStateManager
-        if (gameStateManager != null) {
-            gameStateManager.resetGameState(); // Réinitialise le gestionnaire d'état du jeu
-            gameStateManager.resetGameEntities(); // Réinitialise l'état du jeu
-            gameStateManager.restartGame();
-        } else {
-            // Fallback si pas de GameStateManager (ne devrait pas arriver)
-            try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/game-view.fxml"));
-                Parent gameRoot = loader.load();
-                Scene gameScene = new Scene(gameRoot);
-                Stage stage = (Stage) rootContainer.getScene().getWindow();
-                stage.setScene(gameScene);
-                stage.setTitle("Super Bomberman - Nouvelle Partie");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @FXML
-    private void handleReturnToMenu() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu.fxml"));
-            Parent menuRoot = loader.load();
-
-            Scene menuScene = new Scene(menuRoot);
-            Stage stage = (Stage) rootContainer.getScene().getWindow();
-            stage.setScene(menuScene);
-            stage.setTitle("Super Bomberman - Menu");
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     @FXML
