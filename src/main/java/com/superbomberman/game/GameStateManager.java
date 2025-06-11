@@ -258,11 +258,33 @@ public class GameStateManager {
         System.out.println("🎮 Toutes les entités ont été réinitialisées");
     }
 
+    /**
+     * Réinitialise complètement l'état du jeu pour une nouvelle partie
+     */
+    private void resetGameState() {
+        System.out.println("🔄 Réinitialisation de l'état du jeu...");
+
+        // Réinitialiser les variables d'état
+        this.gameEnded = false;
+        this.gameWon = false;
+        this.gameScore = 0;
+        this.gameStartTime = System.currentTimeMillis();
+        this.winner = null;
+
+        // Réinitialiser le système de score
+        if (scoreSystem != null) {
+            scoreSystem.reset();
+        }
+
+        System.out.println("✅ État du jeu réinitialisé");
+    }
+
     // === MÉTHODES POUR LES BOUTONS (appelées depuis EndGameController) ===
 
     public void restartGame() {
         javafx.application.Platform.runLater(() -> {
             try {
+                resetGameState();
                 resetGameEntities();
 
                 javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
