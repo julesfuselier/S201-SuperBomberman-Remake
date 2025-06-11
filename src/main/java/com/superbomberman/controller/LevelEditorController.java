@@ -109,7 +109,7 @@ public class LevelEditorController {
 
     private void addToolButton(String imagePath, TileType type) {
         try {
-            Image img = new Image(Objects.requireNonNull(getClass().getResource("/images/" + imagePath)).toExternalForm());
+            Image img = new Image(Objects.requireNonNull(getClass().getResource("/images/classique/" + imagePath)).toExternalForm());
             ImageView imageView = new ImageView(img);
             imageView.setFitWidth(40);
             imageView.setFitHeight(40);
@@ -189,13 +189,13 @@ public class LevelEditorController {
 
     private void updateCellAppearance(Button cell, TileType type) {
         String imagePath = switch (type) {
-            case FLOOR -> "/images/grass.png";
-            case WALL -> "/images/wall.png";
-            case WALL_BREAKABLE -> "/images/wall_breakable.png";
-            case PLAYER1 -> "/images/player.png";
-            case PLAYER2 -> "/images/player2.png";
-            case ENEMY -> "/images/enemy.png";
-            default -> "/images/grass.png";
+            case FLOOR -> "/images/classique/grass.png";
+            case WALL -> "/images/classique/wall.png";
+            case WALL_BREAKABLE -> "/images/classique/wall_breakable.png";
+            case PLAYER1 -> "/images/classique/player.png";
+            case PLAYER2 -> "/images/classique/player2.png";
+            case ENEMY -> "/images/classique/enemy.png";
+            default -> "/images/classique/grass.png";
         };
 
         try {
