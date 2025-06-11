@@ -18,6 +18,7 @@ import com.superbomberman.model.powerup.MalusType;
  * @since 2025-06-08
  */
 public class Player {
+
     /** Position actuelle sur l'axe X du joueur. */
     private int x;
 
