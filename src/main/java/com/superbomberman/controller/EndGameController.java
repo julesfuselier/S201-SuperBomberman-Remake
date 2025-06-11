@@ -1,5 +1,6 @@
 package com.superbomberman.controller;
 
+import com.superbomberman.game.GameStateManager;
 import com.superbomberman.model.GameResult;
 import com.superbomberman.model.GameEndType;
 import javafx.animation.*;
@@ -40,6 +41,7 @@ public class EndGameController {
     @FXML private Button quitButton;
 
     private GameResult gameResult;
+    private GameStateManager gameStateManager;
 
     /**
      * Initialise l'écran de fin avec les résultats du jeu
@@ -62,6 +64,10 @@ public class EndGameController {
 
         // Animation d'entrée
         playEntryAnimation();
+    }
+
+    public void setGameStateManager(com.superbomberman.game.GameStateManager gameStateManager) {
+        this.gameStateManager = gameStateManager;
     }
 
     /**
@@ -190,17 +196,21 @@ public class EndGameController {
 
     @FXML
     private void handleReplay() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/game-view.fxml"));
-            Parent gameRoot = loader.load();
-
-            Scene gameScene = new Scene(gameRoot);
-            Stage stage = (Stage) rootContainer.getScene().getWindow();
-            stage.setScene(gameScene);
-            stage.setTitle("Super Bomberman - Nouvelle Partie");
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        // 🆕 UTILISER la méthode restartGame() du GameStateManager
+        if (gameStateManager != null) {
+            gameStateManager.restartGame();
+        } else {
+            // Fallback si pas de GameStateManager (ne devrait pas arriver)
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/game-view.fxml"));
+                Parent gameRoot = loader.load();
+                Scene gameScene = new Scene(gameRoot);
+                Stage stage = (Stage) rootContainer.getScene().getWindow();
+                stage.setScene(gameScene);
+                stage.setTitle("Super Bomberman - Nouvelle Partie");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -224,4 +234,5 @@ public class EndGameController {
     private void handleQuit() {
         javafx.application.Platform.exit();
     }
+
 }

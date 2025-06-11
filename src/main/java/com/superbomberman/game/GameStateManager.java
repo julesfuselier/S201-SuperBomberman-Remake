@@ -104,6 +104,9 @@ public class GameStateManager {
             EndGameController controller = loader.getController();
             controller.initializeEndScreen(result);
 
+            // 🆕 PASSER la référence du GameStateManager au contrôleur
+            controller.setGameStateManager(this);
+
             // Obtenir la fenêtre actuelle de façon sécurisée
             javafx.stage.Stage stage = getCurrentStage();
             if (stage != null) {
@@ -117,8 +120,6 @@ public class GameStateManager {
         } catch (Exception e) {
             System.err.println("❌ Erreur lors de l'affichage de l'écran de fin:");
             e.printStackTrace();
-
-            // Fallback : retourner au menu
             returnToMenu();
         }
     }
