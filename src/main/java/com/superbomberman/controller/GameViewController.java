@@ -7,7 +7,10 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.animation.AnimationTimer;
 import javafx.stage.Stage;
 
@@ -20,7 +23,7 @@ import static com.superbomberman.controller.MenuController.isOnePlayer;
 
 /**
  * Contrôleur principal de la vue de jeu pour Super Bomberman.
- * Version refactorisée avec séparation des responsabilités.
+ * Version refactorisée avec séparation des responsabilités et affichage des scores.
  *
  * Chaque aspect du jeu est maintenant géré par une classe spécialisée :
  * - GameStateManager : État du jeu et statistiques
@@ -31,13 +34,37 @@ import static com.superbomberman.controller.MenuController.isOnePlayer;
  * - GameLogic : Logique principale (mouvement, collisions, IA)
  *
  * @author Jules Fuselier
- * @version 3.2 - Fix affichage noir et taille fenêtre
+ * @version 3.3 - Ajout affichage scores à gauche
  * @since 2025-06-11
  */
 public class GameViewController extends OptionsController {
 
     @FXML
     private GridPane gameGrid;
+
+    // Éléments FXML pour l'affichage des scores
+    @FXML
+    private Label scorePlayer1;
+    @FXML
+    private Label scorePlayer2;
+    @FXML
+    private Label bombsPlayer1;
+    @FXML
+    private Label bombsPlayer2;
+    @FXML
+    private Label livesPlayer1;
+    @FXML
+    private Label livesPlayer2;
+    @FXML
+    private Label timeLabel;
+    @FXML
+    private Label powerupsLabel;
+    @FXML
+    private Label totalScoreLabel;
+    @FXML
+    private VBox player2Panel;
+    @FXML
+    private Button pauseButton;
 
     // Gestionnaires délégués - Chacun a sa responsabilité
     private GameStateManager gameStateManager;
@@ -51,8 +78,10 @@ public class GameViewController extends OptionsController {
     private Tile[][] map;
     private User currentUser;
 
-    // Timer pour la boucle de jeu
+    // Timer pour la boucle de jeu et gestion du temps
     private AnimationTimer gameLoop;
+    private long gameStartTime;
+    private boolean gamePaused = false;
 
     /**
      * Initialise tous les composants du jeu
@@ -60,6 +89,15 @@ public class GameViewController extends OptionsController {
     public void initialize() {
         try {
             System.out.println("=== INITIALISATION DU JEU ===");
+
+            // Enregistrer le temps de début
+            gameStartTime = System.currentTimeMillis();
+
+            // Masquer le panneau joueur 2 si mode 1 joueur
+            if (isOnePlayer && player2Panel != null) {
+                player2Panel.setVisible(false);
+                player2Panel.setManaged(false);
+            }
 
             // Étape 1 : Charger la carte
             initializeMap();
@@ -70,13 +108,16 @@ public class GameViewController extends OptionsController {
             // Étape 3 : Placer les entités sur la carte
             initializeEntities();
 
-            // Étape 4 : Démarrer la boucle de jeu
+            // Étape 4 : Initialiser l'affichage des scores
+            initializeScoreDisplay();
+
+            // Étape 5 : Démarrer la boucle de jeu
             startGameLoop();
 
-            // Étape 5 : Afficher les contrôles
+            // Étape 6 : Afficher les contrôles
             inputHandler.displayControls();
 
-            // Étape 6 : Forcer le focus et l'affichage
+            // Étape 7 : Forcer le focus et l'affichage
             Platform.runLater(() -> {
                 forceFocus();
                 System.out.println("=== JEU INITIALISÉ AVEC SUCCÈS ===");
@@ -86,6 +127,87 @@ public class GameViewController extends OptionsController {
             e.printStackTrace();
             System.err.println("ERREUR CRITIQUE : Impossible d'initialiser le jeu");
         }
+    }
+
+    /**
+     * Initialise l'affichage des scores
+     */
+    private void initializeScoreDisplay() {
+        Platform.runLater(() -> {
+            updateScoreDisplay();
+            System.out.println("Affichage des scores initialisé");
+        });
+    }
+
+    /**
+     * Met à jour l'affichage des scores dans le panneau latéral
+     */
+    private void updateScoreDisplay() {
+        if (gameStateManager == null) return;
+
+        Platform.runLater(() -> {
+            try {
+                // Mise à jour du score du joueur 1
+                if (scorePlayer1 != null && player1 != null) {
+                    int score1 = gameStateManager.getScoreSystem().getPlayerScore(player1);
+                    scorePlayer1.setText("Score: " + score1);
+                }
+
+                if (bombsPlayer1 != null && player1 != null && bombManager != null) {
+                    int currentBombs = bombManager.getCurrentBombCountPlayer1();
+                    int maxBombs = player1.getMaxBombs();
+                    bombsPlayer1.setText("💣 Bombes: " + currentBombs + "/" + maxBombs);
+                }
+
+                if (livesPlayer1 != null && player1 != null) {
+                    // Assumons que le joueur commence avec 3 vies (à adapter selon votre logique)
+                    int lives1 = player1.isAlive() ? 3 : 0; // Vous pouvez ajuster selon votre système de vies
+                    livesPlayer1.setText("❤️ Vies: " + lives1);
+                }
+
+                // Mise à jour du score du joueur 2 (si mode 2 joueurs)
+                if (!isOnePlayer && player2 != null) {
+                    if (scorePlayer2 != null) {
+                        int score2 = gameStateManager.getScoreSystem().getPlayerScore(player2);
+                        scorePlayer2.setText("Score: " + score2);
+                    }
+
+                    if (bombsPlayer2 != null && bombManager != null) {
+                        int currentBombs2 = bombManager.getCurrentBombCountPlayer2();
+                        int maxBombs2 = player2.getMaxBombs();
+                        bombsPlayer2.setText("💣 Bombes: " + currentBombs2 + "/" + maxBombs2);
+                    }
+
+                    if (livesPlayer2 != null) {
+                        int lives2 = player2.isAlive() ? 3 : 0;
+                        livesPlayer2.setText("❤️ Vies: " + lives2);
+                    }
+                }
+
+                // Mise à jour du temps de jeu
+                if (timeLabel != null) {
+                    long elapsedTime = (System.currentTimeMillis() - gameStartTime) / 1000;
+                    int minutes = (int) (elapsedTime / 60);
+                    int seconds = (int) (elapsedTime % 60);
+                    timeLabel.setText(String.format("⏱️ Temps: %02d:%02d", minutes, seconds));
+                }
+
+                // Mise à jour des power-ups actifs
+                if (powerupsLabel != null && powerUpManager != null) {
+                    int powerUpCount = powerUpManager.getActivePowerUpCount();
+                    powerupsLabel.setText("⚡ Power-ups: " + powerUpCount);
+                }
+
+                // Mise à jour du score total
+                if (totalScoreLabel != null) {
+                    int totalScore = gameStateManager.getGameScore();
+                    totalScoreLabel.setText("🎯 Total: " + totalScore);
+                }
+
+            } catch (Exception e) {
+                System.err.println("Erreur lors de la mise à jour des scores: " + e.getMessage());
+            }
+        });
     }
 
     /**
@@ -233,11 +355,16 @@ public class GameViewController extends OptionsController {
         gameLoop = new AnimationTimer() {
             private long lastAutoBombTimePlayer1 = 0;
             private long lastAutoBombTimePlayer2 = 0;
+            private long lastScoreUpdate = 0;
             private final long AUTO_BOMB_INTERVAL = 2_000_000_000L; // 2 secondes
+            private final long SCORE_UPDATE_INTERVAL = 100_000_000L; // 0.1 seconde
 
             @Override
             public void handle(long now) {
                 try {
+                    // Ignorer si le jeu est en pause
+                    if (gamePaused) return;
+
                     // === PHASE 1 : ACTIONS IMMÉDIATES ===
                     // Traiter les actions instantanées (bombes, pouvoirs)
                     inputHandler.processImmediateActions(player1, player2, bombManager, gameLogic);
@@ -272,7 +399,13 @@ public class GameViewController extends OptionsController {
                         lastAutoBombTimePlayer2 = now;
                     }
 
-                    // === PHASE 5 : VÉRIFICATIONS FINALES ===
+                    // === PHASE 5 : MISE À JOUR DE L'AFFICHAGE DES SCORES ===
+                    if (now - lastScoreUpdate >= SCORE_UPDATE_INTERVAL) {
+                        updateScoreDisplay();
+                        lastScoreUpdate = now;
+                    }
+
+                    // === PHASE 6 : VÉRIFICATIONS FINALES ===
                     // Mettre à jour toutes les entités
                     gameLogic.updateEntities(visualRenderer);
 
@@ -288,6 +421,18 @@ public class GameViewController extends OptionsController {
 
         gameLoop.start();
         System.out.println("Boucle de jeu démarrée!");
+    }
+
+    /**
+     * Gère la mise en pause du jeu
+     */
+    @FXML
+    private void handlePause() {
+        if (gamePaused) {
+            resumeGame();
+        } else {
+            pauseGame();
+        }
     }
 
     /**
@@ -332,11 +477,25 @@ public class GameViewController extends OptionsController {
                 menuController.setCurrentUser(gameStateManager.getCurrentUser());
             }
 
-            // Changer de scène
-            Scene menuScene = new Scene(menuRoot);
+            // Récupérer la fenêtre actuelle
             Stage stage = (Stage) gameGrid.getScene().getWindow();
+
+            // Créer la nouvelle scène
+            Scene menuScene = new Scene(menuRoot);
+
+            // Changer de scène
             stage.setScene(menuScene);
             stage.setTitle("Super Bomberman - Menu");
+
+            // IMPORTANT : Redimensionner la fenêtre pour s'adapter au menu
+            stage.sizeToScene(); // Ajuste automatiquement à la taille du contenu
+
+            // Ou vous pouvez définir des dimensions spécifiques pour le menu :
+            // stage.setWidth(800);  // Largeur du menu
+            // stage.setHeight(600); // Hauteur du menu
+
+            // Centrer la fenêtre sur l'écran
+            stage.centerOnScreen();
 
             System.out.println("Retour au menu réussi!");
 
@@ -350,21 +509,25 @@ public class GameViewController extends OptionsController {
      * Gère la mise en pause du jeu
      */
     public void pauseGame() {
-        if (gameLoop != null) {
-            gameLoop.stop();
+        gamePaused = true;
+        if (inputHandler != null) {
             inputHandler.clearPressedKeys();
-            System.out.println("Jeu mis en pause");
         }
+        if (pauseButton != null) {
+            pauseButton.setText("▶️ Reprendre");
+        }
+        System.out.println("Jeu mis en pause");
     }
 
     /**
      * Reprend le jeu après une pause
      */
     public void resumeGame() {
-        if (gameLoop != null) {
-            startGameLoop();
-            System.out.println("Jeu repris");
+        gamePaused = false;
+        if (pauseButton != null) {
+            pauseButton.setText("⏸️ Pause");
         }
+        System.out.println("Jeu repris");
     }
 
     /**

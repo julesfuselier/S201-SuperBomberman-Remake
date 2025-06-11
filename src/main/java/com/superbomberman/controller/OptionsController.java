@@ -64,8 +64,6 @@ public class OptionsController {
     private static String leftKey2 = "Q";
     private static String rightKey2 = "D";
     private static String bombKey2 = "ENTER";
-    // Touche pause
-    private static String pauseKey = "P";
 
     @FXML
     private ComboBox<String> imageTheme; // Lien avec le FXML
@@ -146,7 +144,6 @@ public class OptionsController {
         bombKeyButton2.setText(bombKey2);
 
         // Pause
-        pauseKeyButton.setText(pauseKey);
     }
 
     private void setupControlButtons() {
@@ -164,8 +161,6 @@ public class OptionsController {
         rightKeyButton2.setOnAction(e -> showKeyBindingDialog("Joueur 2 - Touche Droite", rightKeyButton2, "rightKey2"));
         bombKeyButton2.setOnAction(e -> showKeyBindingDialog("Joueur 2 - Touche Bombe", bombKeyButton2, "bombKey2"));
 
-        // Pause
-        pauseKeyButton.setOnAction(e -> showKeyBindingDialog("Touche Pause", pauseKeyButton, "pauseKey"));
     }
 
     private void showKeyBindingDialog(String keyName, Button button, String keyVariable) {
@@ -191,7 +186,6 @@ public class OptionsController {
                     case "leftKey2": leftKey2 = upperKey; break;
                     case "rightKey2": rightKey2 = upperKey; break;
                     case "bombKey2": bombKey2 = upperKey; break;
-                    case "pauseKey": pauseKey = upperKey; break;
                 }
             }
         });
@@ -215,7 +209,6 @@ public class OptionsController {
         System.out.println("Vitesse de jeu: " + gameSpeed);
         System.out.println("Touches Joueur 1 - Haut: " + upKey1 + ", Bas: " + downKey1 + ", Gauche: " + leftKey1 + ", Droite: " + rightKey1 + ", Bombe: " + bombKey1);
         System.out.println("Touches Joueur 2 - Haut: " + upKey2 + ", Bas: " + downKey2 + ", Gauche: " + leftKey2 + ", Droite: " + rightKey2 + ", Bombe: " + bombKey2);
-        System.out.println("Pause: " + pauseKey);
         System.out.println("Thème d'images: " + selectedImageTheme);
     }
 
@@ -245,8 +238,6 @@ public class OptionsController {
             leftKey2 = "Q";
             rightKey2 = "D";
             bombKey2 = "ENTER";
-            // Pause
-            pauseKey = "P";
             // Thème
             setImageTheme("Bomberman");
             if (imageTheme != null) imageTheme.setValue("Bomberman");
@@ -300,6 +291,4 @@ public class OptionsController {
     public static String getRightKey2() { return rightKey2; }
     public static String getBombKey2() { return bombKey2; }
 
-    // Méthode pour accéder à la touche pause
-    public static String getPauseKey() { return pauseKey; }
 }
