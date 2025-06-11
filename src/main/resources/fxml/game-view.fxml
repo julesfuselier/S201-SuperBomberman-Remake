@@ -54,9 +54,10 @@
             <VBox spacing="10">
                 <Button text="⏸️ Pause" fx:id="pauseButton" onAction="#handlePause"
                         style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 160;" />
-
+                <!--
                 <Button text="🏠 Menu" onAction="#handleBackToMenu"
                         style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 160;" />
+                 -->
             </VBox>
 
         </VBox>

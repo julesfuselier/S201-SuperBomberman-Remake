@@ -483,7 +483,8 @@ public class GameViewController extends OptionsController {
 
     /**
      * Retourne au menu principal
-     */
+
+
     @FXML
     private void handleBackToMenu() {
         System.out.println("Retour au menu demandé...");
@@ -532,6 +533,8 @@ public class GameViewController extends OptionsController {
             System.err.println("Erreur lors du retour au menu");
         }
     }
+
+     */
 
     /**
      * Gère la mise en pause du jeu
