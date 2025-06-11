@@ -94,7 +94,7 @@
             </Button>
 
             <Button fx:id="backToMenuButton" onAction="#handleBackToMenu" text="RETOUR À L'ACCUEIL"
-                    prefWidth="160" prefHeight="36"
+
                     style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 18px; -fx-border-radius: 18px; -fx-cursor: hand;">
                 <font>
                     <Font size="13.0" />

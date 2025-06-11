@@ -153,6 +153,33 @@ public class MenuController {
         }
     }
 
+    @FXML
+    private void handleBackToMenu(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/welcome.fxml"));
+            Parent welcomeRoot = loader.load();
+
+
+            // Pas besoin de cast vers MenuController, c'est un WelcomeController
+            // WelcomeController welcomeController = loader.getController();
+            // Vous pouvez ajouter des informations si nécessaire dans WelcomeController
+
+
+            Scene welcomeScene = new Scene(welcomeRoot);
+            Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+
+
+            stage.setScene(welcomeScene);
+            stage.setTitle("Super Bomberman - Accueil");
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Erreur lors du retour à l'accueil");
+        }
+    }
+
+
     /**
      * Navigation vers l'écran d'authentification
      */

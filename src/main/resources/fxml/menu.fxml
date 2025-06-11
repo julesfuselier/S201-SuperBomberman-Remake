@@ -93,6 +93,15 @@
                 </font>
             </Button>
 
+            <Button fx:id="backToMenuButton" onAction="#handleBackToMenu" text="RETOUR À L'ACCUEIL"
+                    prefWidth="320" prefHeight="50"
+                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
+                <font>
+                    <Font size="14.0" />
+                </font>
+            </Button>
+
+
             <Button fx:id="exitButton" onAction="#handleExit" text="QUITTER"
                     prefWidth="120" prefHeight="40"
                     style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;">
