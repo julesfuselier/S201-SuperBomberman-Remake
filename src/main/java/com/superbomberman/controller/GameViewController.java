@@ -181,6 +181,7 @@ public class GameViewController extends OptionsController {
             @Override
             public void handle(long now) {
                 try {
+
                     // === PHASE 1 : ACTIONS IMMÉDIATES ===
                     // Traiter les actions instantanées (bombes, pouvoirs)
                     inputHandler.processImmediateActions(player1, player2, bombManager, gameLogic);

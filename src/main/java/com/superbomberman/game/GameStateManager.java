@@ -28,6 +28,7 @@ public class GameStateManager {
 
     // 🆕 NOUVEAU : Système de score avancé
     private ScoreSystem scoreSystem;
+    private Player winner;
 
     public GameStateManager(User currentUser, AuthService authService) {
         this.currentUser = currentUser;
@@ -150,9 +151,9 @@ public class GameStateManager {
             int player2Score = player2 != null ? scoreSystem.getPlayerScore(player2) : 0;
 
             GameEndType endType;
-            if (player1Score > player2Score) {
+            if (player1.isAlive() && !player2.isAlive()) {
                 endType = GameEndType.MULTI_PLAYER1_WINS;
-            } else if (player2Score > player1Score) {
+            } else if (!player1.isAlive() && player2.isAlive()) {
                 endType = GameEndType.MULTI_PLAYER2_WINS;
             } else {
                 endType = GameEndType.MULTI_DRAW;
@@ -253,23 +254,10 @@ public class GameStateManager {
         javafx.application.Platform.exit();
     }
 
-    public void setWinner(Player winner) {
-        if (isOnePlayer) {
-            // En mode solo, on n'a qu'un joueur
-            if (winner == player1) {
-                setGameWon(true);
-            } else {
-                setGameWon(false);
-            }
-        } else {
-            // En mode multi, on peut avoir un gagnant ou un match nul
-            if (winner == player1) {
-                setGameWon(true);
-            } else setGameWon(winner == player2);
-        }
-    }
-
     // Getters
+    public void setWinner(Player winner) {
+        this.winner = winner;
+    }
     public int getGameScore() { return gameScore; }
     public boolean isGameWon() { return gameWon; }
     public User getCurrentUser() { return currentUser; }
