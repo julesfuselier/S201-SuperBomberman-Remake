@@ -1,7 +1,83 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
 
-<GridPane fx:id="gameGrid" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
-          fx:controller="com.superbomberman.controller.GameViewController">
-</GridPane>
+<!-- Conteneur principal avec panneau latéral -->
+<BorderPane xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.superbomberman.controller.GameViewController"
+            style="-fx-background-color: #2c3e50;">
+
+    <!-- Panneau de scores à gauche -->
+    <left>
+        <VBox spacing="15" style="-fx-background-color: rgba(44, 62, 80, 0.9); -fx-padding: 20; -fx-border-color: #ecf0f1; -fx-border-width: 0 2 0 0;">
+
+
+            <!-- Titre des scores -->
+            <Label text="🏆 SCORES" style="-fx-text-fill: #f39c12; -fx-font-size: 18px; -fx-font-weight: bold; -fx-alignment: center;" />
+
+            <Separator style="-fx-background-color: #34495e;" />
+
+            <!-- Score Joueur 1 -->
+            <VBox spacing="5" style="-fx-background-color: rgba(231, 76, 60, 0.2); -fx-padding: 10; -fx-border-radius: 5; -fx-background-radius: 5;">
+                <Label text="👤 JOUEUR 1" style="-fx-text-fill: #e74c3c; -fx-font-size: 14px; -fx-font-weight: bold;" />
+                <Label fx:id="scorePlayer1" text="Score: 0" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" />
+                <Label fx:id="bombsPlayer1" text="💣 Bombes: 0/1" style="-fx-text-fill: #bdc3c7; -fx-font-size: 12px;" />
+                <Label fx:id="livesPlayer1" text="❤️ Vies: 3" style="-fx-text-fill: #e74c3c; -fx-font-size: 12px;" />
+            </VBox>
+
+            <!-- Score Joueur 2 (visible uniquement en mode 2 joueurs) -->
+            <VBox fx:id="player2Panel" spacing="5" style="-fx-background-color: rgba(52, 152, 219, 0.2); -fx-padding: 10; -fx-border-radius: 5; -fx-background-radius: 5;">
+                <Label text="👤 JOUEUR 2" style="-fx-text-fill: #3498db; -fx-font-size: 14px; -fx-font-weight: bold;" />
+                <Label fx:id="scorePlayer2" text="Score: 0" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" />
+                <Label fx:id="bombsPlayer2" text="💣 Bombes: 0/1" style="-fx-text-fill: #bdc3c7; -fx-font-size: 12px;" />
+                <Label fx:id="livesPlayer2" text="❤️ Vies: 3" style="-fx-text-fill: #3498db; -fx-font-size: 12px;" />
+            </VBox>
+
+            <Separator style="-fx-background-color: #34495e;" />
+
+            <!-- Informations de jeu -->
+            <VBox spacing="8" style="-fx-background-color: rgba(52, 73, 94, 0.3); -fx-padding: 10; -fx-border-radius: 5; -fx-background-radius: 5;">
+                <Label text="📊 INFOS JEU" style="-fx-text-fill: #ecf0f1; -fx-font-size: 14px; -fx-font-weight: bold;" />
+                <Label fx:id="timeLabel" text="⏱️ Temps: 00:00" style="-fx-text-fill: #f39c12; -fx-font-size: 12px;" />
+                <Label fx:id="powerupsLabel" text="⚡ Power-ups: 0" style="-fx-text-fill: #9b59b6; -fx-font-size: 12px;" />
+                <Label fx:id="totalScoreLabel" text="🎯 Total: 0" style="-fx-text-fill: #2ecc71; -fx-font-size: 12px; -fx-font-weight: bold;" />
+            </VBox>
+
+            <!-- Espace flexible -->
+            <Region VBox.vgrow="ALWAYS" />
+
+            <!-- Boutons d'actions -->
+            <VBox spacing="10">
+                <Button text="⏸️ Pause" fx:id="pauseButton" onAction="#handlePause"
+                        style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 160;" />
+
+                <Button text="🏠 Menu" onAction="#handleBackToMenu"
+                        style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-pref-width: 160;" />
+            </VBox>
+
+        </VBox>
+    </left>
+
+    <!-- Zone de jeu au centre avec fond -->
+    <center>
+        <StackPane style="-fx-alignment: center;">
+            <!-- Image de fond (optionnelle) -->
+            <ImageView preserveRatio="true" fitWidth="800" fitHeight="600" opacity="0.1">
+                <Image url="@../images/menu_background.jpg" />
+            </ImageView>
+
+            <!-- La grille de jeu centrée -->
+            <GridPane fx:id="gameGrid"
+                      style="-fx-background-color: #34495e; -fx-border-color: #ecf0f1; -fx-border-width: 2px;">
+                <StackPane.margin>
+                    <Insets top="20" bottom="20" left="20" right="20"/>
+                </StackPane.margin>
+            </GridPane>
+        </StackPane>
+    </center>
+
+</BorderPane>
