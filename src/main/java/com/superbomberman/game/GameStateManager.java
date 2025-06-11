@@ -148,10 +148,14 @@ public class GameStateManager {
         long gameDuration = System.currentTimeMillis() - gameStartTime;
 
         if (isOnePlayer) {
-            // Mode solo
+            // Mode solo - Utiliser le score total du système
             GameEndType endType = gameWon ? GameEndType.SOLO_VICTORY : GameEndType.SOLO_DEFEAT;
-            System.out.println("Fin de jeu en mode solo : " + (gameWon ? "Victoire" : "Défaite"));
-            return new GameResult(endType, gameScore, gameDuration);
+
+            // 🔥 FIX : Récupérer le VRAI score
+            int finalScore = scoreSystem.getPlayerScore(player1) + gameScore;
+
+            System.out.println("🎯 Score final transmis: " + finalScore);
+            return new GameResult(endType, finalScore, gameDuration);
         } else {
             // Mode multijoueur
             String player1Name = player1 != null ? player1.getName() : "Joueur 1";
@@ -160,10 +164,14 @@ public class GameStateManager {
             int player2Score = player2 != null ? scoreSystem.getPlayerScore(player2) : 0;
 
             GameEndType endType;
-            if (player1.isAlive() && !player2.isAlive()) {
-                endType = GameEndType.MULTI_PLAYER1_WINS;
-            } else if (!player1.isAlive() && player2.isAlive()) {
-                endType = GameEndType.MULTI_PLAYER2_WINS;
+            if (player1 != null && player2 != null) {
+                if (player1.isAlive() && !player2.isAlive()) {
+                    endType = GameEndType.MULTI_PLAYER1_WINS;
+                } else if (!player1.isAlive() && player2.isAlive()) {
+                    endType = GameEndType.MULTI_PLAYER2_WINS;
+                } else {
+                    endType = GameEndType.MULTI_DRAW;
+                }
             } else {
                 endType = GameEndType.MULTI_DRAW;
             }
@@ -285,26 +293,39 @@ public class GameStateManager {
     public void restartGame() {
         javafx.application.Platform.runLater(() -> {
             try {
+                System.out.println("🔄 DÉBUT DU RESTART...");
+
+                // 1️⃣ Réinitialiser l'état complet
                 resetGameState();
                 resetGameEntities();
 
+                // 2️⃣ Charger la nouvelle vue de jeu
                 javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
                         getClass().getResource("/fxml/game-view.fxml")
                 );
                 javafx.scene.Parent gameRoot = loader.load();
 
+                // 3️⃣ Configurer le contrôleur
                 com.superbomberman.controller.GameViewController gameController = loader.getController();
                 if (currentUser != null) {
                     gameController.setCurrentUser(currentUser);
                 }
 
+                // 4️⃣ ✅ FIX : Nettoyer et rafraîchir l'affichage
                 javafx.stage.Stage stage = getCurrentStage();
                 if (stage != null) {
-                    stage.setScene(new javafx.scene.Scene(gameRoot));
+                    javafx.scene.Scene newScene = new javafx.scene.Scene(gameRoot);
+                    stage.setScene(newScene);
                     stage.setTitle("Super Bomberman - " + (isOnePlayer ? "1 Joueur" : "2 Joueurs"));
+
+                    // 🔥 FORCER le rafraîchissement complet
                     stage.sizeToScene();
+                    stage.centerOnScreen();
+
+                    System.out.println("✅ RESTART TERMINÉ AVEC SUCCÈS !");
                 }
             } catch (Exception e) {
+                System.err.println("❌ ERREUR DURANT LE RESTART:");
                 e.printStackTrace();
             }
         });

@@ -513,6 +513,45 @@ public class GameLogic {
         return bestMove;
     }
 
+    /**
+     * FIX : Détection de collision corrigée pour tous les types d'entités
+     */
+    private boolean isValidPosition(int x, int y, Object entity) {
+        // Vérifier les limites de la carte
+        if (x < 0 || y < 0 || y >= map.length || x >= map[0].length) {
+            return false;
+        }
+
+        Tile tile = map[y][x];
+
+        // ❌ MURS INDESTRUCTIBLES : Personne ne peut passer
+        if (tile.getType() == TileType.WALL) {
+            return false;
+        }
+
+        // 🧱 MURS DESTRUCTIBLES : Seuls les joueurs avec WallPass peuvent passer
+        if (tile.getType() == TileType.WALL_BREAKABLE) {
+            if (entity instanceof Player player) {
+                return player.canPassThroughWalls();
+            }
+            // ⚠️ FIX MAJEUR : Les ennemis NE PEUVENT PAS passer à travers les murs destructibles
+            return false;
+        }
+
+        // 💣 BOMBES : Vérifier BombPass pour les joueurs
+        for (Bomb bomb : bombManager.getActiveBombs()) {
+            if (bomb.getX() == x && bomb.getY() == y) {
+                if (entity instanceof Player player) {
+                    return player.canPassThroughBombs();
+                }
+                // Les ennemis ne peuvent pas passer à travers les bombes
+                return false;
+            }
+        }
+
+        return true; // Position libre
+    }
+
 
     // 🆕 Getters pour les états de mort
     public boolean isPlayer1Dead() { return player1Dead; }
