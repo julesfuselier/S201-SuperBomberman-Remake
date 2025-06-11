@@ -133,6 +133,9 @@ public class GameLogic {
             // Vérifier les power-ups
             powerUpManager.checkPlayerCollisions(player1, player2, gameStateManager, visualRenderer);
 
+            // 🆕 AJOUTER CETTE LIGNE - Vérifier les collisions avec l'ennemi
+            checkPlayerEnemyCollisions();
+
             // Mettre à jour le timestamp
             if (playerNumber == 1) {
                 lastPlayer1MoveTime = currentTime;
@@ -150,8 +153,10 @@ public class GameLogic {
             return;
         }
 
-        if (enemy != null) {
+        if (enemy != null && enemy.isAlive()) { // 🆕 Vérifier que l'ennemi est vivant
             moveEnemy(enemy, visualRenderer);
+            // 🆕 AJOUTER CETTE LIGNE - Vérifier les collisions après mouvement ennemi
+            checkPlayerEnemyCollisions();
             lastEnemyMoveTime = currentTime;
         }
     }
@@ -374,6 +379,30 @@ public class GameLogic {
         }
     }
 
+    private void checkPlayerEnemyCollisions() {
+        if (enemy == null || enemy.isDead()) {
+            return;
+        }
+
+        // Vérifier collision avec le joueur 1
+        if (player1 != null && player1.isAlive() &&
+                player1.getX() == enemy.getX() && player1.getY() == enemy.getY()) {
+            player1.setAlive(false);
+            player1Dead = true;
+            System.out.println("💀 Joueur 1 tué par l'ennemi à (" + enemy.getX() + ", " + enemy.getY() + ")");
+            checkAndEndGame();
+        }
+
+        // Vérifier collision avec le joueur 2 (mode multijoueur)
+        if (!isOnePlayer && player2 != null && player2.isAlive() &&
+                player2.getX() == enemy.getX() && player2.getY() == enemy.getY()) {
+            player2.setAlive(false);
+            player2Dead = true;
+            System.out.println("💀 Joueur 2 tué par l'ennemi à (" + enemy.getX() + ", " + enemy.getY() + ")");
+            checkAndEndGame();
+        }
+    }
+
     /**
      * Vérifie les conditions de victoire/défaite
      */
@@ -436,6 +465,9 @@ public class GameLogic {
 
         // Vérifier les collisions avec les power-ups
         powerUpManager.checkPlayerCollisions(player1, player2, gameStateManager, visualRenderer);
+
+        // 🆕 AJOUTER CETTE LIGNE - Vérification continue des collisions
+        checkPlayerEnemyCollisions();
 
         // Vérifier les conditions de jeu
         checkGameConditions();

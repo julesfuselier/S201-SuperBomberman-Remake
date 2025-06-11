@@ -336,6 +336,9 @@ public class BombManager {
     /**
      * Gère l'explosion d'une bombe
      */
+    /**
+     * Gère l'explosion d'une bombe
+     */
     private void handleExplosion(Bomb bomb) {
         int x = bomb.getX();
         int y = bomb.getY();
@@ -348,6 +351,11 @@ public class BombManager {
             visualRenderer.showExplosion(x, y);
         }
 
+        // 🆕 CORRECTION : Gérer l'explosion AU CENTRE de la bombe
+        if (gameLogic != null) {
+            gameLogic.handleExplosionAt(x, y); // ✅ Gérer le centre !
+        }
+
         // Explosion dans les 4 directions
         int[][] directions = {{1,0}, {-1,0}, {0,1}, {0,-1}};
         for (int[] direction : directions) {
@@ -356,16 +364,23 @@ public class BombManager {
                 int ny = y + direction[1] * rangeStep;
                 if (!isInBounds(nx, ny)) break;
                 boolean continueExplosion = destroyTile(nx, ny, owner);
-                gameLogic.handleExplosionAt(nx, ny);
+                if (gameLogic != null) {
+                    gameLogic.handleExplosionAt(nx, ny);
+                }
                 if (!continueExplosion) break;
             }
         }
 
-        // Gérer la mort de l'ennemi si touché par l'explosion
-        if (enemy != null && enemy.getX() == x && enemy.getY() == y) {
+        // 🔧 CORRECTION : Tuer l'ennemi si touché par l'explosion
+        if (enemy != null && enemy.isAlive() && enemy.getX() == x && enemy.getY() == y) {
+            enemy.kill(); // ✅ TUER L'ENNEMI !
             if (scoreSystem != null && owner != null) {
                 scoreSystem.addEnemyKilled(owner);
                 scoreSystem.processExplosionCombo(owner);
+            }
+            // ✅ Déclencher la fin de partie en mode solo
+            if (gameLogic != null) {
+                gameLogic.checkAndEndGame();
             }
         }
     }
@@ -408,12 +423,18 @@ public class BombManager {
         }
 
         // Gérer la mort de l'ennemi si touché par l'explosion
-        if (enemy != null && enemy.getX() == x && enemy.getY() == y) {
+        if (enemy != null && enemy.isAlive() && enemy.getX() == x && enemy.getY() == y) {
+            enemy.kill(); // ✅ TUER L'ENNEMI !
             if (scoreSystem != null && owner != null) {
                 scoreSystem.addEnemyKilled(owner);
                 scoreSystem.processExplosionCombo(owner);
             }
+            // ✅ Déclencher la fin de partie en mode solo
+            if (gameLogic != null) {
+                gameLogic.checkAndEndGame();
+            }
         }
+
 
         return true; // Continuer l'explosion
     }
