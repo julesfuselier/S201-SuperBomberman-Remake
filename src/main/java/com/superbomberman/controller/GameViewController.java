@@ -260,7 +260,11 @@ public class GameViewController extends OptionsController {
         gameLogic = new GameLogic(map, bombManager, powerUpManager, gameStateManager);
 
         // 9. Configurer les références croisées
+
         bombManager.setManagers(visualRenderer, powerUpManager, gameStateManager);
+
+        // 🆕 AJOUTER LA RÉFÉRENCE GAMELOGIC MANQUANTE
+        bombManager.setGameLogic(gameLogic);
 
         System.out.println("Tous les gestionnaires initialisés!");
     }
@@ -362,8 +366,10 @@ public class GameViewController extends OptionsController {
             @Override
             public void handle(long now) {
                 try {
+
                     // Ignorer si le jeu est en pause
                     if (gamePaused) return;
+
 
                     // === PHASE 1 : ACTIONS IMMÉDIATES ===
                     // Traiter les actions instantanées (bombes, pouvoirs)

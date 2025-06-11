@@ -208,29 +208,37 @@ public class VisualRenderer {
     /**
      * Met à jour la position de l'ennemi
      */
+    /**
+     * Met à jour la position de l'ennemi avec nettoyage amélioré
+     */
     public void updateEnemyPosition(Enemy enemy, List<Bomb> activeBombs) {
         int prevX = enemy.getPreviousX();
         int prevY = enemy.getPreviousY();
 
-        // Nettoyer la position précédente
+        // 🔥 FIX : Nettoyer la position précédente de manière plus agressive
         StackPane prevCell = (StackPane) getNodeFromGridPane(prevX, prevY);
         if (prevCell != null) {
             boolean hasBombAtPrevPos = activeBombs.stream()
                     .anyMatch(bomb -> bomb.getX() == prevX && bomb.getY() == prevY);
 
             if (hasBombAtPrevPos) {
-                if (prevCell.getChildren().size() > 2) {
-                    prevCell.getChildren().removeIf(node -> prevCell.getChildren().indexOf(node) > 1);
+                // Garder fond + bombe, supprimer tout le reste
+                while (prevCell.getChildren().size() > 2) {
+                    prevCell.getChildren().remove(prevCell.getChildren().size() - 1);
                 }
             } else {
-                if (prevCell.getChildren().size() > 1) {
-                    prevCell.getChildren().removeIf(node -> prevCell.getChildren().indexOf(node) > 0);
+                // Garder seulement le fond, supprimer TOUT le reste
+                while (prevCell.getChildren().size() > 1) {
+                    prevCell.getChildren().remove(prevCell.getChildren().size() - 1);
                 }
             }
+
+            System.out.println("🧹 Position (" + prevX + ", " + prevY + ") nettoyée, reste " + prevCell.getChildren().size() + " éléments");
         }
 
         // Ajouter à la nouvelle position
         addEntityToGrid(enemy.getX(), enemy.getY(), enemyPattern);
+        System.out.println("👾 Ennemi déplacé vers (" + enemy.getX() + ", " + enemy.getY() + ")");
     }
 
     /**
@@ -387,6 +395,32 @@ public class VisualRenderer {
             }
         }
         return null;
+    }
+
+
+    /**
+     * 🧹 NOUVEAU : Nettoie complètement la grille visuelle
+     */
+    public void clearAllVisuals() {
+        for (Node node : gameGrid.getChildren()) {
+            if (node instanceof StackPane cell) {
+                // Garder seulement le background (premier enfant)
+                if (cell.getChildren().size() > 1) {
+                    cell.getChildren().removeIf(child -> cell.getChildren().indexOf(child) > 0);
+                }
+            }
+        }
+        System.out.println("🧹 Grille visuelle nettoyée complètement");
+    }
+
+    /**
+     * 🔄 NOUVEAU : Recharge tous les patterns et redessine la carte
+     */
+    public void refreshDisplay() {
+        loadPatterns();
+        setupGridConstraints();
+        drawMap();
+        System.out.println("🔄 Affichage rafraîchi");
     }
 
     // Getters pour les patterns

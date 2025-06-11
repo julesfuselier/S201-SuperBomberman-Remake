@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox fx:id="rootContainer" alignment="CENTER" spacing="30.0"
+      style="-fx-background-color: linear-gradient(to bottom, #1a1a2e, #16213e); -fx-padding: 40;"
+      xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.superbomberman.controller.EndGameController">
+
+    <!-- Titre principal -->
+    <Label fx:id="titleLabel" alignment="CENTER" textAlignment="CENTER" textFill="WHITE">
+        <font>
+            <Font name="System Bold" size="32.0" />
+        </font>
+    </Label>
+
+    <!-- Container pour mode solo -->
+    <VBox fx:id="soloContainer" alignment="CENTER" spacing="20.0" visible="false">
+        <Label fx:id="soloMessageLabel" alignment="CENTER" textAlignment="CENTER" textFill="#CCCCCC">
+            <font>
+                <Font size="16.0" />
+            </font>
+        </Label>
+
+        <VBox alignment="CENTER" spacing="10.0"
+              style="-fx-background-color: rgba(255,255,255,0.1); -fx-background-radius: 15; -fx-padding: 20;">
+            <Label fx:id="soloScoreLabel" textFill="#FFD700">
+                <font>
+                    <Font name="System Bold" size="24.0" />
+                </font>
+            </Label>
+            <Label fx:id="soloTimeLabel" textFill="#87CEEB">
+                <font>
+                    <Font size="18.0" />
+                </font>
+            </Label>
+        </VBox>
+    </VBox>
+
+    <!-- Container pour mode multijoueur -->
+    <VBox fx:id="multiContainer" alignment="CENTER" spacing="25.0" visible="false">
+
+        <!-- Podium -->
+        <VBox fx:id="podiumContainer" alignment="CENTER" spacing="15.0"
+              style="-fx-background-color: rgba(255,255,255,0.1); -fx-background-radius: 20; -fx-padding: 30;">
+
+            <!-- Winner -->
+            <VBox alignment="CENTER" spacing="8.0">
+                <Label fx:id="winnerNameLabel" textAlignment="CENTER">
+                    <font>
+                        <Font name="System Bold" size="24.0" />
+                    </font>
+                </Label>
+                <Label fx:id="winnerScoreLabel" textFill="#FFD700">
+                    <font>
+                        <Font size="20.0" />
+                    </font>
+                </Label>
+            </VBox>
+
+            <!-- Separator -->
+            <Label text="────────────────" textFill="rgba(255,255,255,0.3)">
+                <font>
+                    <Font size="14.0" />
+                </font>
+            </Label>
+
+            <!-- Loser/Second place -->
+            <VBox alignment="CENTER" spacing="8.0">
+                <Label fx:id="loserNameLabel" textAlignment="CENTER">
+                    <font>
+                        <Font size="18.0" />
+                    </font>
+                </Label>
+                <Label fx:id="loserScoreLabel" textFill="#C0C0C0">
+                    <font>
+                        <Font size="16.0" />
+                    </font>
+                </Label>
+            </VBox>
+
+        </VBox>
+    </VBox>
+
+    <!-- Boutons d'action -->
+    <HBox alignment="CENTER" spacing="20.0">
+        <Button fx:id="quitButton" mnemonicParsing="false" prefHeight="45.0" prefWidth="120.0"
+                style="-fx-background-color: #F44336; -fx-text-fill: white; -fx-background-radius: 25; -fx-font-size: 16; -fx-font-weight: bold;"
+                text="❌ Quitter" />
+    </HBox>
+
+</VBox>

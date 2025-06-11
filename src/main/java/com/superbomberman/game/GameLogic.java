@@ -133,6 +133,9 @@ public class GameLogic {
             // Vérifier les power-ups
             powerUpManager.checkPlayerCollisions(player1, player2, gameStateManager, visualRenderer);
 
+            // 🆕 AJOUTER CETTE LIGNE - Vérifier les collisions avec l'ennemi
+            checkPlayerEnemyCollisions();
+
             // Mettre à jour le timestamp
             if (playerNumber == 1) {
                 lastPlayer1MoveTime = currentTime;
@@ -150,8 +153,10 @@ public class GameLogic {
             return;
         }
 
-        if (enemy != null) {
+        if (enemy != null && enemy.isAlive()) { // 🆕 Vérifier que l'ennemi est vivant
             moveEnemy(enemy, visualRenderer);
+            // 🆕 AJOUTER CETTE LIGNE - Vérifier les collisions après mouvement ennemi
+            checkPlayerEnemyCollisions();
             lastEnemyMoveTime = currentTime;
         }
     }
@@ -304,53 +309,133 @@ public class GameLogic {
      * Gère l'explosion sur une case et tue le joueur si besoin
      */
     public void handleExplosionAt(int x, int y) {
+        boolean gameEnded = false;
+
         // Vérifier si player1 est sur la case
         if (player1 != null && player1.isAlive() && player1.getX() == x && player1.getY() == y) {
             player1.setAlive(false);
+            player1Dead = true;
+            System.out.println("💀 Joueur 1 éliminé par explosion à (" + x + ", " + y + ")");
+            gameEnded = true;
         }
+
         // Vérifier si player2 est sur la case (si multi)
         if (!isOnePlayer && player2 != null && player2.isAlive() && player2.getX() == x && player2.getY() == y) {
             player2.setAlive(false);
+            player2Dead = true;
+            System.out.println("💀 Joueur 2 éliminé par explosion à (" + x + ", " + y + ")");
+            gameEnded = true;
         }
-        // Vérifier si l'ennemi est sur la case (optionnel)
-//        if (enemy != null && enemy.getX() == x && enemy.getY() == y) {
-//            enemy.setDead(true); // à adapter selon ta logique Enemy
-//        }
-        // Vérifier la fin de partie
-        gameStateManager.checkGameConditions();
+
+        // 🔧 CORRECTION : Utiliser kill() au lieu de setDead()
+        if (enemy != null && enemy.isAlive() && enemy.getX() == x && enemy.getY() == y) {
+            enemy.kill(); // ✅ Utiliser la méthode kill() qui existe
+            enemyDead = true;
+            System.out.println("💀 Ennemi éliminé par explosion à (" + x + ", " + y + ")");
+            // En mode solo, tuer l'ennemi = victoire
+            if (isOnePlayer) {
+                gameStateManager.setGameWon(true);
+                gameEnded = true;
+            }
+        }
+
+        // 🆕 DÉCLENCHER LA FIN DE JEU IMMÉDIATEMENT
+        if (gameEnded) {
+            checkAndEndGame();
+        }
+    }
+
+    // 🆕 NOUVELLE MÉTHODE pour gérer la fin de jeu
+    public void checkAndEndGame() {
+        if (isOnePlayer) {
+            // Mode solo : joueur mort = défaite
+            if (player1Dead) {
+                gameStateManager.setGameWon(false);
+                gameStateManager.endGame();
+                return;
+            }
+            // Ennemi mort = victoire
+            if (enemyDead || (enemy != null && enemy.isDead())) {
+                gameStateManager.setGameWon(true);
+                gameStateManager.endGame();
+            }
+        } else {
+            // Mode multijoueur
+            if (player1Dead && player2Dead) {
+                // Les deux morts = match nul (ou logique spécifique)
+                gameStateManager.setGameWon(false);
+                gameStateManager.endGame();
+            } else if (player1Dead) {
+                // Joueur 2 gagne
+                winner = player2;
+                gameStateManager.setGameWon(false); // Du point de vue du joueur 1
+                gameStateManager.endGame();
+            } else if (player2Dead) {
+                // Joueur 1 gagne
+                winner = player1;
+                gameStateManager.setGameWon(true);
+                gameStateManager.endGame();
+            }
+        }
+    }
+
+    private void checkPlayerEnemyCollisions() {
+        if (enemy == null || enemy.isDead()) {
+            return;
+        }
+
+        // Vérifier collision avec le joueur 1
+        if (player1 != null && player1.isAlive() &&
+                player1.getX() == enemy.getX() && player1.getY() == enemy.getY()) {
+            player1.setAlive(false);
+            player1Dead = true;
+            System.out.println("💀 Joueur 1 tué par l'ennemi à (" + enemy.getX() + ", " + enemy.getY() + ")");
+            checkAndEndGame();
+        }
+
+        // Vérifier collision avec le joueur 2 (mode multijoueur)
+        if (!isOnePlayer && player2 != null && player2.isAlive() &&
+                player2.getX() == enemy.getX() && player2.getY() == enemy.getY()) {
+            player2.setAlive(false);
+            player2Dead = true;
+            System.out.println("💀 Joueur 2 tué par l'ennemi à (" + enemy.getX() + ", " + enemy.getY() + ")");
+            checkAndEndGame();
+        }
     }
 
     /**
      * Vérifie les conditions de victoire/défaite
      */
     public void checkGameConditions() {
-        // Vérifier si l'ennemi est vaincu
-        if (enemy != null && isEnemyDefeated()) {
+        // Vérifier si l'ennemi est vaincu (mode solo)
+        if (isOnePlayer && enemy != null && enemy.isDead()) {
             gameStateManager.setGameWon(true);
+            gameStateManager.endGame();
+            return;
         }
 
         // Vérifier si le joueur est vaincu
         if (isPlayerDefeated()) {
             gameStateManager.setGameWon(false);
+            gameStateManager.endGame();
         }
     }
 
-    /**
-     * Vérifie si l'ennemi est vaincu
-     */
     private boolean isEnemyDefeated() {
-        // Vérifier si l'ennemi est sur une case d'explosion
-        // Cette logique sera à implémenter selon les besoins
-        return false; // Placeholder
+        return enemy != null && enemy.isDead(); // Utiliser isDead()
     }
-
     /**
      * Vérifie si le joueur est vaincu
      */
     private boolean isPlayerDefeated() {
-        // Vérifier si le joueur est sur une case d'explosion
-        // Cette logique sera à implémenter selon les besoins
-        return false; // Placeholder
+        if (isOnePlayer) {
+            return player1 == null || !player1.isAlive();
+        } else {
+            // En multi, tous les joueurs morts = défaite
+            boolean player1Alive = player1 != null && player1.isAlive();
+            boolean player2Alive = player2 != null && player2.isAlive();
+            return !player1Alive && !player2Alive;
+        }
     }
 
     /**
@@ -380,6 +465,9 @@ public class GameLogic {
 
         // Vérifier les collisions avec les power-ups
         powerUpManager.checkPlayerCollisions(player1, player2, gameStateManager, visualRenderer);
+
+        // 🆕 AJOUTER CETTE LIGNE - Vérification continue des collisions
+        checkPlayerEnemyCollisions();
 
         // Vérifier les conditions de jeu
         checkGameConditions();
@@ -424,6 +512,46 @@ public class GameLogic {
 
         return bestMove;
     }
+
+    /**
+     * FIX : Détection de collision corrigée pour tous les types d'entités
+     */
+    private boolean isValidPosition(int x, int y, Object entity) {
+        // Vérifier les limites de la carte
+        if (x < 0 || y < 0 || y >= map.length || x >= map[0].length) {
+            return false;
+        }
+
+        Tile tile = map[y][x];
+
+        // ❌ MURS INDESTRUCTIBLES : Personne ne peut passer
+        if (tile.getType() == TileType.WALL) {
+            return false;
+        }
+
+        // 🧱 MURS DESTRUCTIBLES : Seuls les joueurs avec WallPass peuvent passer
+        if (tile.getType() == TileType.WALL_BREAKABLE) {
+            if (entity instanceof Player player) {
+                return player.canPassThroughWalls();
+            }
+            // ⚠️ FIX MAJEUR : Les ennemis NE PEUVENT PAS passer à travers les murs destructibles
+            return false;
+        }
+
+        // 💣 BOMBES : Vérifier BombPass pour les joueurs
+        for (Bomb bomb : bombManager.getActiveBombs()) {
+            if (bomb.getX() == x && bomb.getY() == y) {
+                if (entity instanceof Player player) {
+                    return player.canPassThroughBombs();
+                }
+                // Les ennemis ne peuvent pas passer à travers les bombes
+                return false;
+            }
+        }
+
+        return true; // Position libre
+    }
+
 
     // 🆕 Getters pour les états de mort
     public boolean isPlayer1Dead() { return player1Dead; }
