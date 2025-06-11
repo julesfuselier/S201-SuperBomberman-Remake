@@ -32,7 +32,7 @@ public class StatsController implements Initializable {
     @FXML private Label enemiesKilledLabel;
     @FXML private Label wallsDestroyedLabel;
     @FXML private Label powerUpsCollectedLabel;
-    @FXML private Label bestComboLabel;
+    //@FXML private Label bestComboLabel;
 
     @FXML private TableView<GameStats> recentGamesTable;
     @FXML private TableColumn<GameStats, String> dateColumn;
@@ -134,7 +134,7 @@ public class StatsController implements Initializable {
         enemiesKilledLabel.setText(String.valueOf(summary.totalEnemiesKilled));
         wallsDestroyedLabel.setText(String.valueOf(summary.totalWallsDestroyed));
         powerUpsCollectedLabel.setText(String.valueOf(summary.totalPowerUpsCollected));
-        bestComboLabel.setText(String.valueOf(summary.bestCombo));
+        //bestComboLabel.setText(String.valueOf(summary.bestCombo));
 
         // Charger les parties récentes
         List<GameStats> recentGames = statsService.getRecentUserStats(currentUsername, 10);
