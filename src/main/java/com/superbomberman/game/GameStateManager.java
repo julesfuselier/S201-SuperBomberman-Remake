@@ -280,10 +280,15 @@ public class GameStateManager {
         // 🆕 UTILISER LA NOUVELLE MÉTHODE finalizeGame au lieu d'updateUserStats
         if (currentUser != null && authService != null) {
             long gameDuration = System.currentTimeMillis() - gameStartTime;
-            authService.finalizeGame(currentUser, gameWon, gameScore, gameDuration);
+
+            // 🔥 FIX : Calculer le VRAI score final
+            int realFinalScore = enhancedScoreSystem.getPlayerScore(player1) + gameScore;
+
+            System.out.println("🎯 Score transmis à finalizeGame: " + realFinalScore);
+            authService.finalizeGame(currentUser, gameWon, realFinalScore, gameDuration);
 
             System.out.println("✅ Statistiques finales pour " + currentUser.getUsername());
-            System.out.println("Score final: " + gameScore + " | Victoire: " + (gameWon ? "Oui" : "Non"));
+            System.out.println("Score final: " + realFinalScore + " | Victoire: " + (gameWon ? "Oui" : "Non"));
             enhancedScoreSystem.displayScoreSummary();
         }
 

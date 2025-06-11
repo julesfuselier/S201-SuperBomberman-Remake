@@ -415,6 +415,24 @@ public class GameViewController extends OptionsController {
                     // Mettre à jour toutes les entités
                     gameLogic.updateEntities(visualRenderer);
 
+                    // Quand un ennemi est tué
+                    gameStateManager.recordEnemyKilled(player1);
+                    if (!isOnePlayer && player2 != null) {
+                        gameStateManager.recordEnemyKilled(player2);
+                    }
+
+                    // Quand un power-up est collecté
+                    gameStateManager.recordPowerUpCollected(player1);
+                    if (!isOnePlayer && player2 != null) {
+                        gameStateManager.recordPowerUpCollected(player2);
+                    }
+
+                    // Quand un mur est détruit
+                    gameStateManager.recordWallDestroyed(player1);
+                    if (!isOnePlayer && player2 != null) {
+                        gameStateManager.recordWallDestroyed(player2);
+                    }
+
                     // Vérifier les conditions de victoire/défaite
                     gameStateManager.checkGameConditions();
 

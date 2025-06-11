@@ -219,6 +219,9 @@ public class AuthService {
     private void saveUser(User user) {
         Path userFile = Paths.get(USERS_DIR + user.getUsername() + ".properties");
 
+        System.out.println("💾 SAUVEGARDE USER: " + user.getUsername());
+        System.out.println("💾 Fichier: " + userFile.toAbsolutePath());
+
         try (OutputStream output = Files.newOutputStream(userFile)) {
             Properties props = new Properties();
 
@@ -249,6 +252,11 @@ public class AuthService {
 
             props.store(output, "User data for " + user.getUsername());
             userCache.put(user.getUsername(), user);
+
+            props.store(output, "User data for " + user.getUsername());
+            userCache.put(user.getUsername(), user);
+
+            System.out.println("💾 Sauvegarde réussie !");
 
         } catch (IOException e) {
             System.err.println("Erreur lors de la sauvegarde de l'utilisateur " + user.getUsername() + " : " + e.getMessage());
@@ -375,10 +383,23 @@ public class AuthService {
     }
 
     /**
-     * Finalise une partie (remplace updateUserStats)
+     * Finalise une partie et met à jour les statistiques de l'utilisateur.
      */
     public void finalizeGame(User user, boolean won, int finalScore, long gameDuration) {
-        if (user == null) return;
+        if (user == null) {
+            System.err.println("❌ USER NULL !");
+            return;
+        }
+
+        System.out.println("🎯 DEBUT finalizeGame");
+        System.out.println("  - User: " + user.getUsername());
+        System.out.println("  - Score: " + finalScore + " | Won: " + won);
+        System.out.println("  - Durée: " + (gameDuration/1000) + "s");
+
+        // Stats AVANT modification
+        System.out.println("  - AVANT - gamesPlayed: " + user.getGamesPlayed());
+        System.out.println("  - AVANT - enemiesKilled: " + user.getEnemiesKilled());
+        System.out.println("  - AVANT - powerUpsCollected: " + user.getPowerUpsCollected());
 
         // Mettre à jour les stats traditionnelles
         user.setGamesPlayed(user.getGamesPlayed() + 1);
@@ -400,8 +421,13 @@ public class AuthService {
             user.setAverageScore(newAverage);
         }
 
+        // Stats APRES modification
+        System.out.println("  - APRES - gamesPlayed: " + user.getGamesPlayed());
+        System.out.println("  - APRES - enemiesKilled: " + user.getEnemiesKilled());
+        System.out.println("  - APRES - powerUpsCollected: " + user.getPowerUpsCollected());
+
         saveUser(user);
-        System.out.println("🎯 Partie finalisée - Stats complètes sauvegardées");
+        System.out.println("🎯 FIN finalizeGame - Sauvegarde terminée");
     }
 
     /**
