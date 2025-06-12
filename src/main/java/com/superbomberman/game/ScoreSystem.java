@@ -7,8 +7,20 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Système de score complet pour Super Bomberman
- * Gère les points, combos, bonus de temps et vies supplémentaires
+ * Système de score complet pour Super Bomberman.
+ * <p>
+ * Cette classe gère les points, les combos, les bonus de temps et les vies supplémentaires
+ * pour chaque joueur. Elle intègre la gestion des événements de score lors des actions du jeu
+ * (ennemi tué, mur détruit, power-up ramassé, combos, etc.) et fournit des utilitaires pour
+ * l'affichage et la remise à zéro des scores.
+ * </p>
+ *
+ * <ul>
+ *     <li>Points attribués pour chaque action (ennemis, power-ups, murs...)</li>
+ *     <li>Gestion des combos d'explosion avec multiplicateur</li>
+ *     <li>Gestion des vies supplémentaires à chaque palier de score</li>
+ *     <li>Affichage et accès aux scores individuels</li>
+ * </ul>
  *
  * @author Jules Fuselier
  * @version 1.0
@@ -16,30 +28,38 @@ import java.util.Map;
  */
 public class ScoreSystem {
 
-    // Configuration des points
+    // --- Configuration des points ---
     private static final int POINTS_WALL_DESTROYED = 10;
     private static final int POINTS_POWERUP_COLLECTED = 50;
     private static final int POINTS_ENEMY_KILLED = 100;
 
-    // Configuration des bonus de temps
+    // --- Configuration des bonus de temps ---
     private static final int TIME_BONUS_MULTIPLIER = 10;
 
-    // Configuration des vies supplémentaires
+    // --- Configuration des vies supplémentaires ---
     private static final int EXTRA_LIFE_THRESHOLD = 10000; // Tous les 10 000 points
 
-    // État du système
-    // Remplace le score global par un score par joueur
+    // --- État du système ---
+    /** Scores par joueur */
     private Map<Player, Integer> playerScores = new HashMap<>();
+    /** Liste des points des combos en attente par joueur */
     private Map<Player, List<Integer>> playerCombos = new HashMap<>();
+    /** Nombre de vies supplémentaires gagnées par joueur (calculé sur la base du score) */
     private Map<Player, Integer> playerLivesEarned = new HashMap<>();
+    /** Référence vers le GameStateManager pour notification */
     private GameStateManager gameStateManager;
 
+    /**
+     * Crée un système de score lié à un GameStateManager.
+     * @param gameStateManager Gestionnaire d'état de partie
+     */
     public ScoreSystem(GameStateManager gameStateManager) {
         this.gameStateManager = gameStateManager;
     }
 
     /**
-     * 🎯 Ajoute des points pour un ennemi tué
+     * 🎯 Ajoute des points pour un ennemi tué (points en attente de combo).
+     * @param player Joueur ayant tué l'ennemi
      */
     public void addEnemyKilled(Player player) {
         playerCombos.computeIfAbsent(player, k -> new ArrayList<>()).add(POINTS_ENEMY_KILLED);
@@ -47,7 +67,9 @@ public class ScoreSystem {
     }
 
     /**
-     * 💥 Traite le combo d'une explosion (appelé après toutes les morts)
+     * 💥 Traite le combo d'une explosion (appelé après toutes les morts).
+     * Applique un multiplicateur en fonction du nombre d'ennemis tués dans la même explosion.
+     * @param player Joueur concerné
      */
     public void processExplosionCombo(Player player) {
         List<Integer> comboList = playerCombos.getOrDefault(player, new ArrayList<>());
@@ -58,7 +80,7 @@ public class ScoreSystem {
         int totalPoints = 0;
         int enemyCount = comboList.size();
 
-        // Calculer les points avec bonus de combo
+        // Calcul des points avec multiplicateur de combo
         for (int i = 0; i < comboList.size(); i++) {
             int basePoints = comboList.get(i);
             int comboMultiplier = i + 1; // 1er ennemi = x1, 2e = x2, etc.
@@ -68,7 +90,7 @@ public class ScoreSystem {
             System.out.println("🔥 Combo x" + comboMultiplier + " : " + basePoints + " -> " + points + " points");
         }
 
-        // Afficher le combo si multiple
+        // Affichage spécial si plusieurs ennemis touchés
         if (enemyCount > 1) {
             System.out.println("🎊 COMBO " + enemyCount + " ENNEMIS pour " + player + " ! Total : +" + totalPoints + " points");
         }
@@ -78,7 +100,10 @@ public class ScoreSystem {
     }
 
 //    /**
-//     * Calcule et ajoute le bonus de temps
+//     * Calcule et ajoute le bonus de temps (optionnel).
+//     * @param player Joueur concerné
+//     * @param maxTimeSeconds Temps maximal pour terminer le niveau
+//     * @param usedTimeSeconds Temps utilisé
 //     */
 //    public void calculateTimeBonus(Player player, int maxTimeSeconds, int usedTimeSeconds) {
 //        int remainingTime = Math.max(0, maxTimeSeconds - usedTimeSeconds);
@@ -91,7 +116,8 @@ public class ScoreSystem {
 //    }
 
     /**
-     * 🎁 Ajoute des points pour un power-up collecté
+     * 🎁 Ajoute des points pour un power-up collecté.
+     * @param player Joueur concerné
      */
     public void addPowerUpCollected(Player player) {
         addScore(player, POINTS_POWERUP_COLLECTED);
@@ -99,7 +125,8 @@ public class ScoreSystem {
     }
 
     /**
-     * 🧱 Ajoute des points pour un mur détruit
+     * 🧱 Ajoute des points pour un mur détruit.
+     * @param player Joueur concerné
      */
     public void addWallDestroyed(Player player) {
         addScore(player, POINTS_WALL_DESTROYED);
@@ -107,7 +134,9 @@ public class ScoreSystem {
     }
 
     /**
-     * 🏁 Termine le niveau et calcule tous les bonus
+     * 🏁 Termine le niveau et calcule tous les bonus (combos, temps...).
+     * @param maxTimeSeconds Temps maximal du niveau
+     * @param usedTimeSeconds Temps utilisé par le joueur
      */
     public void finishLevel(int maxTimeSeconds, int usedTimeSeconds) {
         // Finaliser les combos en cours
@@ -115,7 +144,7 @@ public class ScoreSystem {
             processExplosionCombo(player);
         }
 
-        // Calculer le bonus de temps
+        // Calculer le bonus de temps pour chaque joueur (décommenter si besoin)
 //        for (Player player : playerScores.keySet()) {
 //            calculateTimeBonus(player, maxTimeSeconds, usedTimeSeconds);
 //        }
@@ -124,20 +153,22 @@ public class ScoreSystem {
     }
 
     /**
-     * 📊 Méthode privée pour ajouter du score et vérifier les vies
+     * Méthode privée pour ajouter du score et vérifier les vies supplémentaires.
+     * @param player Joueur concerné
+     * @param points Points à ajouter
      */
     private void addScore(Player player, int points) {
         int newScore = playerScores.getOrDefault(player, 0) + points;
         playerScores.put(player, newScore);
 
-        // Gestion des vies supplémentaires (optionnel)
+        // Gestion des vies supplémentaires
         int lives = newScore / EXTRA_LIFE_THRESHOLD;
         if (lives > playerLivesEarned.getOrDefault(player, 0)) {
             playerLivesEarned.put(player, lives);
             System.out.println("❤️ Vie supplémentaire gagnée par " + player + " !");
         }
 
-        // Mettre à jour le GameStateManager
+        // Notifier le GameStateManager
         if (gameStateManager != null) {
             gameStateManager.updateScore(points);
         }
@@ -146,17 +177,17 @@ public class ScoreSystem {
     }
 
     /**
-     * 💚 Vérifie si le joueur a gagné des vies supplémentaires
+     * Vérifie si le joueur a gagné des vies supplémentaires (obsolète, voir playerLivesEarned).
      */
+    @Deprecated
     private void checkExtraLives(int oldScore, int newScore) {
         int oldLives = oldScore / EXTRA_LIFE_THRESHOLD;
         int newLives = newScore / EXTRA_LIFE_THRESHOLD;
         // Cette méthode n'est plus utilisée, car la gestion des vies se fait par joueur dans playerLivesEarned
-        // Elle peut être supprimée si non utilisée ailleurs
     }
 
     /**
-     * 🎮 Remet à zéro le système de score
+     * 🎮 Remet à zéro le système de score.
      */
     public void reset() {
         playerScores.clear();
@@ -165,20 +196,28 @@ public class ScoreSystem {
         System.out.println("🔄 Système de score remis à zéro");
     }
 
-    // Getters
+    // --- Getters et utilitaires ---
+
+    /**
+     * Récupère le score d'un joueur.
+     * @param player Joueur concerné
+     * @return Score du joueur
+     */
     public int getScore(Player player) {
         return playerScores.getOrDefault(player, 0);
     }
 
     /**
-     * Récupère le score d'un joueur
+     * Alias pour récupérer le score d'un joueur.
+     * @param player Joueur concerné
+     * @return Score du joueur
      */
     public int getPlayerScore(Player player) {
         return playerScores.getOrDefault(player, 0);
     }
 
     /**
-     * 📋 Affiche un résumé du score
+     * 📋 Affiche un résumé du score de chaque joueur.
      */
     public void displayScoreSummary() {
         System.out.println("=== 📊 RÉSUMÉ DU SCORE ===");
@@ -189,7 +228,8 @@ public class ScoreSystem {
     }
 
     /**
-     * 📋 Méthodes utilitaires pour initialiser les joueurs
+     * Initialise un joueur dans le système de score (à appeler lors de la création).
+     * @param player Joueur à enregistrer
      */
     public void registerPlayer(Player player) {
         playerScores.putIfAbsent(player, 0);

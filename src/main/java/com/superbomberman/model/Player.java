@@ -13,6 +13,13 @@ import com.superbomberman.model.powerup.MalusType;
  * ces propriétés, notamment lors de l'obtention de bonus en jeu.
  * </p>
  *
+ * <ul>
+ *     <li>Position et gestion du déplacement (x, y, previousX, previousY)</li>
+ *     <li>Capacités spéciales, bonus et malus</li>
+ *     <li>Gestion de la bombe tenue (glove)</li>
+ *     <li>Gestion de la vie pour le système de victoire</li>
+ * </ul>
+ *
  * @author Jules Fuselier
  * @version 2.0
  * @since 2025-06-08
@@ -84,6 +91,16 @@ public class Player {
 
     /** Nom du joueur (pour l'affichage du podium) */
     private String name;
+
+    /**
+     * Constructeur du joueur.
+     *
+     * @param name Nom du joueur.
+     */
+    public Player(String name) {
+        this.name = name;
+        this.alive = true;
+    }
 
     /**
      * Définit la position du joueur et met à jour la position précédente.
@@ -471,13 +488,32 @@ public class Player {
 
     // ✨ NOUVELLES MÉTHODES POUR LE SYSTÈME DE VICTOIRE ✨
 
+    /**
+     * Indique si le joueur est vivant.
+     *
+     * @return true si le joueur est vivant, false sinon.
+     */
     public boolean isAlive() { return alive; }
+
+    /**
+     * Définit l'état de vie du joueur.
+     *
+     * @param alive true pour vivant, false pour mort.
+     */
     public void setAlive(boolean alive) { this.alive = alive; }
-    public Player(String name) {
-        this.name = name;
-        this.alive = true;
-    }
+
+    /**
+     * Retourne le nom du joueur.
+     *
+     * @return Le nom du joueur.
+     */
     public String getName() { return name; }
+
+    /**
+     * Définit le nom du joueur.
+     *
+     * @param name Le nom à définir.
+     */
     public void setName(String name) { this.name = name; }
 
 }

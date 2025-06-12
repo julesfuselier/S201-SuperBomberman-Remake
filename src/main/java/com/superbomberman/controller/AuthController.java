@@ -23,7 +23,21 @@ import java.io.IOException;
 
 /**
  * Contrôleur pour l'écran de connexion.
- * Gère l'authentification utilisateur et la navigation vers le menu principal.
+ * <p>
+ * Gère l'authentification utilisateur, les messages de connexion,
+ * les raccourcis clavier, les animations et la navigation vers les autres écrans de l'application.
+ * </p>
+ *
+ * <ul>
+ *     <li>Connexion avec gestion de "Se souvenir de moi"</li>
+ *     <li>Navigation vers le menu principal, l'écran d'inscription ou l'accueil</li>
+ *     <li>Animations et feedback visuel pour les actions utilisateur</li>
+ *     <li>Gestion sécurisée des transitions de scène</li>
+ * </ul>
+ *
+ * @author Jules Fuselier
+ * @version 1.0
+ * @since 2025-06-08
  */
 public class AuthController {
 

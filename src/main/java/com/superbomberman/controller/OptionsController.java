@@ -1,3 +1,21 @@
+/**
+ * Contrôleur des options de Super Bomberman.
+ * <p>
+ * Permet de configurer la difficulté, la vitesse du jeu, les touches de contrôle pour les deux joueurs,
+ * le thème graphique et la sélection de la carte. Gère l'interface utilisateur associée, l'application et la réinitialisation
+ * des paramètres, ainsi que la notification des changements de thème aux autres composants.
+ * </p>
+ *
+ * <ul>
+ *     <li>Gestion des touches pour chaque joueur (haut, bas, gauche, droite, bombe).</li>
+ *     <li>Sélection de la difficulté, de la vitesse, de la map et du thème graphique.</li>
+ *     <li>Application, réinitialisation et sauvegarde des paramètres utilisateurs.</li>
+ *     <li>Notification des changements de thème via un système d'observateurs.</li>
+ * </ul>
+ *
+ * @author Hugo Brest Lestrade
+ * @version 1.4
+ */
 package com.superbomberman.controller;
 
 import javafx.event.ActionEvent;
@@ -15,11 +33,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author Hugo Brest Lestrade
- * @version 1.4
- **/
+ * Contrôleur de la fenêtre des options du jeu.
+ * Gère les paramètres de jeu, de contrôles et de thème graphique.
+ */
 public class OptionsController {
 
+    /** ComboBox pour la sélection de la difficulté. */
     @FXML private ComboBox<String> difficultyComboBox;
 
     // Boutons de contrôle Joueur 1
@@ -36,7 +55,7 @@ public class OptionsController {
     @FXML private Button rightKeyButton2;
     @FXML private Button bombKeyButton2;
 
-    // Bouton pause commun
+    // Bouton pause commun (optionnel)
     @FXML private Button pauseKeyButton;
 
     // Boutons d'action
@@ -62,40 +81,70 @@ public class OptionsController {
     private static String rightKey2 = "D";
     private static String bombKey2 = "ENTER";
 
+    /** Map sélectionnée pour la partie. */
     private static String selectedMap = "level1.txt";
     public static String getSelectedMap() { return selectedMap; }
     public static void setSelectedMap(String map) { selectedMap = map; }
 
+    /** ComboBox pour choisir le thème d'images. */
     @FXML
-    private ComboBox<String> imageTheme; // Lien avec le FXML
+    private ComboBox<String> imageTheme;
 
-    private static String selectedImageTheme = "classique"; // Valeur globale accessible
+    /** Thème graphique sélectionné (valeur globale). */
+    private static String selectedImageTheme = "classique";
 
-    // --- Observer/Listener pour le changement de thème
+    // --- Observateur pour le changement de thème ---
+    /**
+     * Interface pour notifier le changement de thème graphique.
+     */
     public interface ThemeChangeListener {
         void onThemeChanged(String newTheme);
     }
     private static final List<ThemeChangeListener> themeChangeListeners = new ArrayList<>();
+    /**
+     * Ajoute un observateur du thème.
+     * @param listener Observateur à ajouter
+     */
     public static void addThemeChangeListener(ThemeChangeListener listener) {
         themeChangeListeners.add(listener);
     }
+    /**
+     * Retire un observateur du thème.
+     * @param listener Observateur à retirer
+     */
     public static void removeThemeChangeListener(ThemeChangeListener listener) {
         themeChangeListeners.remove(listener);
     }
+    /**
+     * Notifie tous les observateurs d'un changement de thème.
+     * @param newTheme Nouveau thème choisi
+     */
     private static void notifyThemeChanged(String newTheme) {
         for (ThemeChangeListener listener : themeChangeListeners) {
             listener.onThemeChanged(newTheme);
         }
     }
 
+    /**
+     * Retourne le thème d'images sélectionné.
+     * @return Thème d'images courant
+     */
     public static String getImageTheme() {
         return selectedImageTheme;
     }
+    /**
+     * Définit le thème d'images et notifie les listeners.
+     * @param theme Nouveau thème d'images
+     */
     public static void setImageTheme(String theme) {
         selectedImageTheme = theme;
-        notifyThemeChanged(theme); // Notifie tous les listeners
+        notifyThemeChanged(theme);
     }
 
+    /**
+     * Initialise les composants graphiques et les valeurs par défaut.
+     * Appelée automatiquement après chargement du FXML.
+     */
     @FXML
     public void initialize() {
         updateButtonTexts();
@@ -112,12 +161,15 @@ public class OptionsController {
             }
             imageTheme.valueProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal != null && !newVal.equals(selectedImageTheme)) {
-                    setImageTheme(newVal); // Appelle le setter qui notifie
+                    setImageTheme(newVal);
                 }
             });
         }
     }
 
+    /**
+     * Met à jour les textes des boutons de contrôle selon les touches associées.
+     */
     private void updateButtonTexts() {
         // Joueur 1
         upKeyButton1.setText(upKey1);
@@ -132,10 +184,12 @@ public class OptionsController {
         leftKeyButton2.setText(leftKey2);
         rightKeyButton2.setText(rightKey2);
         bombKeyButton2.setText(bombKey2);
-
-        // Pause
     }
 
+    /**
+     * Permet de sélectionner dynamiquement une map parmi celles disponibles dans le dossier "maps".
+     * @param event Événement de clic sur le bouton de sélection de map
+     */
     @FXML
     private void handleMap(ActionEvent event) {
         // 1. Lister dynamiquement les maps du dossier
@@ -166,9 +220,12 @@ public class OptionsController {
             String selectedTheme = imageTheme.getValue();
             setImageTheme(selectedTheme);
             System.out.println("Map choisie : " + selectedMap );
-            });
+        });
     }
 
+    /**
+     * Configure les actions des boutons de contrôle pour la personnalisation des touches.
+     */
     private void setupControlButtons() {
         // Joueur 1
         upKeyButton1.setOnAction(e -> showKeyBindingDialog("Joueur 1 - Touche Haut", upKeyButton1, "upKey1"));
@@ -183,9 +240,14 @@ public class OptionsController {
         leftKeyButton2.setOnAction(e -> showKeyBindingDialog("Joueur 2 - Touche Gauche", leftKeyButton2, "leftKey2"));
         rightKeyButton2.setOnAction(e -> showKeyBindingDialog("Joueur 2 - Touche Droite", rightKeyButton2, "rightKey2"));
         bombKeyButton2.setOnAction(e -> showKeyBindingDialog("Joueur 2 - Touche Bombe", bombKeyButton2, "bombKey2"));
-
     }
 
+    /**
+     * Ouvre une boîte de dialogue pour modifier la touche associée à une action.
+     * @param keyName      Nom lisible de la touche/action
+     * @param button       Bouton à modifier
+     * @param keyVariable  Nom de la variable correspondant à la touche
+     */
     private void showKeyBindingDialog(String keyName, Button button, String keyVariable) {
         TextInputDialog dialog = new TextInputDialog(button.getText());
         dialog.setTitle("Configuration des touches");
@@ -214,6 +276,10 @@ public class OptionsController {
         });
     }
 
+    /**
+     * Applique les paramètres et affiche une confirmation.
+     * @param event Événement de clic sur le bouton "Appliquer"
+     */
     @FXML
     private void handleApply(ActionEvent event) {
         // Afficher une confirmation
@@ -231,6 +297,10 @@ public class OptionsController {
         System.out.println("Thème d'images: " + selectedImageTheme);
     }
 
+    /**
+     * Réinitialise tous les paramètres à leurs valeurs par défaut après confirmation.
+     * @param event Événement de clic sur le bouton "Réinitialiser"
+     */
     @FXML
     private void handleReset(ActionEvent event) {
         // Confirmer le reset
@@ -270,10 +340,13 @@ public class OptionsController {
         }
     }
 
+    /**
+     * Retourne au menu principal.
+     * @param event Événement de clic sur le bouton "Retour"
+     */
     @FXML
     private void handleBack(ActionEvent event) {
         try {
-            // Retourner au menu principal
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu.fxml"));
             Parent menuRoot = loader.load();
 

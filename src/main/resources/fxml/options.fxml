@@ -112,15 +112,15 @@
         <HBox spacing="20" alignment="CENTER">
             <Button fx:id="applyButton" onAction="#handleApply" text="APPLIQUER"
                     prefWidth="120" prefHeight="40"
-                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;"/>
+                    style="-fx-background-color: rgba(217,217,217,0.5); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;"/>
 
             <Button fx:id="resetButton" onAction="#handleReset" text="RESET"
                     prefWidth="120" prefHeight="40"
-                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;"/>
+                    style="-fx-background-color: rgba(217,217,217,0.5); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;"/>
 
             <Button fx:id="backButton" onAction="#handleBack" text="RETOUR"
                     prefWidth="120" prefHeight="40"
-                    style="-fx-background-color: rgba(217,217,217,0.3); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;"/>
+                    style="-fx-background-color: rgba(217,217,217,0.5); -fx-text-fill: black; -fx-font-weight: bold; -fx-background-radius: 30px; -fx-border-radius: 30px; -fx-cursor: hand;"/>
         </HBox>
     </VBox>
 </StackPane>
