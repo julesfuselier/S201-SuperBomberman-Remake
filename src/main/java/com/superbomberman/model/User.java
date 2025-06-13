@@ -5,7 +5,7 @@ import java.util.Objects;
 
 /**
  * Classe représentant un utilisateur du jeu Super Bomberman.
- * <p>
+ *
  * Contient les informations d'authentification, les statistiques de jeu et des préférences utilisateur.
  * <ul>
  *     <li>Identifiants (nom d'utilisateur, mot de passe, email)</li>
@@ -14,7 +14,7 @@ import java.util.Objects;
  *     <li>Personnage favori et calcul du taux de victoire</li>
  * </ul>
  * <b>Remarque :</b> En production, le mot de passe doit être stocké de manière sécurisée (hashé).
- * </p>
+ *
  *
  * @author Jules Fuselier
  * @version 1.0

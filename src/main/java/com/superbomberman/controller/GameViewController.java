@@ -25,7 +25,6 @@ import static com.superbomberman.controller.MenuController.isOnePlayer;
 
 /**
  * Contrôleur principal de la vue de jeu pour Super Bomberman.
- * <p>
  * Version refactorisée avec séparation des responsabilités et affichage des scores.
  * Chaque aspect du jeu est maintenant géré par une classe spécialisée :
  * <ul>
@@ -36,7 +35,7 @@ import static com.superbomberman.controller.MenuController.isOnePlayer;
  *     <li>PowerUpManager : Gestion des power-ups</li>
  *     <li>GameLogic : Logique principale (mouvement, collisions, IA)</li>
  * </ul>
- * </p>
+ *
  * <b>Principales responsabilités :</b>
  * <ul>
  *     <li>Initialisation des gestionnaires et de la carte</li>

@@ -1,0 +1,7 @@
+module:com.superbomberman
+com.superbomberman
+com.superbomberman.controller
+com.superbomberman.game
+com.superbomberman.model
+com.superbomberman.model.powerup
+com.superbomberman.service

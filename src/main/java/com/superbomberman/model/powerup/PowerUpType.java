@@ -13,7 +13,7 @@ import java.util.Random;
  *
  * @author Jules Fuselier
  * @version 1.0
- * @date 2025-06-13
+ * @since 2025-06-13
  */
 public enum PowerUpType {
     /** Augmente le nombre maximum de bombes posables */

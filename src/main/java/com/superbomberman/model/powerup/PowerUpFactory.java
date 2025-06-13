@@ -10,7 +10,7 @@ package com.superbomberman.model.powerup;
  *
  * @author Jules Fuselier
  * @version 1.0
- * @date 2025-06-13
+ * @since 2025-06-13
  */
 public class PowerUpFactory {
 

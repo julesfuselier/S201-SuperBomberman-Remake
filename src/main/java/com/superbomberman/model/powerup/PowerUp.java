@@ -13,7 +13,7 @@ import com.superbomberman.model.Player;
  *
  * @author Jules Fuselier
  * @version 1.0
- * @date 2025-06-13
+ * @since 2025-06-13
  */
 public abstract class PowerUp {
 
