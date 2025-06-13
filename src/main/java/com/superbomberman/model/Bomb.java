@@ -43,16 +43,16 @@ public class Bomb {
     /** Callback pour notifier le mouvement */
     private Runnable moveCallback;
 
-    /** ⭐ NOUVEAU : Indique si la bombe glisse suite à un coup de pied (Kick Power) */
+    /** Indique si la bombe glisse suite à un coup de pied (Kick Power) */
     private boolean isMoving = false;
 
-    /** ⭐ NOUVEAU : Direction X du glissement par coup de pied (-1, 0, 1) */
+    /** Direction X du glissement par coup de pied (-1, 0, 1) */
     private int kickDirectionX = 0;
 
-    /** ⭐ NOUVEAU : Direction Y du glissement par coup de pied (-1, 0, 1) */
+    /** Direction Y du glissement par coup de pied (-1, 0, 1) */
     private int kickDirectionY = 0;
 
-    /** ⭐ NOUVEAU : Timer pour le mouvement par coup de pied */
+    /** Timer pour le mouvement par coup de pied */
     private Timeline kickTimer;
 
     public Bomb(int x, int y, int damage, int range) {
@@ -65,6 +65,11 @@ public class Bomb {
         this.owner = null; // Sera défini lors de la pose
     }
 
+    /**
+     * Démarre le compte à rebours avant l'explosion.
+     *
+     * @param onExplode Action à exécuter lorsque la bombe explose
+     */
     public void startCountdown(Runnable onExplode) {
         timer = new Timeline(new KeyFrame(Duration.seconds(1.5), e -> {
             exploded = true;
@@ -110,7 +115,7 @@ public class Bomb {
     }
 
     /**
-     * ⭐ NOUVEAU : Fait glisser la bombe suite à un coup de pied (Kick Power).
+     * Fait glisser la bombe suite à un coup de pied (Kick Power).
      *
      * @param directionX   Direction X (-1, 0, 1)
      * @param directionY   Direction Y (-1, 0, 1)
@@ -144,7 +149,7 @@ public class Bomb {
     }
 
     /**
-     * ⭐ NOUVEAU : Calcule la prochaine position de la bombe qui glisse sans la déplacer.
+     * Calcule la prochaine position de la bombe qui glisse sans la déplacer.
      *
      * @return Tableau [newX, newY] de la prochaine position
      */
@@ -167,7 +172,7 @@ public class Bomb {
     }
 
     /**
-     * ⭐ NOUVEAU : Déplace la bombe vers sa prochaine position de glissement (appelé par le GameViewController).
+     *  Déplace la bombe vers sa prochaine position de glissement (appelé par le GameViewController).
      */
     public void moveToNextKickPosition() {
         if (!isMoving) return;

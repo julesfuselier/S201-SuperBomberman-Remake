@@ -100,6 +100,7 @@ public class LevelEditorController {
      * Gère le retour au menu principal.
      * @param event Événement déclenché par le bouton de retour.
      */
+
     @FXML
     private void handleBackToMenu(ActionEvent event) {
         try {

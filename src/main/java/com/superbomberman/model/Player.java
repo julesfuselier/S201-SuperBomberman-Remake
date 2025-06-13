@@ -486,8 +486,6 @@ public class Player {
         return Math.max(0, malusEndTime - System.currentTimeMillis());
     }
 
-    // ✨ NOUVELLES MÉTHODES POUR LE SYSTÈME DE VICTOIRE ✨
-
     /**
      * Indique si le joueur est vivant.
      *

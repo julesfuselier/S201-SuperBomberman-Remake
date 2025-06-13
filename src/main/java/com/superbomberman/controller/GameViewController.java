@@ -252,6 +252,7 @@ public class GameViewController extends OptionsController {
      * @param playerNumber Le numéro du joueur (1 ou 2) pour déterminer les touches
      * @return Texte formaté avec les power-ups actifs et leurs touches
      */
+
     private String getPlayerPowerupsText(Player player, int playerNumber) {
         if (player == null) return "Aucun";
 
@@ -324,6 +325,7 @@ public class GameViewController extends OptionsController {
      * @param malus Le type de malus
      * @return L'emoji correspondant
      */
+
     private String getMalusEmoji(com.superbomberman.model.powerup.MalusType malus) {
         if (malus == null) return "❓";
 
@@ -342,6 +344,7 @@ public class GameViewController extends OptionsController {
      * Charge la carte selon le mode de jeu.
      * @throws IOException si le fichier de carte ne peut être lu
      */
+
     private void initializeMap() throws IOException {
         System.out.println("Mode un joueur: " + isOnePlayer);
         String mapName = OptionsController.getSelectedMap();

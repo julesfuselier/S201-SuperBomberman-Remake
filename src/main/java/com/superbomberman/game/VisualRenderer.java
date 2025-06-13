@@ -60,7 +60,7 @@ public class VisualRenderer {
     }
 
     /**
-     * ✅ FIX: Charge tous les patterns d'images avec les bons chemins
+     * Charge tous les patterns d'images avec les bons chemins
      */
     private void loadPatterns() {
         try {
@@ -210,7 +210,7 @@ public class VisualRenderer {
         int prevX = enemy.getPreviousX();
         int prevY = enemy.getPreviousY();
 
-        // 🔥 FIX : Nettoyer la position précédente de manière plus agressive
+        // Nettoyer la position précédente de manière plus agressive
         StackPane prevCell = (StackPane) getNodeFromGridPane(prevX, prevY);
         if (prevCell != null) {
             boolean hasBombAtPrevPos = activeBombs.stream()
@@ -293,12 +293,12 @@ public class VisualRenderer {
             // Ajouter l'explosion avec un ID unique
             Rectangle explosionRect = new Rectangle(50, 50);
             explosionRect.setFill(explosionPattern);
-            explosionRect.setId("explosion"); // ✅ MARQUER L'EXPLOSION
+            explosionRect.setId("explosion"); // MARQUER L'EXPLOSION
             cell.getChildren().add(explosionRect);
 
             PauseTransition explosionDuration = new PauseTransition(Duration.seconds(0.5));
             explosionDuration.setOnFinished(event -> {
-                // ✅ SUPPRIMER SEULEMENT L'EXPLOSION PAR SON ID
+                // SUPPRIMER SEULEMENT L'EXPLOSION PAR SON ID
                 cell.getChildren().removeIf(node -> "explosion".equals(node.getId()));
 
                 // Redessiner le fond
@@ -342,7 +342,7 @@ public class VisualRenderer {
     public void removePowerUpVisual(PowerUp powerUp) {
         StackPane cell = (StackPane) getNodeFromGridPane(powerUp.getX(), powerUp.getY());
         if (cell != null) {
-            // ✅ SUPPRIMER SEULEMENT LE POWER-UP (pas tout!)
+            // SUPPRIMER SEULEMENT LE POWER-UP (pas tout!)
             cell.getChildren().removeIf(node -> {
                 if (node instanceof Rectangle) {
                     Rectangle rect = (Rectangle) node;
@@ -393,7 +393,7 @@ public class VisualRenderer {
     }
 
     /**
-     * 🧹 Nettoie complètement la grille visuelle (supprime toutes les entités, conserve le fond).
+     * Nettoie complètement la grille visuelle (supprime toutes les entités, conserve le fond).
      */
     public void clearAllVisuals() {
         for (Node node : gameGrid.getChildren()) {
@@ -408,7 +408,7 @@ public class VisualRenderer {
     }
 
     /**
-     * 🔄 Recharge tous les patterns et redessine la carte.
+     * Recharge tous les patterns et redessine la carte.
      */
     public void refreshDisplay() {
         loadPatterns();

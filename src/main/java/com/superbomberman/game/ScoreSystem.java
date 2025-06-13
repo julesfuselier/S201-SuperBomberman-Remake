@@ -58,7 +58,7 @@ public class ScoreSystem {
     }
 
     /**
-     * 🎯 Ajoute des points pour un ennemi tué (points en attente de combo).
+     * Ajoute des points pour un ennemi tué (points en attente de combo).
      * @param player Joueur ayant tué l'ennemi
      */
     public void addEnemyKilled(Player player) {
@@ -67,7 +67,7 @@ public class ScoreSystem {
     }
 
     /**
-     * 💥 Traite le combo d'une explosion (appelé après toutes les morts).
+     * Traite le combo d'une explosion (appelé après toutes les morts).
      * Applique un multiplicateur en fonction du nombre d'ennemis tués dans la même explosion.
      * @param player Joueur concerné
      */
@@ -99,24 +99,8 @@ public class ScoreSystem {
         comboList.clear();
     }
 
-//    /**
-//     * Calcule et ajoute le bonus de temps (optionnel).
-//     * @param player Joueur concerné
-//     * @param maxTimeSeconds Temps maximal pour terminer le niveau
-//     * @param usedTimeSeconds Temps utilisé
-//     */
-//    public void calculateTimeBonus(Player player, int maxTimeSeconds, int usedTimeSeconds) {
-//        int remainingTime = Math.max(0, maxTimeSeconds - usedTimeSeconds);
-//        int timeBonus = remainingTime * TIME_BONUS_MULTIPLIER;
-//
-//        if (timeBonus > 0) {
-//            System.out.println("⏱️ Bonus de temps pour " + player + " : " + remainingTime + "s × " + TIME_BONUS_MULTIPLIER + " = +" + timeBonus + " points");
-//            addScore(player, timeBonus);
-//        }
-//    }
-
     /**
-     * 🎁 Ajoute des points pour un power-up collecté.
+     * Ajoute des points pour un power-up collecté.
      * @param player Joueur concerné
      */
     public void addPowerUpCollected(Player player) {
@@ -125,7 +109,7 @@ public class ScoreSystem {
     }
 
     /**
-     * 🧱 Ajoute des points pour un mur détruit.
+     * Ajoute des points pour un mur détruit.
      * @param player Joueur concerné
      */
     public void addWallDestroyed(Player player) {
@@ -134,7 +118,7 @@ public class ScoreSystem {
     }
 
     /**
-     * 🏁 Termine le niveau et calcule tous les bonus (combos, temps...).
+     * Termine le niveau et calcule tous les bonus (combos, temps...).
      * @param maxTimeSeconds Temps maximal du niveau
      * @param usedTimeSeconds Temps utilisé par le joueur
      */
@@ -187,7 +171,7 @@ public class ScoreSystem {
     }
 
     /**
-     * 🎮 Remet à zéro le système de score.
+     * Remet à zéro le système de score.
      */
     public void reset() {
         playerScores.clear();

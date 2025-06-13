@@ -12,6 +12,7 @@ package com.superbomberman.model;
  * @version 1.0
  * @since 2025-06-12
  */
+
 public class GameResult {
     private final GameEndType endType;
     private final int finalScore;

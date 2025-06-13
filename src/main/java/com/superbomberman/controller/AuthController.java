@@ -53,7 +53,7 @@ public class AuthController {
 
     // Boutons de navigation
     @FXML private Button exitButton;
-    @FXML private Button backToMenuButton;  // AJOUT : Déclaration du nouveau bouton
+    @FXML private Button backToMenuButton;
 
     private AuthService authService;
 
@@ -144,7 +144,7 @@ public class AuthController {
     private void setupAnimations() {
         setupButtonAnimation(loginButton);
         setupButtonAnimation(exitButton);
-        setupButtonAnimation(backToMenuButton);  // AJOUT : Animation pour le nouveau bouton
+        setupButtonAnimation(backToMenuButton);
 
         // Vérification de sécurité pour les boutons optionnels
         if (registerPageButton != null) {
@@ -156,7 +156,7 @@ public class AuthController {
      * Ajoute une animation hover à un bouton
      */
     private void setupButtonAnimation(Button button) {
-        if (button != null) {  // AJOUT : Vérification de sécurité
+        if (button != null) {
             button.setOnMouseEntered(e -> {
                 ScaleTransition st = new ScaleTransition(Duration.millis(100), button);
                 st.setToX(1.05);
@@ -236,7 +236,7 @@ public class AuthController {
 
     /**
      * Navigation vers le menu principal
-     * MÉTHODE CORRIGÉE : gère le cas où event peut être null
+     *  gère le cas où event peut être null
      */
     private void navigateToMainMenu(ActionEvent event) {
         try {
@@ -251,7 +251,7 @@ public class AuthController {
 
             Scene menuScene = new Scene(menuRoot);
 
-            // CORRECTION : obtenir le Stage de manière sécurisée
+
             Stage stage = getCurrentStage(event);
             if (stage == null) {
                 System.err.println("Impossible de récupérer la fenêtre actuelle");
@@ -282,7 +282,7 @@ public class AuthController {
     }
 
     /**
-     * NOUVELLE MÉTHODE : Obtient le Stage actuel de manière sécurisée
+     *  Obtient le Stage actuel de manière sécurisée
      */
     private Stage getCurrentStage(ActionEvent event) {
         // Méthode 1 : Si event n'est pas null, utiliser la source
@@ -345,7 +345,7 @@ public class AuthController {
     }
 
     /**
-     * MÉTHODE CORRIGÉE : Affiche un message de bienvenue pour les sessions restaurées
+     *  Affiche un message de bienvenue pour les sessions restaurées
      */
     private void showWelcomeMessage() {
         User currentUser = authService.getCurrentUser();
@@ -366,7 +366,7 @@ public class AuthController {
 
             welcomeAlert.showAndWait().ifPresent(response -> {
                 if (response == goToMenuButton) {
-                    // CORRECTION : Passer null comme event est maintenant géré
+
                     navigateToMainMenu(null);
                 }
             });
@@ -374,7 +374,7 @@ public class AuthController {
     }
 
     /**
-     * MÉTHODE FONCTIONNELLE : Retour vers l'accueil (welcome.fxml)
+     *  Retour vers l'accueil (welcome.fxml)
      */
     @FXML
     private void handleBackToMenu(ActionEvent event) {

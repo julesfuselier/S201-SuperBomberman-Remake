@@ -102,35 +102,6 @@ public class AuthService {
         return true;
     }
 
-    public boolean register(String username, String password, String email, String favoriteCharacter) {
-        if (username == null || username.trim().isEmpty() ||
-                password == null || password.trim().isEmpty()) {
-            return false;
-        }
-
-        username = username.trim();
-
-        // Vérifier si l'utilisateur existe déjà
-        if (userExists(username)) {
-            return false;
-        }
-
-        // Créer le nouvel utilisateur avec personnage favori
-        User newUser = new User(username, password, email);
-        if (favoriteCharacter != null && !favoriteCharacter.isEmpty()) {
-            newUser.setFavoriteCharacter(favoriteCharacter);
-        }
-
-        saveUser(newUser);
-        userCache.put(username, newUser);
-
-        // Connexion automatique après inscription
-        this.currentUser = newUser;
-        saveCurrentUserSession();
-
-        return true;
-    }
-
     /**
      * Déconnecte l'utilisateur actuel
      */
