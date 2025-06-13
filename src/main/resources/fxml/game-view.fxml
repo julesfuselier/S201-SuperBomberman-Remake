@@ -26,6 +26,9 @@
                 <Label text="👤 JOUEUR 1" style="-fx-text-fill: #e74c3c; -fx-font-size: 14px; -fx-font-weight: bold;" />
                 <Label fx:id="scorePlayer1" text="Score: 0" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" />
                 <Label fx:id="bombsPlayer1" text="💣 Bombes: 0/1" style="-fx-text-fill: #bdc3c7; -fx-font-size: 12px;" />
+                <!-- Nouveau: Power-ups du joueur 1 -->
+                <Label text="⚡ Power-ups:" style="-fx-text-fill: #f39c12; -fx-font-size: 11px; -fx-font-weight: bold;" />
+                <Label fx:id="powerupsPlayer1" text="Aucun" style="-fx-text-fill: #ecf0f1; -fx-font-size: 10px; -fx-wrap-text: true; -fx-pref-width: 150;" />
                 <!-- <Label fx:id="livesPlayer1" text="❤️ Vies: 3" style="-fx-text-fill: #e74c3c; -fx-font-size: 12px;" /> -->
             </VBox>
 
@@ -34,12 +37,15 @@
                 <Label text="👤 JOUEUR 2" style="-fx-text-fill: #3498db; -fx-font-size: 14px; -fx-font-weight: bold;" />
                 <Label fx:id="scorePlayer2" text="Score: 0" style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;" />
                 <Label fx:id="bombsPlayer2" text="💣 Bombes: 0/1" style="-fx-text-fill: #bdc3c7; -fx-font-size: 12px;" />
+                <!-- Nouveau: Power-ups du joueur 2 -->
+                <Label text="⚡ Power-ups:" style="-fx-text-fill: #f39c12; -fx-font-size: 11px; -fx-font-weight: bold;" />
+                <Label fx:id="powerupsPlayer2" text="Aucun" style="-fx-text-fill: #ecf0f1; -fx-font-size: 10px; -fx-wrap-text: true; -fx-pref-width: 150;" />
                 <!-- <Label fx:id="livesPlayer2" text="❤️ Vies: 3" style="-fx-text-fill: #3498db; -fx-font-size: 12px;" /> -->
-           </VBox>
+            </VBox>
 
-           <Separator style="-fx-background-color: #34495e;" />
+            <Separator style="-fx-background-color: #34495e;" />
 
-           <!-- Informations de jeu -->
+            <!-- Informations de jeu -->
             <VBox spacing="8" style="-fx-background-color: rgba(52, 73, 94, 0.3); -fx-padding: 10; -fx-border-radius: 5; -fx-background-radius: 5;">
                 <Label text="📊 INFOS JEU" style="-fx-text-fill: #ecf0f1; -fx-font-size: 14px; -fx-font-weight: bold;" />
                 <Label fx:id="timeLabel" text="⏱️ Temps: 00:00" style="-fx-text-fill: #f39c12; -fx-font-size: 12px;" />
