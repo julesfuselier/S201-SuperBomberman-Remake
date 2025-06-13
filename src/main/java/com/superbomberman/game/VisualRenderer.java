@@ -16,7 +16,6 @@ import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Gestionnaire du rendu visuel du jeu
@@ -65,7 +64,6 @@ public class VisualRenderer {
      */
     private void loadPatterns() {
         try {
-
             String theme = OptionsController.getImageTheme();
             String basePath = "/images/" + theme + "/";
             floorPattern = new ImagePattern(new Image(getClass().getResource(basePath + "grass.png").toExternalForm()));
@@ -164,7 +162,7 @@ public class VisualRenderer {
     public void addEntityToGrid(int x, int y, ImagePattern pattern) {
         StackPane cell = (StackPane) getNodeFromGridPane(x, y);
         if (cell != null) {
-            // Supprimer les entités existantes (garder seulement le fond)
+            // Supprime toutes les entités déjà présentes (conserve le fond)
             if (cell.getChildren().size() > 1) {
                 cell.getChildren().removeIf(node -> cell.getChildren().indexOf(node) > 0);
             }
@@ -205,9 +203,6 @@ public class VisualRenderer {
         addEntityToGrid(player.getX(), player.getY(), pattern);
     }
 
-    /**
-     * Met à jour la position de l'ennemi
-     */
     /**
      * Met à jour la position de l'ennemi avec nettoyage amélioré
      */
@@ -397,9 +392,8 @@ public class VisualRenderer {
         return null;
     }
 
-
     /**
-     * 🧹 NOUVEAU : Nettoie complètement la grille visuelle
+     * 🧹 Nettoie complètement la grille visuelle (supprime toutes les entités, conserve le fond).
      */
     public void clearAllVisuals() {
         for (Node node : gameGrid.getChildren()) {
@@ -414,7 +408,7 @@ public class VisualRenderer {
     }
 
     /**
-     * 🔄 NOUVEAU : Recharge tous les patterns et redessine la carte
+     * 🔄 Recharge tous les patterns et redessine la carte.
      */
     public void refreshDisplay() {
         loadPatterns();
@@ -423,17 +417,75 @@ public class VisualRenderer {
         System.out.println("🔄 Affichage rafraîchi");
     }
 
-    // Getters pour les patterns
+    /**
+     * Retourne le pattern (motif image) du sol.
+     * @return le motif de sol courant
+     */
     public ImagePattern getFloorPattern() { return floorPattern; }
+
+    /**
+     * Retourne le pattern (motif image) du mur indestructible.
+     * @return le motif de mur courant
+     */
     public ImagePattern getWallPattern() { return wallPattern; }
+
+    /**
+     * Retourne le pattern (motif image) du mur destructible.
+     * @return le motif de mur cassable courant
+     */
     public ImagePattern getWallBreakablePattern() { return wallBreakablePattern; }
+
+    /**
+     * Retourne le pattern (motif image) du joueur 1.
+     * @return le motif du joueur 1
+     */
     public ImagePattern getPlayerPattern() { return playerPattern; }
+
+    /**
+     * Retourne le pattern (motif image) du joueur 2.
+     * @return le motif du joueur 2
+     */
     public ImagePattern getPlayer2Pattern() { return player2Pattern; }
+
+    /**
+     * Retourne le pattern (motif image) de l'ennemi.
+     * @return le motif de l'ennemi
+     */
     public ImagePattern getEnemyPattern() { return enemyPattern; }
+
+    /**
+     * Retourne le pattern (motif image) de la bombe.
+     * @return le motif de la bombe
+     */
     public ImagePattern getBombPattern() { return bombPattern; }
+
+    /**
+     * Retourne le pattern (motif image) de l'explosion.
+     * @return le motif de l'explosion
+     */
     public ImagePattern getExplosionPattern() { return explosionPattern; }
+
+    /**
+     * Retourne le pattern (motif image) d'un power-up générique.
+     * @return le motif du power-up
+     */
     public ImagePattern getPowerUpPattern() { return powerUpPattern; }
+
+    /**
+     * Retourne le pattern (motif image) du power-up d'augmentation de portée.
+     * @return le motif du power-up de portée
+     */
     public ImagePattern getRangePowerUpPattern() { return rangePowerUpPattern; }
+
+    /**
+     * Retourne le pattern (motif image) du power-up BombPass.
+     * @return le motif du power-up BombPass
+     */
     public ImagePattern getBombPassPattern() { return bombPassPattern; }
+
+    /**
+     * Retourne le pattern (motif image) du power-up Skull (malus).
+     * @return le motif du power-up Skull
+     */
     public ImagePattern getSkullPattern() { return skullPattern; }
 }

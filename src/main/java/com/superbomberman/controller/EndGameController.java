@@ -15,6 +15,17 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+/**
+ * Contrôleur de l'écran de fin de partie (victoire, défaite, égalité, podium, etc.).
+ * <p>
+ * Gère l'affichage des scores, du temps, des messages et des animations pour
+ * le mode solo et multijoueur, ainsi que l'action du bouton quitter.
+ * </p>
+ *
+ * @author Jules Fuselier
+ * @version 1.0
+ * @since 2025-06-12
+ */
 public class EndGameController {
 
     // === ÉLÉMENTS FXML ===
@@ -42,7 +53,10 @@ public class EndGameController {
     private GameStateManager gameStateManager;
 
     /**
-     * Initialise l'écran de fin avec les résultats du jeu
+     * Initialise l'écran de fin avec les résultats du jeu.
+     * Affiche soit la vue solo, soit la vue multi selon le résultat.
+     *
+     * @param result Résultat de la partie
      */
     public void initializeEndScreen(GameResult result) {
         this.gameResult = result;
@@ -64,12 +78,17 @@ public class EndGameController {
         playEntryAnimation();
     }
 
+    /**
+     * Spécifie le gestionnaire d'état du jeu pour permettre interaction (restart, menu, etc.).
+     * @param gameStateManager Instance du gestionnaire d'état
+     */
     public void setGameStateManager(com.superbomberman.game.GameStateManager gameStateManager) {
         this.gameStateManager = gameStateManager;
     }
 
     /**
-     * Configure l'affichage pour le mode solo
+     * Configure l'affichage pour le mode solo.
+     * @param result Résultat du mode solo
      */
     private void setupSoloEndScreen(GameResult result) {
         soloContainer.setVisible(true);
@@ -91,7 +110,8 @@ public class EndGameController {
     }
 
     /**
-     * Configure l'affichage pour le mode multijoueur
+     * Configure l'affichage pour le mode multijoueur.
+     * @param result Résultat du mode multi
      */
     private void setupMultiEndScreen(GameResult result) {
         multiContainer.setVisible(true);
@@ -118,7 +138,11 @@ public class EndGameController {
     }
 
     /**
-     * Configure l'affichage du podium
+     * Configure l'affichage du podium (gagnant et perdant).
+     * @param winnerName Nom du gagnant
+     * @param winnerScore Score du gagnant
+     * @param loserName Nom du perdant
+     * @param loserScore Score du perdant
      */
     private void setupPodium(String winnerName, int winnerScore, String loserName, int loserScore) {
         winnerNameLabel.setText("🥇 " + winnerName);
@@ -131,7 +155,8 @@ public class EndGameController {
     }
 
     /**
-     * Configure l'affichage en cas d'égalité
+     * Configure l'affichage en cas d'égalité.
+     * @param result Résultat de la partie
      */
     private void setupDrawDisplay(GameResult result) {
         winnerNameLabel.setText("🥇 " + result.getPlayer1Name() + " & " + result.getPlayer2Name());
@@ -143,14 +168,14 @@ public class EndGameController {
     }
 
     /**
-     * Configure les actions des boutons
+     * Configure les actions des boutons (bouton quitter).
      */
     private void setupButtons() {
         quitButton.setOnAction(e -> handleQuit());
     }
 
     /**
-     * Animation d'entrée fluide
+     * Joue une animation d'entrée lors de l'affichage de l'écran de fin.
      */
     private void playEntryAnimation() {
         // Animation de fade-in
@@ -179,7 +204,9 @@ public class EndGameController {
     }
 
     /**
-     * Formate la durée en format lisible
+     * Formate la durée (en ms) en chaîne lisible mm:ss.
+     * @param durationMs Durée en millisecondes
+     * @return String formatée mm:ss
      */
     private String formatDuration(long durationMs) {
         long seconds = durationMs / 1000;
@@ -188,9 +215,11 @@ public class EndGameController {
         return String.format("%d:%02d", minutes, seconds);
     }
 
+    /**
+     * Action du bouton quitter : ferme l'application.
+     */
     @FXML
     private void handleQuit() {
         javafx.application.Platform.exit();
     }
-
 }

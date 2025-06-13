@@ -1,3 +1,24 @@
+/**
+ * Logique principale du jeu Super Bomberman.
+ * <p>
+ * Gère les mouvements des joueurs et de l'ennemi, la gestion des bombes, des power-ups, du score,
+ * des collisions, des malus, et la détection des conditions de fin de partie (victoire/défaite).
+ * Ce contrôleur centralise toute la logique du gameplay, indépendante de l'interface graphique.
+ * </p>
+ *
+ * <ul>
+ *     <li>Mouvements des joueurs et de l'ennemi (IA simple)</li>
+ *     <li>Gestion des bombes et explosions</li>
+ *     <li>Gestion des power-ups et malus</li>
+ *     <li>Détection et gestion des collisions entre entités</li>
+ *     <li>Détermination des conditions de victoire et défaite</li>
+ *     <li>Gestion du score et des événements de jeu</li>
+ * </ul>
+ *
+ * @author Jules Fuselier
+ * @version 1.0
+ * @since 2025-06-08
+ */
 package com.superbomberman.game;
 
 import com.superbomberman.model.*;
@@ -12,17 +33,19 @@ import static com.superbomberman.model.MapLoader.player2;
 import static com.superbomberman.controller.MenuController.isOnePlayer;
 
 /**
- * Logique principale du jeu Super Bomberman
- *
- * @author Jules Fuselier
- * @version 1.0
- * @since 2025-06-08
+ * Classe principale de logique du jeu.
+ * Centralise la gestion des entités, du score, des conditions de victoire/défaite et des événements principaux.
  */
 public class GameLogic {
+    /** Carte actuelle du niveau. */
     private Tile[][] map;
+    /** Gestionnaire des bombes. */
     private BombManager bombManager;
+    /** Gestionnaire des power-ups. */
     private PowerUpManager powerUpManager;
+    /** Gestionnaire d'état de partie. */
     private GameStateManager gameStateManager;
+    /** Système de score. */
     private ScoreSystem scoreSystem;
 
     // Gestion du mouvement
@@ -37,7 +60,7 @@ public class GameLogic {
     private int lastPlayer2DirectionX = 0;
     private int lastPlayer2DirectionY = 1;
 
-    // 🆕 Variables pour détecter les morts
+    // États de mort
     private boolean player1Dead = false;
     private boolean player2Dead = false;
     private boolean enemyDead = false;
@@ -47,6 +70,13 @@ public class GameLogic {
     private static final long BASE_MOVE_DELAY = 200_000_000L; // 200ms de base
     private static final long ENEMY_MOVE_DELAY = 500_000_000L; // 500ms pour l'ennemi
 
+    /**
+     * Construit la logique du jeu à partir des gestionnaires et de la carte.
+     * @param map Carte actuelle du niveau
+     * @param bombManager Gestionnaire de bombes
+     * @param powerUpManager Gestionnaire de power-ups
+     * @param gameStateManager Gestionnaire d'état de partie
+     */
     public GameLogic(Tile[][] map, BombManager bombManager, PowerUpManager powerUpManager, GameStateManager gameStateManager) {
         this.map = map;
         this.bombManager = bombManager;
@@ -61,21 +91,20 @@ public class GameLogic {
     }
 
     /**
-     * Gère le mouvement d'un joueur
+     * Gère le mouvement d'un joueur (vitesse, contrôles, collisions, malus).
+     * @param player Le joueur à déplacer
+     * @param playerNumber Numéro du joueur (1 ou 2)
+     * @param currentTime Horodatage courant (nanosecondes)
+     * @param pressedKeys Ensemble des touches appuyées
+     * @param visualRenderer Gestionnaire graphique pour MAJ visuelle
      */
     public void handlePlayerMovement(Player player, int playerNumber, long currentTime, Set<KeyCode> pressedKeys, VisualRenderer visualRenderer) {
-        // 🆕 Ne pas bouger si le joueur est mort
         if ((playerNumber == 1 && player1Dead) || (playerNumber == 2 && player2Dead)) {
             return;
         }
 
-        // Mettre à jour les malus du joueur
         player.updateMalus();
-
-        // Calculer le délai basé sur la vitesse du joueur
         long moveDelay = (long) (BASE_MOVE_DELAY / player.getSpeed());
-
-        // Vérifier si assez de temps s'est écoulé depuis le dernier mouvement
         long lastMoveTime = (playerNumber == 1) ? lastPlayer1MoveTime : lastPlayer2MoveTime;
         if (currentTime - lastMoveTime < moveDelay) {
             return;
@@ -84,27 +113,21 @@ public class GameLogic {
         int newX = player.getX();
         int newY = player.getY();
         boolean moved = false;
-
-        // Gérer les contrôles inversés
         boolean reversed = player.hasMalus(MalusType.REVERSED_CONTROLS);
 
-        // Déterminer les touches selon le joueur
         KeyCode leftKey, rightKey, upKey, downKey;
         if (playerNumber == 1) {
-            // Joueur 1: Flèches directionnelles
             leftKey = KeyCode.LEFT;
             rightKey = KeyCode.RIGHT;
             upKey = KeyCode.UP;
             downKey = KeyCode.DOWN;
         } else {
-            // Joueur 2: ZQSD (AZERTY français)
-            leftKey = KeyCode.Q;    // Q = gauche
-            rightKey = KeyCode.D;   // D = droite
-            upKey = KeyCode.Z;      // Z = haut
-            downKey = KeyCode.S;    // S = bas
+            leftKey = KeyCode.Q;
+            rightKey = KeyCode.D;
+            upKey = KeyCode.Z;
+            downKey = KeyCode.S;
         }
 
-        // Calculer le mouvement
         if (pressedKeys.contains(leftKey)) {
             newX += reversed ? 1 : -1;
             setLastDirection(playerNumber, reversed ? 1 : -1, 0);
@@ -123,20 +146,12 @@ public class GameLogic {
             moved = true;
         }
 
-        // Effectuer le mouvement si possible
         if (moved && canMoveTo(newX, newY, player)) {
             player.setPosition(newX, newY);
-
-            // Mettre à jour la position visuelle
             updatePlayerVisualPosition(player, playerNumber, visualRenderer);
-
-            // Vérifier les power-ups
             powerUpManager.checkPlayerCollisions(player1, player2, gameStateManager, visualRenderer);
-
-            // 🆕 AJOUTER CETTE LIGNE - Vérifier les collisions avec l'ennemi
             checkPlayerEnemyCollisions();
 
-            // Mettre à jour le timestamp
             if (playerNumber == 1) {
                 lastPlayer1MoveTime = currentTime;
             } else {
@@ -146,23 +161,25 @@ public class GameLogic {
     }
 
     /**
-     * Gère le mouvement de l'ennemi
+     * Gère le mouvement de l'ennemi à intervalle régulier, puis vérifie les collisions.
+     * @param currentTime Horodatage actuel
+     * @param visualRenderer Gestionnaire graphique
      */
     public void handleEnemyMovement(long currentTime, VisualRenderer visualRenderer) {
         if (currentTime - lastEnemyMoveTime < ENEMY_MOVE_DELAY) {
             return;
         }
-
-        if (enemy != null && enemy.isAlive()) { // 🆕 Vérifier que l'ennemi est vivant
+        if (enemy != null && enemy.isAlive()) {
             moveEnemy(enemy, visualRenderer);
-            // 🆕 AJOUTER CETTE LIGNE - Vérifier les collisions après mouvement ennemi
             checkPlayerEnemyCollisions();
             lastEnemyMoveTime = currentTime;
         }
     }
 
     /**
-     * Déplace l'ennemi avec une IA simple
+     * IA simple pour déplacer l'ennemi (change de direction si bloqué).
+     * @param enemy L'ennemi à déplacer
+     * @param visualRenderer Gestionnaire graphique
      */
     private void moveEnemy(Enemy enemy, VisualRenderer visualRenderer) {
         int currentX = enemy.getX();
@@ -175,18 +192,15 @@ public class GameLogic {
             enemy.setPosition(newX, newY);
             visualRenderer.updateEnemyPosition(enemy, bombManager.getActiveBombs());
         } else {
-            // Changer de direction aléatoirement
+            // Changer de direction aléatoirement (hors direction actuelle)
             int[][] directions = {{1,0}, {-1,0}, {0,1}, {0,-1}};
             int[][] possibleDirections = new int[3][2];
             int idx = 0;
-
-            // Éviter de revenir en arrière
             for (int[] dir : directions) {
                 if (!(dir[0] == enemyCurrDirection[0] && dir[1] == enemyCurrDirection[1])) {
                     possibleDirections[idx++] = dir;
                 }
             }
-
             int randomIndex = (int) (Math.random() * possibleDirections.length);
             enemyCurrDirection = possibleDirections[randomIndex];
 
@@ -201,7 +215,11 @@ public class GameLogic {
     }
 
     /**
-     * Vérifie si une entité peut se déplacer vers une position
+     * Vérifie si une entité peut se déplacer vers une position (en fonction des murs, bombes, etc.).
+     * @param x abscisse cible
+     * @param y ordonnée cible
+     * @param entity entité qui veut se déplacer
+     * @return true si le déplacement est possible, false sinon
      */
     private boolean canMoveTo(int x, int y, Object entity) {
         if (x < 0 || y < 0 || y >= map.length || x >= map[0].length) {
@@ -215,28 +233,25 @@ public class GameLogic {
         }
 
         if (tile.getType() == TileType.WALL_BREAKABLE) {
-            // Vérifier WallPass
             if (entity instanceof Player player) {
                 return player.canPassThroughWalls();
             }
             return false;
         }
 
-        // Vérifier les bombes
+        // Vérifier les bombes sur la case
         for (Bomb bomb : bombManager.getActiveBombs()) {
             if (bomb.getX() == x && bomb.getY() == y) {
                 if (entity instanceof Player player) {
-                    // Vérifier Kick Power
+                    // Power Kick
                     if (player.canKickBombs() && !bomb.isFlying() && !bomb.isMoving()) {
                         int kickDirX = x - player.getX();
                         int kickDirY = y - player.getY();
-
                         if (bombManager.tryKickBomb(bomb, kickDirX, kickDirY)) {
                             return true;
                         }
                     }
-
-                    // Vérifier BombPass
+                    // BombPass
                     if (player.canPassThroughBombs() && bomb.getOwner() == player) {
                         return true;
                     }
@@ -249,7 +264,10 @@ public class GameLogic {
     }
 
     /**
-     * Met à jour la position visuelle d'un joueur
+     * Met à jour la position visuelle d'un joueur.
+     * @param player Joueur concerné
+     * @param playerNumber Numéro du joueur
+     * @param visualRenderer Gestionnaire graphique
      */
     private void updatePlayerVisualPosition(Player player, int playerNumber, VisualRenderer visualRenderer) {
         if (playerNumber == 1) {
@@ -260,7 +278,10 @@ public class GameLogic {
     }
 
     /**
-     * Définit la dernière direction d'un joueur
+     * Définit la dernière direction d'un joueur (pour les actions directionnelles comme le lancer de bombe).
+     * @param playerNumber Numéro du joueur
+     * @param dirX Direction X
+     * @param dirY Direction Y
      */
     private void setLastDirection(int playerNumber, int dirX, int dirY) {
         if (playerNumber == 1) {
@@ -273,7 +294,9 @@ public class GameLogic {
     }
 
     /**
-     * Obtient la dernière direction d'un joueur
+     * Retourne la dernière direction utilisée par le joueur.
+     * @param playerNumber Numéro du joueur
+     * @return tableau [dirX, dirY]
      */
     public int[] getLastDirection(int playerNumber) {
         if (playerNumber == 1) {
@@ -284,7 +307,11 @@ public class GameLogic {
     }
 
     /**
-     * Gère la logique d'explosion et la génération de power-ups
+     * Gère l'explosion d'une case, destruction des murs, génération de power-ups, et effet graphique.
+     * @param x abscisse cible
+     * @param y ordonnée cible
+     * @param visualRenderer gestionnaire graphique
+     * @param player joueur à qui attribuer les points
      */
     public void handleExplosion(int x, int y, VisualRenderer visualRenderer, Player player) {
         visualRenderer.showExplosion(x, y);
@@ -293,7 +320,6 @@ public class GameLogic {
             Tile tile = map[y][x];
             if (tile.getType() == TileType.WALL_BREAKABLE) {
                 map[y][x] = new Tile(TileType.FLOOR);
-                // Ajouter des points pour la destruction de murs au bon joueur
                 scoreSystem.addWallDestroyed(player);
                 PowerUp powerUp = powerUpManager.generateRandomPowerUp(x, y);
                 if (powerUp != null) {
@@ -306,72 +332,62 @@ public class GameLogic {
     }
 
     /**
-     * Gère l'explosion sur une case et tue le joueur si besoin
+     * Gère l'explosion sur une case et tue les entités concernées. Déclenche potentiellement la fin de partie.
+     * @param x abscisse de la case
+     * @param y ordonnée de la case
      */
     public void handleExplosionAt(int x, int y) {
         boolean gameEnded = false;
 
-        // Vérifier si player1 est sur la case
         if (player1 != null && player1.isAlive() && player1.getX() == x && player1.getY() == y) {
             player1.setAlive(false);
             player1Dead = true;
             System.out.println("💀 Joueur 1 éliminé par explosion à (" + x + ", " + y + ")");
             gameEnded = true;
         }
-
-        // Vérifier si player2 est sur la case (si multi)
         if (!isOnePlayer && player2 != null && player2.isAlive() && player2.getX() == x && player2.getY() == y) {
             player2.setAlive(false);
             player2Dead = true;
             System.out.println("💀 Joueur 2 éliminé par explosion à (" + x + ", " + y + ")");
             gameEnded = true;
         }
-
-        // 🔧 CORRECTION : Utiliser kill() au lieu de setDead()
         if (enemy != null && enemy.isAlive() && enemy.getX() == x && enemy.getY() == y) {
-            enemy.kill(); // ✅ Utiliser la méthode kill() qui existe
+            enemy.kill();
             enemyDead = true;
             System.out.println("💀 Ennemi éliminé par explosion à (" + x + ", " + y + ")");
-            // En mode solo, tuer l'ennemi = victoire
             if (isOnePlayer) {
                 gameStateManager.setGameWon(true);
                 gameEnded = true;
             }
         }
-
-        // 🆕 DÉCLENCHER LA FIN DE JEU IMMÉDIATEMENT
         if (gameEnded) {
             checkAndEndGame();
         }
     }
 
-    // 🆕 NOUVELLE MÉTHODE pour gérer la fin de jeu
+    /**
+     * Gestion de la fin de partie (victoire/défaite) en fonction des états des entités.
+     */
     public void checkAndEndGame() {
         if (isOnePlayer) {
-            // Mode solo : joueur mort = défaite
             if (player1Dead) {
                 gameStateManager.setGameWon(false);
                 gameStateManager.endGame();
                 return;
             }
-            // Ennemi mort = victoire
             if (enemyDead || (enemy != null && enemy.isDead())) {
                 gameStateManager.setGameWon(true);
                 gameStateManager.endGame();
             }
         } else {
-            // Mode multijoueur
             if (player1Dead && player2Dead) {
-                // Les deux morts = match nul (ou logique spécifique)
                 gameStateManager.setGameWon(false);
                 gameStateManager.endGame();
             } else if (player1Dead) {
-                // Joueur 2 gagne
                 winner = player2;
-                gameStateManager.setGameWon(false); // Du point de vue du joueur 1
+                gameStateManager.setGameWon(false);
                 gameStateManager.endGame();
             } else if (player2Dead) {
-                // Joueur 1 gagne
                 winner = player1;
                 gameStateManager.setGameWon(true);
                 gameStateManager.endGame();
@@ -379,12 +395,13 @@ public class GameLogic {
         }
     }
 
+    /**
+     * Vérifie les collisions entre joueur(s) et ennemi, et tue le joueur si collision.
+     */
     private void checkPlayerEnemyCollisions() {
         if (enemy == null || enemy.isDead()) {
             return;
         }
-
-        // Vérifier collision avec le joueur 1
         if (player1 != null && player1.isAlive() &&
                 player1.getX() == enemy.getX() && player1.getY() == enemy.getY()) {
             player1.setAlive(false);
@@ -392,8 +409,6 @@ public class GameLogic {
             System.out.println("💀 Joueur 1 tué par l'ennemi à (" + enemy.getX() + ", " + enemy.getY() + ")");
             checkAndEndGame();
         }
-
-        // Vérifier collision avec le joueur 2 (mode multijoueur)
         if (!isOnePlayer && player2 != null && player2.isAlive() &&
                 player2.getX() == enemy.getX() && player2.getY() == enemy.getY()) {
             player2.setAlive(false);
@@ -404,34 +419,36 @@ public class GameLogic {
     }
 
     /**
-     * Vérifie les conditions de victoire/défaite
+     * Vérifie les conditions de victoire/défaite à chaque cycle d'update.
      */
     public void checkGameConditions() {
-        // Vérifier si l'ennemi est vaincu (mode solo)
         if (isOnePlayer && enemy != null && enemy.isDead()) {
             gameStateManager.setGameWon(true);
             gameStateManager.endGame();
             return;
         }
-
-        // Vérifier si le joueur est vaincu
         if (isPlayerDefeated()) {
             gameStateManager.setGameWon(false);
             gameStateManager.endGame();
         }
     }
 
-    private boolean isEnemyDefeated() {
-        return enemy != null && enemy.isDead(); // Utiliser isDead()
-    }
     /**
-     * Vérifie si le joueur est vaincu
+     * Vérifie si l'ennemi est vaincu.
+     * @return true si l'ennemi est mort
+     */
+    private boolean isEnemyDefeated() {
+        return enemy != null && enemy.isDead();
+    }
+
+    /**
+     * Vérifie si le joueur est vaincu (mode solo ou multi).
+     * @return true si le(s) joueur(s) sont morts
      */
     private boolean isPlayerDefeated() {
         if (isOnePlayer) {
             return player1 == null || !player1.isAlive();
         } else {
-            // En multi, tous les joueurs morts = défaite
             boolean player1Alive = player1 != null && player1.isAlive();
             boolean player2Alive = player2 != null && player2.isAlive();
             return !player1Alive && !player2Alive;
@@ -439,55 +456,51 @@ public class GameLogic {
     }
 
     /**
-     * Gère les malus automatiques (AUTO_BOMB)
+     * Gère les malus automatiques (ex : AUTO_BOMB).
+     * @param currentTime Horodatage actuel
      */
     public void handleAutoBombMalus(long currentTime) {
         final long AUTO_BOMB_INTERVAL = 2_000_000_000L; // 2 secondes
 
-        // Variables statiques pour les timestamps (à améliorer)
         if (player1.hasMalus(MalusType.AUTO_BOMB)) {
-            // Logic pour AUTO_BOMB du joueur 1
             bombManager.placeBomb(player1, 1);
         }
-
         if (!isOnePlayer && player2 != null && player2.hasMalus(MalusType.AUTO_BOMB)) {
-            // Logic pour AUTO_BOMB du joueur 2
             bombManager.placeBomb(player2, 2);
         }
     }
 
     /**
-     * Met à jour toutes les entités du jeu
+     * Met à jour toutes les entités du jeu : bombes, power-ups, collisions.
+     * @param visualRenderer gestionnaire graphique
      */
     public void updateEntities(VisualRenderer visualRenderer) {
-        // Mettre à jour les bombes
         bombManager.updateBombs();
-
-        // Vérifier les collisions avec les power-ups
         powerUpManager.checkPlayerCollisions(player1, player2, gameStateManager, visualRenderer);
-
-        // 🆕 AJOUTER CETTE LIGNE - Vérification continue des collisions
         checkPlayerEnemyCollisions();
-
-        // Vérifier les conditions de jeu
         checkGameConditions();
     }
 
     /**
-     * Calcule la distance entre deux points
+     * Calcule la distance euclidienne entre deux points.
+     * @param x1 abscisse 1
+     * @param y1 ordonnée 1
+     * @param x2 abscisse 2
+     * @param y2 ordonnée 2
+     * @return distance
      */
     public double calculateDistance(int x1, int y1, int x2, int y2) {
         return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
     }
 
     /**
-     * Trouve le chemin le plus court pour l'ennemi (IA basique)
+     * IA basique : trouve le déplacement rapprochant l'ennemi du joueur le plus proche.
+     * @param enemy L'ennemi
+     * @return tableau directionnel [dx, dy]
      */
     public int[] findBestMoveForEnemy(Enemy enemy) {
-        // IA simple : se rapprocher du joueur le plus proche
         double minDistance = Double.MAX_VALUE;
         int[] bestMove = {0, 0};
-
         int[][] directions = {{1,0}, {-1,0}, {0,1}, {0,-1}};
 
         for (int[] dir : directions) {
@@ -509,54 +522,55 @@ public class GameLogic {
                 }
             }
         }
-
         return bestMove;
     }
 
     /**
-     * FIX : Détection de collision corrigée pour tous les types d'entités
+     * Vérifie la validité d'une position pour une entité (murs, bombes, etc.).
+     * @param x abscisse
+     * @param y ordonnée
+     * @param entity entité concernée
+     * @return true si la position est valide
      */
     private boolean isValidPosition(int x, int y, Object entity) {
-        // Vérifier les limites de la carte
         if (x < 0 || y < 0 || y >= map.length || x >= map[0].length) {
             return false;
         }
 
         Tile tile = map[y][x];
 
-        // ❌ MURS INDESTRUCTIBLES : Personne ne peut passer
         if (tile.getType() == TileType.WALL) {
             return false;
         }
 
-        // 🧱 MURS DESTRUCTIBLES : Seuls les joueurs avec WallPass peuvent passer
         if (tile.getType() == TileType.WALL_BREAKABLE) {
             if (entity instanceof Player player) {
                 return player.canPassThroughWalls();
             }
-            // ⚠️ FIX MAJEUR : Les ennemis NE PEUVENT PAS passer à travers les murs destructibles
             return false;
         }
 
-        // 💣 BOMBES : Vérifier BombPass pour les joueurs
         for (Bomb bomb : bombManager.getActiveBombs()) {
             if (bomb.getX() == x && bomb.getY() == y) {
                 if (entity instanceof Player player) {
                     return player.canPassThroughBombs();
                 }
-                // Les ennemis ne peuvent pas passer à travers les bombes
                 return false;
             }
         }
 
-        return true; // Position libre
+        return true;
     }
 
+    // === GETTERS pour états de mort et directions ===
 
-    // 🆕 Getters pour les états de mort
+    /** @return true si le joueur 1 est mort */
     public boolean isPlayer1Dead() { return player1Dead; }
+    /** @return true si le joueur 2 est mort */
     public boolean isPlayer2Dead() { return player2Dead; }
+    /** @return true si l'ennemi est mort */
     public boolean isEnemyDead() { return enemyDead; }
+    /** @return le joueur gagnant (multijoueur) */
     public Player getWinner() { return winner; }
 
     // Getters pour les directions

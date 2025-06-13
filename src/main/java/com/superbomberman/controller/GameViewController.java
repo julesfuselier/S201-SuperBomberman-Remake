@@ -23,15 +23,26 @@ import static com.superbomberman.controller.MenuController.isOnePlayer;
 
 /**
  * Contrôleur principal de la vue de jeu pour Super Bomberman.
+ * <p>
  * Version refactorisée avec séparation des responsabilités et affichage des scores.
- *
  * Chaque aspect du jeu est maintenant géré par une classe spécialisée :
- * - GameStateManager : État du jeu et statistiques
- * - VisualRenderer : Rendu visuel
- * - InputHandler : Gestion des entrées clavier
- * - BombManager : Logique des bombes
- * - PowerUpManager : Gestion des power-ups
- * - GameLogic : Logique principale (mouvement, collisions, IA)
+ * <ul>
+ *     <li>GameStateManager : État du jeu et statistiques</li>
+ *     <li>VisualRenderer : Rendu visuel</li>
+ *     <li>InputHandler : Gestion des entrées clavier</li>
+ *     <li>BombManager : Logique des bombes</li>
+ *     <li>PowerUpManager : Gestion des power-ups</li>
+ *     <li>GameLogic : Logique principale (mouvement, collisions, IA)</li>
+ * </ul>
+ * </p>
+ * <b>Principales responsabilités :</b>
+ * <ul>
+ *     <li>Initialisation des gestionnaires et de la carte</li>
+ *     <li>Placement et suivi des entités</li>
+ *     <li>Boucle de jeu (AnimationTimer)</li>
+ *     <li>Affichage et mise à jour du score, de la durée, des power-ups</li>
+ *     <li>Gestion de la pause, debug et fonctionnalités de test</li>
+ * </ul>
  *
  * @author Jules Fuselier
  * @version 3.3 - Ajout affichage scores à gauche
@@ -84,7 +95,13 @@ public class GameViewController extends OptionsController {
     private boolean gamePaused = false;
 
     /**
-     * Initialise tous les composants du jeu
+     * Initialise tous les composants du jeu.
+     * <ul>
+     *     <li>Charge la carte et les entités</li>
+     *     <li>Crée les gestionnaires et initialise le rendu</li>
+     *     <li>Démarre la boucle de jeu</li>
+     *     <li>Affiche les contrôles et force le focus</li>
+     * </ul>
      */
     public void initialize() {
         try {
@@ -130,7 +147,7 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Initialise l'affichage des scores
+     * Initialise l'affichage des scores.
      */
     private void initializeScoreDisplay() {
         Platform.runLater(() -> {
@@ -140,7 +157,7 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Met à jour l'affichage des scores dans le panneau latéral
+     * Met à jour l'affichage des scores dans le panneau latéral.
      */
     private void updateScoreDisplay() {
         if (gameStateManager == null) return;
@@ -212,7 +229,8 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Charge la carte selon le mode de jeu
+     * Charge la carte selon le mode de jeu.
+     * @throws IOException si le fichier de carte ne peut être lu
      */
     private void initializeMap() throws IOException {
         System.out.println("Mode un joueur: " + isOnePlayer);
@@ -249,7 +267,7 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Initialise tous les gestionnaires dans le bon ordre
+     * Initialise tous les gestionnaires dans le bon ordre.
      */
     private void initializeManagers() {
         System.out.println("Initialisation des gestionnaires...");
@@ -293,7 +311,7 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Configure la grille de jeu avec des tailles appropriées
+     * Configure la grille de jeu avec des tailles appropriées.
      */
     private void configureGameGrid() {
         if (gameGrid != null) {
@@ -332,7 +350,7 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Place toutes les entités sur la carte
+     * Place toutes les entités sur la carte.
      */
     private void initializeEntities() {
         System.out.println("Placement des entités...");
@@ -374,7 +392,8 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Démarre la boucle principale du jeu
+     * Démarre la boucle principale du jeu (game loop).
+     * Traite le gameplay en continu : entrées, mouvements, gestion bombes, score, etc.
      */
     private void startGameLoop() {
         System.out.println("Démarrage de la boucle de jeu...");
@@ -453,7 +472,7 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Gère la mise en pause du jeu
+     * Gère la mise en pause du jeu (bouton pause).
      */
     @FXML
     private void handlePause() {
@@ -465,7 +484,8 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Définit l'utilisateur actuel pour le suivi des statistiques
+     * Définit l'utilisateur actuel pour le suivi des statistiques et scores.
+     * @param user Utilisateur courant
      */
     public void setCurrentUser(User user) {
         this.currentUser = user;
@@ -473,7 +493,7 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Arrête la boucle de jeu
+     * Arrête la boucle de jeu.
      */
     public void stopGameLoop() {
         if (gameLoop != null) {
@@ -483,7 +503,7 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Gère la mise en pause du jeu
+     * Met le jeu en pause (désactive entrées, stoppe les actions).
      */
     public void pauseGame() {
         gamePaused = true;
@@ -497,7 +517,7 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Reprend le jeu après une pause
+     * Reprend le jeu après une pause.
      */
     public void resumeGame() {
         gamePaused = false;
@@ -508,7 +528,7 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Nettoie toutes les ressources (utile pour les tests)
+     * Nettoie toutes les ressources (utile pour les tests).
      */
     public void cleanup() {
         stopGameLoop();
@@ -519,17 +539,50 @@ public class GameViewController extends OptionsController {
 
     // === GETTERS POUR LES TESTS ET LE DEBUG ===
 
+    /**
+     * Retourne le gestionnaire d'état de la partie.
+     * @return GameStateManager courant
+     */
     public GameStateManager getGameStateManager() { return gameStateManager; }
-    public VisualRenderer getVisualRenderer() { return visualRenderer; }
-    public InputHandler getInputHandler() { return inputHandler; }
-    public BombManager getBombManager() { return bombManager; }
-    public PowerUpManager getPowerUpManager() { return powerUpManager; }
-    public GameLogic getGameLogic() { return gameLogic; }
-    public Tile[][] getMap() { return map; }
-    public boolean isGamePaused() { return gamePaused; }
 
     /**
-     * Affiche des statistiques de debug
+     * Retourne le gestionnaire de rendu visuel.
+     * @return VisualRenderer courant
+     */
+    public VisualRenderer getVisualRenderer() { return visualRenderer; }
+
+    /**
+     * Retourne le gestionnaire d'entrées clavier.
+     * @return InputHandler courant
+     */
+    public InputHandler getInputHandler() { return inputHandler; }
+
+    /**
+     * Retourne le gestionnaire des bombes.
+     * @return BombManager courant
+     */
+    public BombManager getBombManager() { return bombManager; }
+
+    /**
+     * Retourne le gestionnaire des power-ups.
+     * @return PowerUpManager courant
+     */
+    public PowerUpManager getPowerUpManager() { return powerUpManager; }
+
+    /**
+     * Retourne le gestionnaire de logique de jeu.
+     * @return GameLogic courant
+     */
+    public GameLogic getGameLogic() { return gameLogic; }
+
+    /**
+     * Retourne la carte de jeu courante.
+     * @return Grille de tuiles (Tile[][])
+     */
+    public Tile[][] getMap() { return map; }
+
+    /**
+     * Affiche des statistiques de debug sur la console.
      */
     public void printDebugStats() {
         System.out.println("=== STATISTIQUES DE DEBUG ===");
@@ -564,7 +617,7 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Force l'affichage des contrôles dans la console (utile pour debug)
+     * Affiche les raccourcis clavier dans la console (debug).
      */
     public void showControls() {
         if (inputHandler != null) {
@@ -573,7 +626,7 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Force le focus sur la grille de jeu (utile si les contrôles ne répondent pas)
+     * Force le focus sur la grille de jeu (utile si les contrôles ne répondent pas).
      */
     public void forceFocus() {
         if (gameGrid != null) {
@@ -585,7 +638,8 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Méthode utilitaire pour tester la pose de bombes (debug)
+     * Méthode utilitaire pour tester la pose de bombes (debug).
+     * @param playerNumber 1 ou 2
      */
     public void testPlaceBomb(int playerNumber) {
         if (playerNumber == 1) {
@@ -596,7 +650,8 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Méthode utilitaire pour tester l'explosion manuelle (debug)
+     * Méthode utilitaire pour tester l'explosion manuelle (debug).
+     * @param playerNumber 1 ou 2
      */
     public void testRemoteExplosion(int playerNumber) {
         if (playerNumber == 1) {
@@ -607,7 +662,8 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Active les power-ups de debug pour tester les fonctionnalités
+     * Active tous les power-ups pour un joueur (debug).
+     * @param playerNumber 1 ou 2
      */
     public void enableDebugPowers(int playerNumber) {
         Player player = (playerNumber == 1) ? player1 : player2;
@@ -632,7 +688,8 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Affiche l'état détaillé d'un joueur (debug)
+     * Affiche l'état détaillé d'un joueur (debug).
+     * @param playerNumber 1 ou 2
      */
     public void printPlayerState(int playerNumber) {
         Player player = (playerNumber == 1) ? player1 : player2;

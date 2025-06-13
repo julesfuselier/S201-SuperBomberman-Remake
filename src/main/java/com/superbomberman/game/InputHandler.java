@@ -213,7 +213,9 @@ public class InputHandler {
         return pressedKeys.contains(key);
     }
 
-    // Getter
+    /**
+     * Retourne une copie de l'ensemble des touches actuellement pressées.
+     */
     public Set<KeyCode> getPressedKeys() {
         return new HashSet<>(pressedKeys); // Retourne une copie pour éviter les modifications externes
     }

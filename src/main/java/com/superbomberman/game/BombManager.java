@@ -15,16 +15,25 @@ import static com.superbomberman.model.MapLoader.enemy;
 import static com.superbomberman.controller.MenuController.isOnePlayer;
 
 /**
- * Gestionnaire des bombes du jeu
+ * Gestionnaire des bombes du jeu Super Bomberman.
+ * <p>
+ * Cette classe gère la pose, l'explosion, le ramassage, le lancer, le kick et la gestion visuelle des bombes
+ * pour les joueurs et l'ennemi. Elle intègre aussi l'interaction avec les autres managers du jeu (rendu visuel, power-ups,
+ * gestion d'état, score, et logique de jeu).
+ * </p>
  *
  * @author Jules Fuselier
  * @version 1.1 - Fix affichage et explosion
  * @since 2025-06-08
  */
 public class BombManager {
+    /** Carte du jeu sous forme de matrice de tuiles. */
     private Tile[][] map;
+    /** Liste des bombes actives posées sur la carte. */
     private List<Bomb> activeBombs = new ArrayList<>();
+    /** Liste des bombes en vol (lancées). */
     private List<Bomb> flyingBombs = new ArrayList<>();
+    /** Liste des bombes qui roulent (kick). */
     private List<Bomb> kickingBombs = new ArrayList<>();
 
     // Références vers les autres managers pour l'intégration
@@ -33,20 +42,27 @@ public class BombManager {
     private GameStateManager gameStateManager;
     private ScoreSystem scoreSystem;
 
-    // 🆕 Référence vers GameLogic pour notifier les morts
+    /** Référence vers la logique principale du jeu (pour notifier morts et explosions). */
     private GameLogic gameLogic;
 
-    // Compteurs de bombes par joueur
+    /** Nombre de bombes actuellement posées par le joueur 1. */
     private int currentBombCountPlayer1 = 0;
+    /** Nombre de bombes actuellement posées par le joueur 2. */
     private int currentBombCountPlayer2 = 0;
 
-
+    /**
+     * Constructeur du BombManager.
+     * @param map La carte du jeu
+     */
     public BombManager(Tile[][] map) {
         this.map = map;
     }
 
     /**
-     * Configure les références vers les autres managers
+     * Configure les références vers les autres managers.
+     * @param visualRenderer Gestionnaire de rendu visuel.
+     * @param powerUpManager Gestionnaire de power-ups.
+     * @param gameStateManager Gestionnaire d'état de partie.
      */
     public void setManagers(VisualRenderer visualRenderer, PowerUpManager powerUpManager, GameStateManager gameStateManager) {
         this.visualRenderer = visualRenderer;
@@ -58,14 +74,17 @@ public class BombManager {
     }
 
     /**
-     * 🆕 Configure la référence vers GameLogic
+     * Configure la référence vers la logique de jeu.
+     * @param gameLogic Logique principale du jeu
      */
     public void setGameLogic(GameLogic gameLogic) {
         this.gameLogic = gameLogic;
     }
 
     /**
-     * Place une bombe pour un joueur
+     * Place une bombe pour un joueur (si autorisé).
+     * @param player Le joueur qui pose la bombe
+     * @param playerNumber Numéro du joueur (1 ou 2)
      */
     public void placeBomb(Player player, int playerNumber) {
         // Vérifier le malus NO_BOMB
@@ -115,7 +134,9 @@ public class BombManager {
     }
 
     /**
-     *  Gère l'explosion complète d'une bombe
+     * Gère l'explosion complète d'une bombe.
+     * @param bomb La bombe à faire exploser
+     * @param playerNumber Le numéro du joueur propriétaire
      */
     private void explodeBomb(Bomb bomb, int playerNumber) {
         // Supprimer la bombe visuellement
@@ -143,7 +164,9 @@ public class BombManager {
     }
 
     /**
-     * Gère le ramassage ou le lancer de bombes (Glove Power)
+     * Gère le ramassage ou le lancer de bombes (Glove Power).
+     * @param player Le joueur
+     * @param playerNumber Le numéro du joueur
      */
     public void handleBombPickupOrThrow(Player player, int playerNumber) {
         if (!player.canThrowBombs()) {
@@ -159,7 +182,9 @@ public class BombManager {
     }
 
     /**
-     * Essaie de ramasser une bombe
+     * Essaie de ramasser une bombe.
+     * @param player Le joueur
+     * @param playerNumber Le numéro du joueur
      */
     private void tryPickupBomb(Player player, int playerNumber) {
         Bomb bombToPickup = null;
@@ -200,7 +225,9 @@ public class BombManager {
     }
 
     /**
-     * Lance la bombe tenue par le joueur
+     * Lance la bombe tenue par le joueur.
+     * @param player Le joueur
+     * @param playerNumber Le numéro du joueur
      */
     private void throwHeldBomb(Player player, int playerNumber) {
         // Direction par défaut - à améliorer avec GameLogic
@@ -239,7 +266,9 @@ public class BombManager {
     }
 
     /**
-     * Place des bombes en ligne droite (LineBomb Power)
+     * Place des bombes en ligne droite (LineBomb Power).
+     * @param player Le joueur
+     * @param playerNumber Le numéro du joueur
      */
     public void placeLineBombs(Player player, int playerNumber) {
         if (!player.hasLineBombs()) {
@@ -306,7 +335,9 @@ public class BombManager {
     }
 
     /**
-     * Fait exploser toutes les bombes Remote du joueur
+     * Fait exploser toutes les bombes Remote du joueur.
+     * @param player Le joueur
+     * @param playerNumber Le numéro du joueur
      */
     public void detonateRemoteBombs(Player player, int playerNumber) {
         if (!player.hasRemoteDetonation()) {
@@ -333,24 +364,26 @@ public class BombManager {
         }
     }
 
+
     /**
-     * Gère l'explosion d'une bombe
+     * Gère l'explosion d'une bombe (centre + propagation dans les 4 directions).
+     * @param bomb La bombe à faire exploser
      */
+
     private void handleExplosion(Bomb bomb) {
         int x = bomb.getX();
         int y = bomb.getY();
         int range = bomb.getRange();
         Player owner = bomb.getOwner();
 
-        // AFFICHER L'EXPLOSION QUI SE SUPPRIME AUTO
+        // Afficher l'explosion au centre (se supprime auto en 0.5s)
         if (visualRenderer != null) {
-            // Afficher l'explosion au centre (se supprime auto en 0.5s)
             visualRenderer.showExplosion(x, y);
         }
 
-        // 🆕 CORRECTION : Gérer l'explosion AU CENTRE de la bombe
+        // Gérer l'explosion au centre via gameLogic
         if (gameLogic != null) {
-            gameLogic.handleExplosionAt(x, y); // ✅ Gérer le centre !
+            gameLogic.handleExplosionAt(x, y); // Centre
         }
 
         // Explosion dans les 4 directions
@@ -368,14 +401,13 @@ public class BombManager {
             }
         }
 
-        // 🔧 CORRECTION : Tuer l'ennemi si touché par l'explosion
+        // Tuer l'ennemi si touché par l'explosion au centre
         if (enemy != null && enemy.isAlive() && enemy.getX() == x && enemy.getY() == y) {
-            enemy.kill(); // ✅ TUER L'ENNEMI !
+            enemy.kill();
             if (scoreSystem != null && owner != null) {
                 scoreSystem.addEnemyKilled(owner);
                 scoreSystem.processExplosionCombo(owner);
             }
-            // ✅ Déclencher la fin de partie en mode solo
             if (gameLogic != null) {
                 gameLogic.checkAndEndGame();
             }
@@ -383,7 +415,11 @@ public class BombManager {
     }
 
     /**
-     * Détruit une tuile lors d'une explosion
+     * Détruit une tuile lors d'une explosion.
+     * @param x Abscisse de la tuile
+     * @param y Ordonnée de la tuile
+     * @param owner Propriétaire de la bombe
+     * @return true si l'explosion doit continuer, false sinon
      */
     private boolean destroyTile(int x, int y, Player owner) {
         Tile tile = map[y][x];
@@ -396,7 +432,6 @@ public class BombManager {
             visualRenderer.showExplosion(x, y);
 
             if (tile.getType() == TileType.WALL_BREAKABLE) {
-
                 map[y][x] = new Tile(TileType.FLOOR);
 
                 if (scoreSystem != null && owner != null) {
@@ -411,7 +446,6 @@ public class BombManager {
                             visualRenderer.placePowerUpVisual(powerUp);
                         }
                     }
-                    // Redessiner la tuile APRÈS génération du power-up
                     visualRenderer.redrawTile(x, y, powerUpManager != null ? powerUpManager.getActivePowerUps() : new ArrayList<>());
                 });
                 delay.play();
@@ -421,23 +455,21 @@ public class BombManager {
 
         // Gérer la mort de l'ennemi si touché par l'explosion
         if (enemy != null && enemy.isAlive() && enemy.getX() == x && enemy.getY() == y) {
-            enemy.kill(); // ✅ TUER L'ENNEMI !
+            enemy.kill();
             if (scoreSystem != null && owner != null) {
                 scoreSystem.addEnemyKilled(owner);
                 scoreSystem.processExplosionCombo(owner);
             }
-            // ✅ Déclencher la fin de partie en mode solo
             if (gameLogic != null) {
                 gameLogic.checkAndEndGame();
             }
         }
 
-
         return true; // Continuer l'explosion
     }
 
     /**
-     * Met à jour les bombes volantes et qui roulent
+     * Met à jour les bombes volantes et qui roulent.
      */
     public void updateBombs() {
         handleFlyingBombs();
@@ -445,7 +477,7 @@ public class BombManager {
     }
 
     /**
-     * Gère les bombes volantes (Glove Power)
+     * Gère les bombes volantes (Glove Power).
      */
     private void handleFlyingBombs() {
         List<Bomb> bombsToStop = new ArrayList<>();
@@ -477,7 +509,7 @@ public class BombManager {
     }
 
     /**
-     * Gère les bombes qui roulent (Kick Power)
+     * Gère les bombes qui roulent (Kick Power).
      */
     private void handleKickingBombs() {
         List<Bomb> bombsToStop = new ArrayList<>();
@@ -504,10 +536,11 @@ public class BombManager {
         kickingBombs.removeAll(bombsToStop);
     }
 
-    // [Reste des méthodes identiques...]
-
     /**
-     * Vérifie si une bombe peut se déplacer vers une position
+     * Vérifie si une bombe peut se déplacer vers une position.
+     * @param x Abscisse
+     * @param y Ordonnée
+     * @return true si le déplacement est possible, false sinon
      */
     private boolean canBombMoveTo(int x, int y) {
         if (x < 0 || y < 0 || y >= map.length || x >= map[0].length) {
@@ -527,7 +560,7 @@ public class BombManager {
             }
         }
 
-        // Vérifier les joueurs
+        // Vérifier les joueurs et l'ennemi
         if ((player1.getX() == x && player1.getY() == y) ||
                 (!isOnePlayer && player2 != null && player2.getX() == x && player2.getY() == y) ||
                 (enemy != null && enemy.getX() == x && enemy.getY() == y)) {
@@ -538,7 +571,10 @@ public class BombManager {
     }
 
     /**
-     * Vérifie si on peut placer une bombe à une position
+     * Vérifie si on peut placer une bombe à une position.
+     * @param x Abscisse
+     * @param y Ordonnée
+     * @return true si possible, false sinon
      */
     private boolean canPlaceBombAt(int x, int y) {
         if (x < 0 || y < 0 || y >= map.length || x >= map[0].length) {
@@ -568,14 +604,21 @@ public class BombManager {
     }
 
     /**
-     * Vérifie si les coordonnées sont dans les limites
+     * Vérifie si les coordonnées sont dans les limites de la carte.
+     * @param x Abscisse
+     * @param y Ordonnée
+     * @return true si dans les limites, false sinon
      */
     private boolean isInBounds(int x, int y) {
         return x >= 0 && y >= 0 && y < map.length && x < map[0].length;
     }
 
     /**
-     * Essaie de faire rouler une bombe (Kick Power)
+     * Essaie de faire rouler une bombe (Kick Power).
+     * @param bomb La bombe à kicker
+     * @param directionX Direction X (-1, 0, 1)
+     * @param directionY Direction Y (-1, 0, 1)
+     * @return true si le kick a réussi, false sinon
      */
     public boolean tryKickBomb(Bomb bomb, int directionX, int directionY) {
         if (Math.abs(directionX) + Math.abs(directionY) != 1) {
@@ -597,29 +640,35 @@ public class BombManager {
         return true;
     }
 
-    // Getters
+    // --- Getters ---
+
+    /** @return Liste des bombes actives */
     public List<Bomb> getActiveBombs() {
         return new ArrayList<>(activeBombs);
     }
 
+    /** @return Liste des bombes volantes */
     public List<Bomb> getFlyingBombs() {
         return new ArrayList<>(flyingBombs);
     }
 
+    /** @return Liste des bombes qui roulent */
     public List<Bomb> getKickingBombs() {
         return new ArrayList<>(kickingBombs);
     }
 
+    /** @return Nombre de bombes du joueur 1 */
     public int getCurrentBombCountPlayer1() {
         return currentBombCountPlayer1;
     }
 
+    /** @return Nombre de bombes du joueur 2 */
     public int getCurrentBombCountPlayer2() {
         return currentBombCountPlayer2;
     }
 
     /**
-     * Nettoie toutes les bombes (utile pour reset)
+     * Nettoie toutes les bombes (utile pour reset).
      */
     public void clearAllBombs() {
         activeBombs.clear();
@@ -630,4 +679,3 @@ public class BombManager {
         System.out.println("Toutes les bombes ont été supprimées");
     }
 }
-

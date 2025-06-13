@@ -25,56 +25,35 @@ public class Bomb {
     private int range;
     private boolean exploded;
 
-    /**
-     * Joueur qui a posé cette bombe
-     */
+    /** Joueur qui a posé cette bombe */
     private Player owner;
 
-    /**
-     * Indique si la bombe est en train de voler (lancée avec Glove)
-     */
+    /** Indique si la bombe est en train de voler (lancée avec Glove) */
     private boolean isFlying = false;
 
-    /**
-     * Direction X du mouvement de la bombe en vol (-1, 0, 1)
-     */
+    /** Direction X du mouvement de la bombe en vol (-1, 0, 1) */
     private int flyDirectionX = 0;
 
-    /**
-     * Direction Y du mouvement de la bombe en vol (-1, 0, 1)
-     */
+    /** Direction Y du mouvement de la bombe en vol (-1, 0, 1) */
     private int flyDirectionY = 0;
 
-    /**
-     * Timer pour le mouvement de la bombe en vol
-     */
+    /** Timer pour le mouvement de la bombe en vol */
     private Timeline flyTimer;
 
-    /**
-     * Callback pour notifier le mouvement
-     */
+    /** Callback pour notifier le mouvement */
     private Runnable moveCallback;
 
-    /**
-     * Indique si la bombe glisse suite à un coup de pied (Kick Power)
-     */
+    /** ⭐ NOUVEAU : Indique si la bombe glisse suite à un coup de pied (Kick Power) */
     private boolean isMoving = false;
 
-    /**
-     * Direction X du glissement par coup de pied (-1, 0, 1)
-     */
+    /** ⭐ NOUVEAU : Direction X du glissement par coup de pied (-1, 0, 1) */
     private int kickDirectionX = 0;
 
-    /**
-     * ⭐ NOUVEAU : Direction Y du glissement par coup de pied (-1, 0, 1)
-     */
+    /** ⭐ NOUVEAU : Direction Y du glissement par coup de pied (-1, 0, 1) */
     private int kickDirectionY = 0;
 
-    /**
-     * ⭐ NOUVEAU : Timer pour le mouvement par coup de pied
-     */
+    /** ⭐ NOUVEAU : Timer pour le mouvement par coup de pied */
     private Timeline kickTimer;
-
 
     public Bomb(int x, int y, int damage, int range) {
         this.x = x;
@@ -241,30 +220,41 @@ public class Bomb {
         this.y = y;
     }
 
-    // Getters existants
-    public int getX() {
-        return x;
-    }
+    /**
+     * Retourne la position X actuelle de la bombe sur la grille.
+     * @return la coordonnée X de la bombe
+     */
+    public int getX() { return x; }
 
-    public int getY() {
-        return y;
-    }
+    /**
+     * Retourne la position Y actuelle de la bombe sur la grille.
+     * @return la coordonnée Y de la bombe
+     */
+    public int getY() { return y; }
 
-    public int getDamage() {
-        return damage;
-    }
+    /**
+     * Retourne la valeur de dégâts de la bombe.
+     * @return dégâts infligés par la bombe
+     */
+    public int getDamage() { return damage; }
 
-    public int getRange() {
-        return range;
-    }
+    /**
+     * Retourne la portée d'explosion de la bombe.
+     * @return portée de la bombe
+     */
+    public int getRange() { return range; }
 
-    public int getPreviousX() {
-        return previousX;
-    }
+    /**
+     * Retourne la dernière position X avant le dernier déplacement de la bombe.
+     * @return précédente coordonnée X
+     */
+    public int getPreviousX() { return previousX; }
 
-    public int getPreviousY() {
-        return previousY;
-    }
+    /**
+     * Retourne la dernière position Y avant le dernier déplacement de la bombe.
+     * @return précédente coordonnée Y
+     */
+    public int getPreviousY() { return previousY; }
 
     /**
      * Retourne le joueur propriétaire de cette bombe.
@@ -285,8 +275,7 @@ public class Bomb {
     }
 
     /**
-     * Vérifie si la bombe est en train de voler.
-     *
+     * Indique si la bombe est actuellement en vol (lancée avec Glove).
      * @return true si la bombe vole, false sinon
      */
     public boolean isFlying() {
@@ -294,8 +283,7 @@ public class Bomb {
     }
 
     /**
-     * ⭐ NOUVEAU : Vérifie si la bombe est en train de glisser (coup de pied).
-     *
+     * Indique si la bombe glisse actuellement suite à un coup de pied (Kick Power).
      * @return true si la bombe glisse, false sinon
      */
     public boolean isMoving() {
@@ -303,36 +291,32 @@ public class Bomb {
     }
 
     /**
-     * Retourne la direction X de vol de la bombe.
-     *
-     * @return Direction X (-1, 0, 1)
+     * Retourne la direction X du vol de la bombe (-1, 0, 1).
+     * @return Direction X de vol
      */
     public int getFlyDirectionX() {
         return flyDirectionX;
     }
 
     /**
-     * Retourne la direction Y de vol de la bombe.
-     *
-     * @return Direction Y (-1, 0, 1)
+     * Retourne la direction Y du vol de la bombe (-1, 0, 1).
+     * @return Direction Y de vol
      */
     public int getFlyDirectionY() {
         return flyDirectionY;
     }
 
     /**
-     * ⭐ NOUVEAU : Retourne la direction X de glissement de la bombe.
-     *
-     * @return Direction X (-1, 0, 1)
+     * Retourne la direction X du glissement de la bombe (-1, 0, 1).
+     * @return Direction X de glissement
      */
     public int getKickDirectionX() {
         return kickDirectionX;
     }
 
     /**
-     * ⭐ NOUVEAU : Retourne la direction Y de glissement de la bombe.
-     *
-     * @return Direction Y (-1, 0, 1)
+     * Retourne la direction Y du glissement de la bombe (-1, 0, 1).
+     * @return Direction Y de glissement
      */
     public int getKickDirectionY() {
         return kickDirectionY;

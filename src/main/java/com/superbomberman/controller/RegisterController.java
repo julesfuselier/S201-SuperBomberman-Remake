@@ -1,3 +1,20 @@
+/**
+ * Contrôleur pour la page d'inscription dédiée de Super Bomberman.
+ * <p>
+ * Gère la création de nouveaux comptes utilisateur, la validation des champs d'inscription,
+ * les raccourcis clavier, les animations de formulaire, les messages utilisateur et la navigation.
+ * </p>
+ *
+ * <ul>
+ *     <li>Validation du nom d'utilisateur, mot de passe et email.</li>
+ *     <li>Gestion des raccourcis clavier pour soumettre le formulaire avec Entrée.</li>
+ *     <li>Animations sur les boutons et champs pour donner un retour visuel à l'utilisateur.</li>
+ *     <li>Navigation vers le menu principal, l'accueil, la connexion et la sortie.</li>
+ * </ul>
+ *
+ * @author Hugo Brest Lestrade
+ * @version 1.3
+ */
 package com.superbomberman.controller;
 
 import com.superbomberman.service.AuthService;
@@ -19,14 +36,16 @@ import javafx.util.Duration;
 import java.io.IOException;
 
 /**
- * Contrôleur pour la page d'inscription dédiée.
- * Gère la création de nouveaux comptes utilisateur.
- *
- * @author Hugo Brest Lestrade
- * @version 1.3
+ * Contrôleur FXML pour la page d'inscription.
+ * <ul>
+ *     <li>Gère l'inscription et la validation des nouveaux utilisateurs.</li>
+ *     <li>Affiche des messages et des animations pour le feedback utilisateur.</li>
+ *     <li>Gère la navigation depuis la page d'inscription.</li>
+ * </ul>
  */
 public class RegisterController {
 
+    /** Conteneur principal du formulaire d'inscription. */
     @FXML private VBox registerForm;
 
     // Éléments d'inscription
@@ -43,8 +62,19 @@ public class RegisterController {
     @FXML private Button backToMenuButton;
     @FXML private Button exitButton;
 
+    /** Service d'authentification utilisé pour créer les comptes. */
     private AuthService authService;
 
+    /**
+     * Initialise le contrôleur :
+     * <ul>
+     *     <li>Instancie le service d'authentification</li>
+     *     <li>Configure les raccourcis clavier</li>
+     *     <li>Met en place les animations</li>
+     *     <li>Met en place la validation temps réel du formulaire</li>
+     *     <li>Initialise la valeur par défaut du personnage favori</li>
+     * </ul>
+     */
     @FXML
     public void initialize() {
         authService = new AuthService();
@@ -59,10 +89,9 @@ public class RegisterController {
     }
 
     /**
-     * Configure les raccourcis clavier
+     * Configure les raccourcis clavier (Entrée pour s'inscrire).
      */
     private void setupKeyboardShortcuts() {
-        // Entrée pour s'inscrire
         confirmPassword.setOnKeyPressed(this::handleRegisterKeyPressed);
         registerPassword.setOnKeyPressed(this::handleRegisterKeyPressed);
         registerUsername.setOnKeyPressed(this::handleRegisterKeyPressed);
@@ -70,7 +99,7 @@ public class RegisterController {
     }
 
     /**
-     * Configure les animations des boutons
+     * Configure les animations des boutons.
      */
     private void setupAnimations() {
         setupButtonAnimation(registerButton);
@@ -80,10 +109,10 @@ public class RegisterController {
     }
 
     /**
-     * Configure la validation en temps réel
+     * Configure la validation en temps réel des champs du formulaire.
      */
     private void setupFormValidation() {
-        // Validation en temps réel du nom d'utilisateur
+        // Validation du nom d'utilisateur
         registerUsername.textProperty().addListener((obs, oldText, newText) -> {
             if (!newText.isEmpty()) {
                 if (newText.length() < 3) {
@@ -111,7 +140,8 @@ public class RegisterController {
     }
 
     /**
-     * Ajoute une animation hover à un bouton
+     * Ajoute une animation de survol à un bouton.
+     * @param button Le bouton cible.
      */
     private void setupButtonAnimation(Button button) {
         button.setOnMouseEntered(e -> {
@@ -130,7 +160,8 @@ public class RegisterController {
     }
 
     /**
-     * Gère les touches pressées sur les champs d'inscription
+     * Gère la pression de la touche Entrée dans les champs du formulaire d'inscription.
+     * @param event l'événement clavier
      */
     private void handleRegisterKeyPressed(KeyEvent event) {
         if (event.getCode() == KeyCode.ENTER) {
@@ -139,7 +170,8 @@ public class RegisterController {
     }
 
     /**
-     * Gère la tentative d'inscription
+     * Gère la tentative d'inscription.
+     * @param event événement de clic sur le bouton "S'inscrire"
      */
     @FXML
     private void handleRegister(ActionEvent event) {
@@ -188,7 +220,7 @@ public class RegisterController {
             return;
         }
 
-        // Tentative d'inscription (utiliser la méthode existante sans personnage favori pour l'instant)
+        // Tentative d'inscription
         if (authService.register(username, password, email)) {
             showRegisterMessage("Inscription réussie ! Bienvenue " + username + " !", true);
 
@@ -206,7 +238,8 @@ public class RegisterController {
     }
 
     /**
-     * Retour à la page de connexion
+     * Retour à la page de connexion.
+     * @param event événement de clic
      */
     @FXML
     private void handleBackToLogin(ActionEvent event) {
@@ -226,15 +259,15 @@ public class RegisterController {
         }
     }
 
+    /**
+     * Retour à la page d'accueil.
+     * @param event événement de clic
+     */
     @FXML
     private void handleBackToMenu(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/welcome.fxml"));
             Parent welcomeRoot = loader.load();
-
-            // Pas besoin de cast vers MenuController, c'est un WelcomeController
-            // WelcomeController welcomeController = loader.getController();
-            // Vous pouvez ajouter des informations si nécessaire dans WelcomeController
 
             Scene welcomeScene = new Scene(welcomeRoot);
             Stage stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
@@ -249,7 +282,8 @@ public class RegisterController {
     }
 
     /**
-     * Permet de continuer en tant qu'invité
+     * Permet de continuer en tant qu'invité et navigue vers le menu principal.
+     * @param event événement de clic
      */
     @FXML
     private void handleGuestMode(ActionEvent event) {
@@ -257,7 +291,8 @@ public class RegisterController {
     }
 
     /**
-     * Ferme l'application
+     * Ferme l'application.
+     * @param event événement de clic
      */
     @FXML
     private void handleExit(ActionEvent event) {
@@ -266,14 +301,15 @@ public class RegisterController {
     }
 
     /**
-     * Navigation vers le menu principal
+     * Navigation vers le menu principal après inscription ou en mode invité.
+     * @param event événement ayant déclenché la navigation
      */
     private void navigateToMainMenu(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu.fxml"));
             Parent menuRoot = loader.load();
 
-            // Passer les informations utilisateur au contrôleur du menu
+            // Passer l'utilisateur courant au menu si connecté
             MenuController menuController = loader.getController();
             if (authService.isLoggedIn()) {
                 menuController.setCurrentUser(authService.getCurrentUser());
@@ -292,7 +328,9 @@ public class RegisterController {
     }
 
     /**
-     * Affiche un message d'inscription
+     * Affiche un message d'inscription (succès ou erreur) avec animation.
+     * @param message   message à afficher
+     * @param isSuccess true si succès, false sinon
      */
     private void showRegisterMessage(String message, boolean isSuccess) {
         registerMessage.setText(message);
@@ -308,7 +346,8 @@ public class RegisterController {
     }
 
     /**
-     * Animation de shake pour les erreurs
+     * Animation de secousse pour les erreurs de saisie.
+     * @param node le champ à animer
      */
     private void shakeNode(Node node) {
         ScaleTransition shake = new ScaleTransition(Duration.millis(100), node);
