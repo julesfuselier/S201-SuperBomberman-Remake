@@ -15,6 +15,8 @@ import javafx.animation.AnimationTimer;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.superbomberman.model.MapLoader.enemy;
 import static com.superbomberman.model.MapLoader.player1;
@@ -45,7 +47,7 @@ import static com.superbomberman.controller.MenuController.isOnePlayer;
  * </ul>
  *
  * @author Jules Fuselier
- * @version 3.3 - Ajout affichage scores à gauche
+ * @version 3.4 - Ajout affichage des power-ups par joueur
  * @since 2025-06-11
  */
 public class GameViewController extends OptionsController {
@@ -76,6 +78,12 @@ public class GameViewController extends OptionsController {
     private VBox player2Panel;
     @FXML
     private Button pauseButton;
+
+    // 🆕 NOUVEAUX LABELS POUR LES POWER-UPS
+    @FXML
+    private Label powerupsPlayer1;
+    @FXML
+    private Label powerupsPlayer2;
 
     // Gestionnaires délégués - Chacun a sa responsabilité
     private GameStateManager gameStateManager;
@@ -176,10 +184,14 @@ public class GameViewController extends OptionsController {
                     bombsPlayer1.setText("💣 Bombes: " + currentBombs + "/" + maxBombs);
                 }
 
+                // 🆕 MISE À JOUR DES POWER-UPS JOUEUR 1 AVEC TOUCHES
+                if (powerupsPlayer1 != null && player1 != null) {
+                    powerupsPlayer1.setText(getPlayerPowerupsText(player1, 1));
+                }
+
                 // TODO: Enlever la logique des vies
                 if (livesPlayer1 != null && player1 != null) {
-                    // Assumons que le joueur commence avec 3 vies (à adapter selon votre logique)
-                    int lives1 = player1.isAlive() ? 3 : 0; // Vous pouvez ajuster selon votre système de vies
+                    int lives1 = player1.isAlive() ? 3 : 0;
                     livesPlayer1.setText("❤️ Vies: " + lives1);
                 }
 
@@ -194,6 +206,11 @@ public class GameViewController extends OptionsController {
                         int currentBombs2 = bombManager.getCurrentBombCountPlayer2();
                         int maxBombs2 = player2.getMaxBombs();
                         bombsPlayer2.setText("💣 Bombes: " + currentBombs2 + "/" + maxBombs2);
+                    }
+
+                    // 🆕 MISE À JOUR DES POWER-UPS JOUEUR 2 AVEC TOUCHES
+                    if (powerupsPlayer2 != null) {
+                        powerupsPlayer2.setText(getPlayerPowerupsText(player2, 2));
                     }
 
                     if (livesPlayer2 != null) {
@@ -226,6 +243,99 @@ public class GameViewController extends OptionsController {
                 System.err.println("Erreur lors de la mise à jour des scores: " + e.getMessage());
             }
         });
+    }
+
+    /**
+     * Génère le texte d'affichage des power-ups d'un joueur avec les touches.
+     *
+     * @param player Le joueur dont on veut afficher les power-ups
+     * @param playerNumber Le numéro du joueur (1 ou 2) pour déterminer les touches
+     * @return Texte formaté avec les power-ups actifs et leurs touches
+     */
+    private String getPlayerPowerupsText(Player player, int playerNumber) {
+        if (player == null) return "Aucun";
+
+        List<String> powerups = new ArrayList<>();
+
+        // Power-ups avec touches associées
+        if (player.canKickBombs()) {
+            powerups.add("🦵 Kick (Auto)");
+        }
+
+        if (player.canThrowBombs()) {
+            String key = (playerNumber == 1) ? "SHIFT" : "CTRL";
+            powerups.add("🧤 Glove (" + key + ")");
+        }
+
+        if (player.hasRemoteDetonation()) {
+            String key = (playerNumber == 1) ? "R" : "O";
+            powerups.add("📡 Remote (" + key + ")");
+        }
+
+        if (player.hasLineBombs()) {
+            String key = (playerNumber == 1) ? "L" : "K";
+            powerups.add("➡️ LineBomb (" + key + ")");
+        }
+
+        // Power-ups passifs (sans touches)
+        if (player.canPassThroughWalls()) {
+            powerups.add("🧱 WallPass");
+        }
+
+        if (player.canPassThroughBombs()) {
+            powerups.add("💣 BombPass");
+        }
+
+        // Améliorations numériques
+        if (player.getMaxBombs() > 1) {
+            String key = (playerNumber == 1) ? "ESPACE" : "ENTRÉE";
+            powerups.add("💥 Bombs + " + (player.getMaxBombs() - 1) + " (" + key + ")");
+        }
+
+        if (player.getExplosionRange() > 2) {
+            powerups.add("🔥 Range + " + (player.getExplosionRange() - 2));
+        }
+
+        if (player.getSpeed() > 1.0) {
+            int speedBonus = (int)((player.getSpeed() - 1.0) / 0.2);
+            powerups.add("⚡ Speed + " + speedBonus);
+        }
+
+        // Malus actifs avec temps restant
+        if (player.hasActiveMalus()) {
+            long timeRemaining = player.getMalusTimeRemaining() / 1000; // Convertir en secondes
+            String malusText = getMalusEmoji(player.getCurrentMalus()) + " " +
+                    player.getCurrentMalus().toString() +
+                    " (" + timeRemaining + "s)";
+            powerups.add(malusText);
+        }
+
+        // Retourner le résultat
+        if (powerups.isEmpty()) {
+            return "Aucun";
+        } else {
+            return String.join("\n", powerups);
+        }
+    }
+
+    /**
+     * Retourne l'emoji correspondant à un malus.
+     *
+     * @param malus Le type de malus
+     * @return L'emoji correspondant
+     */
+    private String getMalusEmoji(com.superbomberman.model.powerup.MalusType malus) {
+        if (malus == null) return "❓";
+
+        switch (malus) {
+            case SLOW_SPEED: return "🐌";
+            case SUPER_FAST: return "💨";
+            case REDUCED_RANGE: return "📉";
+            case REVERSED_CONTROLS: return "🔄";
+            case AUTO_BOMB: return "🤖";
+            case NO_BOMB: return "🚫";
+            default: return "💀";
+        }
     }
 
     /**
@@ -613,6 +723,14 @@ public class GameViewController extends OptionsController {
                     " (reste " + (player2.getMalusTimeRemaining()/1000) + "s)");
         }
 
+        // 🆕 AFFICHAGE DES POWER-UPS AVEC TOUCHES
+        System.out.println("Power-ups Joueur 1:");
+        System.out.println(getPlayerPowerupsText(player1, 1).replace("\n", ", "));
+        if (!isOnePlayer && player2 != null) {
+            System.out.println("Power-ups Joueur 2:");
+            System.out.println(getPlayerPowerupsText(player2, 2).replace("\n", ", "));
+        }
+
         System.out.println("==============================");
     }
 
@@ -711,6 +829,11 @@ public class GameViewController extends OptionsController {
         System.out.println("LineBomb: " + player.hasLineBombs());
         System.out.println("Tient une bombe: " + player.isHoldingBomb());
         System.out.println("Malus actif: " + (player.hasActiveMalus() ? player.getCurrentMalus() : "Aucun"));
+
+        // 🆕 AFFICHAGE DES POWER-UPS AVEC TOUCHES
+        System.out.println("Power-ups avec touches:");
+        System.out.println(getPlayerPowerupsText(player, playerNumber).replace("\n", ", "));
+
         System.out.println("========================");
     }
 
