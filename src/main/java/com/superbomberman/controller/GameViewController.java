@@ -159,6 +159,7 @@ public class GameViewController extends OptionsController {
                     bombsPlayer1.setText("💣 Bombes: " + currentBombs + "/" + maxBombs);
                 }
 
+                // TODO: Enlever la logique des vies
                 if (livesPlayer1 != null && player1 != null) {
                     // Assumons que le joueur commence avec 3 vies (à adapter selon votre logique)
                     int lives1 = player1.isAlive() ? 3 : 0; // Vous pouvez ajuster selon votre système de vies
@@ -482,61 +483,6 @@ public class GameViewController extends OptionsController {
     }
 
     /**
-     * Retourne au menu principal
-
-
-    @FXML
-    private void handleBackToMenu() {
-        System.out.println("Retour au menu demandé...");
-
-        // Arrêter la boucle de jeu
-        stopGameLoop();
-
-        // Sauvegarder les statistiques
-        gameStateManager.endGame();
-
-        try {
-            // Charger la vue du menu
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/menu.fxml"));
-            Parent menuRoot = loader.load();
-
-            // Passer l'utilisateur au contrôleur du menu
-            MenuController menuController = loader.getController();
-            if (gameStateManager.getCurrentUser() != null) {
-                menuController.setCurrentUser(gameStateManager.getCurrentUser());
-            }
-
-            // Récupérer la fenêtre actuelle
-            Stage stage = (Stage) gameGrid.getScene().getWindow();
-
-            // Créer la nouvelle scène
-            Scene menuScene = new Scene(menuRoot);
-
-            // Changer de scène
-            stage.setScene(menuScene);
-            stage.setTitle("Super Bomberman - Menu");
-
-            // IMPORTANT : Redimensionner la fenêtre pour s'adapter au menu
-            stage.sizeToScene(); // Ajuste automatiquement à la taille du contenu
-
-            // Ou vous pouvez définir des dimensions spécifiques pour le menu :
-            // stage.setWidth(800);  // Largeur du menu
-            // stage.setHeight(600); // Hauteur du menu
-
-            // Centrer la fenêtre sur l'écran
-            stage.centerOnScreen();
-
-            System.out.println("Retour au menu réussi!");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.err.println("Erreur lors du retour au menu");
-        }
-    }
-
-     */
-
-    /**
      * Gère la mise en pause du jeu
      */
     public void pauseGame() {
@@ -580,6 +526,7 @@ public class GameViewController extends OptionsController {
     public PowerUpManager getPowerUpManager() { return powerUpManager; }
     public GameLogic getGameLogic() { return gameLogic; }
     public Tile[][] getMap() { return map; }
+    public boolean isGamePaused() { return gamePaused; }
 
     /**
      * Affiche des statistiques de debug

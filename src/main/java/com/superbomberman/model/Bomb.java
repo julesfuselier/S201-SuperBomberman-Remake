@@ -25,35 +25,56 @@ public class Bomb {
     private int range;
     private boolean exploded;
 
-    /** Joueur qui a posé cette bombe */
+    /**
+     * Joueur qui a posé cette bombe
+     */
     private Player owner;
 
-    /** Indique si la bombe est en train de voler (lancée avec Glove) */
+    /**
+     * Indique si la bombe est en train de voler (lancée avec Glove)
+     */
     private boolean isFlying = false;
 
-    /** Direction X du mouvement de la bombe en vol (-1, 0, 1) */
+    /**
+     * Direction X du mouvement de la bombe en vol (-1, 0, 1)
+     */
     private int flyDirectionX = 0;
 
-    /** Direction Y du mouvement de la bombe en vol (-1, 0, 1) */
+    /**
+     * Direction Y du mouvement de la bombe en vol (-1, 0, 1)
+     */
     private int flyDirectionY = 0;
 
-    /** Timer pour le mouvement de la bombe en vol */
+    /**
+     * Timer pour le mouvement de la bombe en vol
+     */
     private Timeline flyTimer;
 
-    /** Callback pour notifier le mouvement */
+    /**
+     * Callback pour notifier le mouvement
+     */
     private Runnable moveCallback;
 
-    /** ⭐ NOUVEAU : Indique si la bombe glisse suite à un coup de pied (Kick Power) */
+    /**
+     * Indique si la bombe glisse suite à un coup de pied (Kick Power)
+     */
     private boolean isMoving = false;
 
-    /** ⭐ NOUVEAU : Direction X du glissement par coup de pied (-1, 0, 1) */
+    /**
+     * Direction X du glissement par coup de pied (-1, 0, 1)
+     */
     private int kickDirectionX = 0;
 
-    /** ⭐ NOUVEAU : Direction Y du glissement par coup de pied (-1, 0, 1) */
+    /**
+     * ⭐ NOUVEAU : Direction Y du glissement par coup de pied (-1, 0, 1)
+     */
     private int kickDirectionY = 0;
 
-    /** ⭐ NOUVEAU : Timer pour le mouvement par coup de pied */
+    /**
+     * ⭐ NOUVEAU : Timer pour le mouvement par coup de pied
+     */
     private Timeline kickTimer;
+
 
     public Bomb(int x, int y, int damage, int range) {
         this.x = x;
@@ -87,8 +108,8 @@ public class Bomb {
     /**
      * Lance la bombe dans une direction donnée (Glove Power).
      *
-     * @param directionX Direction X (-1, 0, 1)
-     * @param directionY Direction Y (-1, 0, 1)
+     * @param directionX   Direction X (-1, 0, 1)
+     * @param directionY   Direction Y (-1, 0, 1)
      * @param moveCallback Callback appelé à chaque tick de mouvement
      */
     public void throwBomb(int directionX, int directionY, Runnable moveCallback) {
@@ -112,8 +133,8 @@ public class Bomb {
     /**
      * ⭐ NOUVEAU : Fait glisser la bombe suite à un coup de pied (Kick Power).
      *
-     * @param directionX Direction X (-1, 0, 1)
-     * @param directionY Direction Y (-1, 0, 1)
+     * @param directionX   Direction X (-1, 0, 1)
+     * @param directionY   Direction Y (-1, 0, 1)
      * @param moveCallback Callback appelé à chaque tick de mouvement
      */
     public void kickBomb(int directionX, int directionY, Runnable moveCallback) {
@@ -196,7 +217,7 @@ public class Bomb {
     }
 
     /**
-     * ⭐ NOUVEAU : Arrête le glissement de la bombe (collision détectée).
+     * Arrête le glissement de la bombe (collision détectée).
      */
     public void stopMoving() {
         if (kickTimer != null) {
@@ -221,12 +242,29 @@ public class Bomb {
     }
 
     // Getters existants
-    public int getX() { return x; }
-    public int getY() { return y; }
-    public int getDamage() { return damage; }
-    public int getRange() { return range; }
-    public int getPreviousX() { return previousX; }
-    public int getPreviousY() { return previousY; }
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public int getDamage() {
+        return damage;
+    }
+
+    public int getRange() {
+        return range;
+    }
+
+    public int getPreviousX() {
+        return previousX;
+    }
+
+    public int getPreviousY() {
+        return previousY;
+    }
 
     /**
      * Retourne le joueur propriétaire de cette bombe.
@@ -299,4 +337,23 @@ public class Bomb {
     public int getKickDirectionY() {
         return kickDirectionY;
     }
+
+    /**
+     * Vérifie si la bombe a explosé
+     *
+     * @return true si la bombe a explosé, false sinon
+     */
+    public boolean hasExploded() {
+        return exploded;
+    }
+
+    /**
+     * Définit l'état d'explosion de la bombe
+     *
+     * @param exploded nouvel état d'explosion
+     */
+    public void setExploded(boolean exploded) {
+        exploded = exploded;
+    }
+
 }

@@ -336,9 +336,6 @@ public class BombManager {
     /**
      * Gère l'explosion d'une bombe
      */
-    /**
-     * Gère l'explosion d'une bombe
-     */
     private void handleExplosion(Bomb bomb) {
         int x = bomb.getX();
         int y = bomb.getY();
