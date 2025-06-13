@@ -713,4 +713,8 @@ public class GameViewController extends OptionsController {
         System.out.println("Malus actif: " + (player.hasActiveMalus() ? player.getCurrentMalus() : "Aucun"));
         System.out.println("========================");
     }
+
+    public boolean isGamePaused() {
+        return gamePaused;
+    }
 }

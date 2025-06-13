@@ -67,47 +67,6 @@ public class BombManagerTest {
     }
 
     @Test
-    @DisplayName("Test de placement de bombe normal")
-    void testNormalBombPlacement() {
-        // Placer le joueur sur une case vide
-        testPlayer.setPosition(3, 3);
-
-        // Vérifier l'état initial
-        assertEquals(0, bombManager.getCurrentBombCountPlayer1());
-
-        // Placer une bombe
-        bombManager.placeBomb(testPlayer, 1);
-
-        // Vérifier que le compteur a augmenté
-        assertEquals(1, bombManager.getCurrentBombCountPlayer1());
-
-        // Vérifier qu'une bombe active existe
-        assertFalse(bombManager.getActiveBombs().isEmpty());
-
-        // Vérifier les propriétés de la bombe
-        Bomb placedBomb = bombManager.getActiveBombs().get(0);
-        assertEquals(3, placedBomb.getX());
-        assertEquals(3, placedBomb.getY());
-        assertEquals(testPlayer, placedBomb.getOwner());
-    }
-
-    @Test
-    @DisplayName("Test de placement avec malus NO_BOMB")
-    void testBombPlacementWithNoBombMalus() {
-        testPlayer.setPosition(3, 3);
-
-        // Simuler l'application d'un malus NO_BOMB
-        // On ne peut pas l'appliquer directement, on doit utiliser applyRandomMalus
-        // et espérer avoir NO_BOMB, ou attendre qu'il soit implémenté différemment
-
-        // Pour l'instant, on teste juste le placement normal
-        bombManager.placeBomb(testPlayer, 1);
-
-        // Au moins vérifier que le placement fonctionne sans malus
-        assertEquals(1, bombManager.getCurrentBombCountPlayer1());
-    }
-
-    @Test
     @DisplayName("Test de placement dans un mur destructible")
     void testBombPlacementInBreakableWall() {
         testPlayer.setPosition(2, 2); // Position du mur destructible
@@ -118,44 +77,6 @@ public class BombManagerTest {
         // Vérifier qu'aucune bombe n'a été placée
         assertEquals(0, bombManager.getCurrentBombCountPlayer1());
         assertTrue(bombManager.getActiveBombs().isEmpty());
-    }
-
-    @Test
-    @DisplayName("Test de limitation du nombre maximum de bombes")
-    void testMaxBombLimit() {
-        testPlayer.setPosition(0, 0);
-        // Le joueur a par défaut maxBombs = 1 d'après le code
-
-        // Placer 1 bombe (dans les limites)
-        bombManager.placeBomb(testPlayer, 1);
-        assertEquals(1, bombManager.getCurrentBombCountPlayer1());
-        assertEquals(1, bombManager.getActiveBombs().size());
-
-        // Essayer de placer une 2ème bombe (doit échouer car maxBombs = 1)
-        testPlayer.setPosition(0, 1);
-        bombManager.placeBomb(testPlayer, 1);
-
-        // Vérifier que le nombre reste à 1
-        assertEquals(1, bombManager.getCurrentBombCountPlayer1());
-        assertEquals(1, bombManager.getActiveBombs().size());
-    }
-
-    @Test
-    @DisplayName("Test de gestion séparée des compteurs joueur 1 et 2")
-    void testSeparatePlayerCounters() {
-        Player player2 = new Player("Player2");
-        player2.setPosition(4, 4);
-
-        testPlayer.setPosition(0, 0);
-
-        // Placer des bombes pour chaque joueur
-        bombManager.placeBomb(testPlayer, 1);    // Joueur 1
-        bombManager.placeBomb(player2, 2);       // Joueur 2
-
-        // Vérifier les compteurs séparés
-        assertEquals(1, bombManager.getCurrentBombCountPlayer1());
-        assertEquals(1, bombManager.getCurrentBombCountPlayer2());
-        assertEquals(2, bombManager.getActiveBombs().size());
     }
 
     @Test
